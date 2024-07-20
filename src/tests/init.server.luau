@@ -14,11 +14,10 @@ end
 
 local DocumentStore = DocumentService.GetDocumentStore("test", check, { test = "default" }, function(lock1, lock2)
 	return "Cancel"
-end, function(data)
-	return nil
 end)
 
 local Document = DocumentStore:GetDocument("Sublivion")
+Document:Open()
 Document:Hook("Update", function(result: DocumentService.Result<typeof({ test = "default" })>)
 	if result.success then
 		print(result.data)
@@ -33,6 +32,10 @@ else
 	print(result.failReason :: string, result.errorMessage)
 end
 
+-- Test: methods should fail if document not open
+
+-- Test: document open and closing
+
 -- Test: Data in datastore does not match interface
 
 -- Test: Data matches interface
@@ -42,3 +45,5 @@ end
 -- Test: Session lock functions
 
 -- Test: Transactions
+
+-- Test: hooks

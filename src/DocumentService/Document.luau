@@ -13,7 +13,6 @@ export type Document<T> = typeof(setmetatable(
 		_check: (unknown) -> T,
 		_default: T,
 		_lockedHandler: (number, number) -> Types.LockedResponse,
-		_invalidDataHandler: (data: unknown) -> T?,
 		_open: boolean,
 		_hooks: {},
 		Hook: HookMethod<T>,
@@ -28,6 +27,7 @@ export type Result<T> = {
 	success: false,
 	failReason: Types.FailReason,
 	errorMessage: string,
+	data: unknown,
 }
 
 type HookMethod<T> =
@@ -47,8 +47,7 @@ function Document.new<T>(
 	dataStore: DataStore,
 	check: (value: unknown) -> T,
 	default: T,
-	lockedHandler: (number, number) -> Types.LockedResponse,
-	invalidDataHandler: (data: unknown) -> T?
+	lockedHandler: (number, number) -> Types.LockedResponse
 ): Document<T>
 	local hookMethod: HookMethod<T> = Document.Hook
 
@@ -58,7 +57,6 @@ function Document.new<T>(
 		_check = check,
 		_default = default,
 		_lockedHandler = lockedHandler,
-		_invalidDataHandler = invalidDataHandler,
 		_open = false,
 		_hooks = {},
 		Hook = hookMethod,
@@ -74,6 +72,18 @@ end
 ]=]
 function Document.Open<T>(self: Document<T>): Result<T>
 	assert(not self._open, "Document already open")
+
+	local success, result: unknown = pcall(function()
+		self._check()
+	end)
+	if not success then
+		return {
+			success = false,
+			failReason = "TypeCheckFailed",
+			errorMessage = result :: string,
+		}
+	end
+	self._check()
 
 	return {
 		success = true,
