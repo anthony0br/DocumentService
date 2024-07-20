@@ -1,0 +1,24 @@
+{
+  "name": "DocumentService",
+  "tree": {
+    "$className": "DataModel",
+
+    "ReplicatedStorage": {
+      "Tests": {
+        "$path": "src/tests"
+      },
+      "Packages": {
+        "$path": "src/Packages"
+      },
+      "DevPackages": {
+        "$path": "src/DevPackages"
+      }
+    },
+
+    "ServerScriptService": {
+      "DocumentService": {
+        "$path": "src/DocumentService"
+      }
+    }
+  }
+}
