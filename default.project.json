@@ -7,11 +7,8 @@
       "Tests": {
         "$path": "src/tests"
       },
-      "Packages": {
-        "$path": "src/Packages"
-      },
       "DevPackages": {
-        "$path": "src/DevPackages"
+        "$path": "DevPackages"
       }
     },
 

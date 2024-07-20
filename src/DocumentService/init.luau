@@ -1,36 +1,64 @@
 --!strict
 -- Author: Anthony O'Brien
 
-local DocumentService = {}
+local DataStoreService = game:GetService("DataStoreService")
 
-export type LockedResponse = "Repeat" | "Cancel" | "ForceLoad" | "Steal"
+local Types = require(script.Types)
+local Document = require(script.Document)
+
+local DocumentService = {}
 
 local DocumentStore = {}
 DocumentStore.__index = DocumentStore
 
 export type DocumentStore<T> = typeof(setmetatable(
 	{} :: {
-		_key: string,
+		_name: string,
+		_dataStore: DataStore,
 		_check: (unknown) -> T,
-		_defaults: T,
-		_lockedHandler: (number, number) -> LockedResponse,
+		_default: T,
+		_lockedHandler: (number, number) -> Types.LockedResponse,
 		_invalidDataHandler: (data: unknown) -> T?,
 	},
 	DocumentStore
 ))
 
 function DocumentService.GetDocumentStore<T>(
-	key: string,
-	lockedHandler: (number, number) -> LockedResponse,
+	name: string,
+	check: (unknown) -> T,
+	default: T,
+	lockedHandler: (number, number) -> Types.LockedResponse,
 	invalidDataHandler: (data: unknown) -> T?
 ): DocumentStore<T>
-	local self = setmetatable({
-		_key = key,
+	local dataStore = DataStoreService:GetDataStore(name)
+
+	return setmetatable({
+		_name = name,
+		_dataStore = dataStore,
+		_check = check,
+		_default = default,
 		_lockedHandler = lockedHandler,
 		_invalidDataHandler = invalidDataHandler,
 	}, DocumentStore)
-
-	return self
 end
+
+function DocumentStore.GetDocument<T>(self: DocumentStore<T>, key: string): Document.Document<T>
+	local document =
+		Document.new(key, self._dataStore, self._check, self._default, self._lockedHandler, self._invalidDataHandler)
+
+	return document
+end
+
+function DocumentStore.__tostring<T>(self: DocumentStore<T>)
+	return `DocumentStore {self._name}`
+end
+
+function DocumentStore.isDocumentStore(instance)
+	return getmetatable(instance).__index == DocumentStore
+end
+
+export type LockedResponse = Types.LockedResponse
+export type HookEvent = Types.HookEvent
+export type Result<T> = Document.Result<T>
 
 return DocumentService
