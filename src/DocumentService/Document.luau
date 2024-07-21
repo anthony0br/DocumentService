@@ -123,7 +123,7 @@ function Document.Open<T>(self: Document<T>): Result<T>
 end
 
 --[=[
-    Adds a session lock
+	Adds a session lock
 
 	@yields
 ]=]
@@ -136,7 +136,7 @@ function Document.Lock<T>(self: Document<T>): Result<nil>
 end
 
 --[=[
-    Removes a session lock
+	Removes a session lock
 
 	@yields
 ]=]
@@ -149,7 +149,7 @@ function Document.Unlock<T>(self: Document<T>): Result<nil>
 end
 
 --[=[
-    Makes the Document uneditable until it is re-opened
+	Makes the Document uneditable until it is re-opened
 
 	@yields
 ]=]
@@ -165,11 +165,14 @@ function Document.Close<T>(self: Document<T>): Result<nil>
 end
 
 --[=[
-    
+	Reads
+	
+	@param cache -- if this is false, it will disable Roblox's GetAsync caching
+	@return result -- result containing the data read
 
 	@yields
 ]=]
-function Document.Read<T>(self: Document<T>): Result<T>
+function Document.Read<T>(self: Document<T>, cache: boolean): Result<T>
 	return {
 		success = true,
 		data = self._default,
@@ -177,7 +180,10 @@ function Document.Read<T>(self: Document<T>): Result<T>
 end
 
 --[=[
-    Performs a single atomic transaction on the Document
+	Performs a single atomic transaction on the Document
+
+	@param transform -- transform function for the transaction
+	@return result -- result containing the new data
 
 	@yields
 ]=]
@@ -197,12 +203,14 @@ function Document.Update<T>(self: Document<T>, transform: (data: T) -> T): Resul
 end
 
 --[=[
-    A joint atomic transaction involving this document, and another document.
+	A joint atomic transaction involving this document, and another document.
+	
+	If either update fails, both keys will be restored to their oirginal state.
 
-    If either update fails, both keys will be restored to their oirginal state.
-
-    @return success -- true if no errors that we cannot control occur (i.e. datastore errors)
-    @return error -- the error that occurred
+	@param otherDocument -- the source of otherData
+	@param transform -- transform function for the transaction
+	@return success -- true if no errors that we cannot control occur (i.e. datastore errors)
+	@return error -- the error that occurred
 
 	@yields
 ]=]
@@ -243,6 +251,11 @@ function Document.PostHook<T>(self: Document<T>, event: Types.PostHookEvent, hoo
 	table.insert(self._postHooks[event], hook)
 end
 
+--[=[
+	Sets the function which determines how to respond to a session lock while opening a Document.
+
+	@param handler
+]=]
 function Document.SetLockedHandler<T>(
 	self: Document<T>,
 	handler: (lockId: string?, timestamp: number) -> Types.LockedResponse
@@ -250,10 +263,20 @@ function Document.SetLockedHandler<T>(
 	self._lockedHandler = handler
 end
 
+--[=[
+	Sets the function which responds to invalid data while opening a Document.
+
+	This can migrate data (by returning a successful result with new data), or fail.
+
+	@param handler
+]=]
 function Document.SetInvalidDataHandler<T>(self: Document<T>, handler: (invalidData: unknown) -> Result<T>)
 	self._invalidDataHandler = handler
 end
 
+--[=[
+	Closes and destroys the class
+]=]
 function Document.Destroy<T>(self: Document<T>)
 	if self._open then
 		self:Close()
@@ -262,10 +285,19 @@ function Document.Destroy<T>(self: Document<T>)
 	table.clear(self :: any)
 end
 
+--[=[
+	For debug printing documents
+]=]
 function Document.__tostring<T>(self: Document<T>)
 	return `Document: {self._key}`
 end
 
+--[=[
+	Checks whether a metatable passed is a Document
+
+	@param instance metatable
+	@return is it a Document
+]=]
 function Document.isDocument(instance)
 	return getmetatable(instance).__index == Document
 end

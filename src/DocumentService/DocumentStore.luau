@@ -48,11 +48,12 @@ function DocumentStore.GetDocument<T>(self: DocumentStore<T>, key: string): Docu
 end
 
 --[=[
-	
+	Checks whether a metatable passed is a DocumentStore
 
-	@p
+	@param instance metatable
+	@return is it a DocumentStore
 ]=]
-function DocumentStore.isDocumentStore(instance)
+function DocumentStore.isDocumentStore(instance): boolean
 	return getmetatable(instance).__index == DocumentStore
 end
 
