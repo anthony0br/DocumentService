@@ -2,7 +2,7 @@
 
 ## Goals
 - Fully strictly typed, working now: DocumentService is fully strictly typed, including internally and the public API, and checks types at runtime.
-- Adaptable with hooks: these can be used for automated logging, automated retries, migrating data on then re-trying fail to open, and more. 
+- Adaptable with hooks. For example, these can be used for automated logging.
 - Few dependencies and simple API: DocumentService will not lock you into using a specific implementation of Promise or Future. Instead, it just yields when it needs to, and lets you implement your own async behaviour.
 - Transaction based API as the core, auto-saving for rapidly changing data can be added on later
 - Safe transactions involving multiple keys (e.g. trades)
