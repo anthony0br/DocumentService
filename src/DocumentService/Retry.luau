@@ -26,7 +26,7 @@ local function Retry<T..., S...>(maxAttempts: number, cooldown: number, func: (T
 		if result[1] == true then
 			break
 		end
-		warn(`[Retry] Attempt {i} failed: {result[2]}\n at\n{debug.traceback}`)
+		warn(`[Retry] Attempt {i} failed: {result[2]} {debug.traceback("\nat", 2)}`)
 		task.wait(cooldown)
 	end
 
