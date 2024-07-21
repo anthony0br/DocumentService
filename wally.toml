@@ -1,8 +1,9 @@
 [package]
-name = "anthony0br/DocumentService"
+name = "anthony0br/documentservice"
 version = "0.1.0"
 registry = "https://github.com/UpliftGames/wally-index"
 realm = "server"
 
 [dev-dependencies]
 Guard = "red-blox/guard@1.0.1"
+Future = "red-blox/future@1.0.1"
