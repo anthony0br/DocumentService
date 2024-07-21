@@ -17,17 +17,11 @@ export type DocumentStore<T> = typeof(setmetatable(
 		_dataStore: DataStore,
 		_check: (unknown) -> T,
 		_default: T,
-		_lockedHandler: (number, number) -> Types.LockedResponse,
 	},
 	DocumentStore
 ))
 
-function DocumentService.GetDocumentStore<T>(
-	name: string,
-	check: (unknown) -> T,
-	default: T,
-	lockedHandler: (number, number) -> Types.LockedResponse
-): DocumentStore<T>
+function DocumentService.GetDocumentStore<T>(name: string, check: (unknown) -> T, default: T): DocumentStore<T>
 	local dataStore = DataStoreService:GetDataStore(name)
 
 	return setmetatable({
@@ -35,18 +29,13 @@ function DocumentService.GetDocumentStore<T>(
 		_dataStore = dataStore,
 		_check = check,
 		_default = default,
-		_lockedHandler = lockedHandler,
 	}, DocumentStore)
 end
 
 function DocumentStore.GetDocument<T>(self: DocumentStore<T>, key: string): Document.Document<T>
-	local document = Document.new(key, self._dataStore, self._check, self._default, self._lockedHandler)
+	local document = Document.new(key, self._dataStore, self._check, self._default)
 
 	return document
-end
-
-function DocumentStore.__tostring<T>(self: DocumentStore<T>)
-	return `DocumentStore {self._name}`
 end
 
 function DocumentStore.isDocumentStore(instance)

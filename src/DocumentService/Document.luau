@@ -3,6 +3,12 @@
 
 local Types = require(script.Parent.Types)
 
+local SESSION_EXPIRE_TIME = 20 * 60
+local RETRY_OPEN_TIME = 5
+
+--[=[
+	@class Document
+]=]
 local Document = {}
 Document.__index = Document
 
@@ -12,10 +18,15 @@ export type Document<T> = typeof(setmetatable(
 		_dataStore: DataStore,
 		_check: (unknown) -> T,
 		_default: T,
-		_lockedHandler: (number, number) -> Types.LockedResponse,
 		_open: boolean,
-		_hooks: {},
-		Hook: HookMethod<T>,
+		_hooks: {
+			open: { (Result<T>) -> () },
+			close: { (Result<T>) -> () },
+			update: { (Result<T>) -> () },
+			read: { (Result<T>) -> () },
+		},
+		_lockedHandler: (lockId: string?, lastUpdated: number) -> Types.LockedResponse,
+		_invalidDataHandler: (invalidData: unknown) -> Result<T>,
 	},
 	Document
 ))
@@ -27,48 +38,55 @@ export type Result<T> = {
 	success: false,
 	failReason: Types.FailReason,
 	errorMessage: string,
-	data: unknown,
+	data: unknown?,
 }
 
-type HookMethod<T> =
-	((self: Document<T>, event: "Update", hook: (Result<T>) -> ()) -> ())
-	& ((self: Document<T>, event: "Open", hook: (Result<T>) -> ()) -> ())
-	& ((self: Document<T>, event: "Close", hook: (Result<T>) -> ()) -> ())
+local function addHook<T>(self: Document<T>, event: Types.HookEvent, hook: (...unknown) -> ...unknown) end
 
 --[=[
-    Creates a new Document class
+	Creates a new Document class
 
-	TO DO: Replace arguments with a table
-
-    @param check --a function that take and returns a value, errors if the value provided does not match the type of data we expect
+	@param check -- a function that take and returns a value, errors if the value provided does not match the type of data we expect
 ]=]
-function Document.new<T>(
-	key: string,
-	dataStore: DataStore,
-	check: (value: unknown) -> T,
-	default: T,
-	lockedHandler: (number, number) -> Types.LockedResponse
-): Document<T>
-	local hookMethod: HookMethod<T> = Document.Hook
-
+function Document.new<T>(key: string, dataStore: DataStore, check: (value: unknown) -> T, default: T): Document<T>
 	return setmetatable({
 		_key = key,
 		_dataStore = dataStore,
 		_check = check,
 		_default = default,
-		_lockedHandler = lockedHandler,
 		_open = false,
-		_hooks = {},
-		Hook = hookMethod,
+		_hooks = {
+			open = {},
+			close = {},
+			update = {},
+			read = {},
+		},
+		_lockedHandler = function(_lockId: string?, lastUpdated: number): Types.LockedResponse
+			if os.time() - lastUpdated > SESSION_EXPIRE_TIME then
+				return "Steal"
+			end
+
+			return "Await"
+		end,
+		_invalidDataHandler = function(invalidData: unknown): Result<T>
+			return {
+				success = false,
+				failReason = "InvalidDataNotHandled",
+				errorMessage = "Data check function failed and no handler set",
+				data = invalidData,
+			}
+		end,
 	}, Document)
 end
 
 --[=[
-    Validates and session locks the document, making it ready for use
+	Validates and session locks the document, making it ready for use
 
-    @returns the initial data found, if successful
+	This can heavily yield due to re-tries
 
-    @yields
+	@return the initial data found, if successful
+
+	@yields
 ]=]
 function Document.Open<T>(self: Document<T>): Result<T>
 	assert(not self._open, "Document already open")
@@ -77,13 +95,34 @@ function Document.Open<T>(self: Document<T>): Result<T>
 		self._check()
 	end)
 	if not success then
-		return {
-			success = false,
-			failReason = "TypeCheckFailed",
-			errorMessage = result :: string,
-		}
+		self._invalidDataHandler()
 	end
 	self._check()
+
+	return {
+		success = true,
+		data = self._default,
+	}
+end
+
+function Document.Lock<T>(self: Document<T>): Result<nil>
+	assert(self._open, "Document not open")
+
+	return {
+		success = true,
+	}
+end
+
+function Document.Unlock<T>(self: Document<T>): Result<nil>
+	assert(self._open, "Document not open")
+
+	return {
+		success = true,
+	}
+end
+
+function Document.Close<T>(self: Document<T>): Result<T>
+	assert(self._open, "Document not open")
 
 	return {
 		success = true,
@@ -115,8 +154,8 @@ end
 
     If either update fails, both keys will be restored to their oirginal state.
 
-    @returns success --true if no errors that we cannot control occur (i.e. datastore errors)
-    @returns error --the error that occurred
+    @return success -- true if no errors that we cannot control occur (i.e. datastore errors)
+    @return error -- the error that occurred
 ]=]
 function Document.UpdateWith<T, S>(
 	self: Document<T>,
@@ -129,15 +168,23 @@ function Document.UpdateWith<T, S>(
 	}
 end
 
-function Document.Hook<T>(self: Document<T>, event: Types.HookEvent, hook: unknown) end
+function Document.OnRead<T>(self: Document<T>, hook: (Result<T>) -> ()) end
 
-function Document.Close<T>(self: Document<T>): Result<T>
-	assert(self._open, "Document not open")
+function Document.OnOpen<T>(self: Document<T>, hook: (Result<T>) -> ()) end
 
-	return {
-		success = true,
-		data = self._default,
-	}
+function Document.OnClose<T>(self: Document<T>, hook: (Result<T>) -> ()) end
+
+function Document.OnUpdate<T>(self: Document<T>, hook: (Result<T>) -> ()) end
+
+function Document.SetLockedHandler<T>(
+	self: Document<T>,
+	handler: (lockId: string?, timestamp: number) -> Types.LockedResponse
+)
+	self._lockedHandler = handler
+end
+
+function Document.SetInvalidDataHandler<T>(self: Document<T>, handler: (invalidData: unknown) -> Result<T>)
+	self._invalidDataHandler = handler
 end
 
 function Document.Destroy<T>(self: Document<T>)

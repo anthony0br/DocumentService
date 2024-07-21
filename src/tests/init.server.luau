@@ -3,6 +3,7 @@
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Guard = require(ReplicatedStorage.DevPackages.Guard)
+local Future = require(ReplicatedStorage.DevPackages.Future)
 local DocumentService = require(game.ServerScriptService.DocumentService)
 
 -- Test: Creating a Document Interface
@@ -12,17 +13,10 @@ local function check(value)
 	}
 end
 
-local DocumentStore = DocumentService.GetDocumentStore("test", check, { test = "default" }, function(lock1, lock2)
-	return "Cancel"
-end)
+local DocumentStore = DocumentService.GetDocumentStore("test", check, { test = "default" })
 
 local Document = DocumentStore:GetDocument("Sublivion")
 Document:Open()
-Document:Hook("Update", function(result: DocumentService.Result<typeof({ test = "default" })>)
-	if result.success then
-		print(result.data)
-	end
-end)
 
 -- This type checks!
 local result = Document:Read()
@@ -36,7 +30,15 @@ end
 
 -- Test: document open and closing
 
--- Test: Data in datastore does not match interface
+-- Test: Data in datastore does not match interface should run invalid data handler
+
+-- Test: Data in datastore does not match interface should error if invalid data handler is unsuccessful
+
+-- Test: locking
+
+-- Test: Steal mode
+
+-- Test: Await mode
 
 -- Test: Data matches interface
 
@@ -47,3 +49,7 @@ end
 -- Test: Transactions
 
 -- Test: hooks
+
+-- Test: If session lock expired, a new session lock should be created
+
+-- Test: Transactions should fail if session stolen
