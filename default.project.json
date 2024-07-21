@@ -4,9 +4,6 @@
     "$className": "DataModel",
 
     "ReplicatedStorage": {
-      "Tests": {
-        "$path": "src/tests"
-      },
       "DevPackages": {
         "$path": "DevPackages"
       }
@@ -15,6 +12,9 @@
     "ServerScriptService": {
       "DocumentService": {
         "$path": "src/DocumentService"
+      },
+      "Tests": {
+        "$path": "src/tests"
       }
     }
   }
