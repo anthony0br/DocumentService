@@ -1,7 +1,8 @@
 --!strict
 
 export type LockedResponse = "Await" | "Steal" | "Cancel"
-export type HookEvent = "Read" | "Update" | "Open" | "Close"
+export type PreHookEvent = "Open" | "Close" | "Update" | "Read"
+export type PostHookEvent = "Open" | "Close" | "Update" | "Read"
 export type FailReason = "RobloxAPIFail" | "InvalidDataNotHandled"
 
 return {}

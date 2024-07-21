@@ -19,11 +19,17 @@ export type Document<T> = typeof(setmetatable(
 		_check: (unknown) -> T,
 		_default: T,
 		_open: boolean,
-		_hooks: {
-			open: { (Result<T>) -> () },
-			close: { (Result<T>) -> () },
-			update: { (Result<T>) -> () },
-			read: { (Result<T>) -> () },
+		_preHooks: {
+			Open: { () -> () },
+			Close: { () -> () },
+			Read: { () -> () },
+			Update: { () -> () },
+		},
+		_postHooks: {
+			Open: { (Result<T>) -> () },
+			Close: { (Result<T>) -> () },
+			Read: { (Result<T>) -> () },
+			Update: { (Result<T>) -> () },
 		},
 		_lockedHandler: (lockId: string?, lastUpdated: number) -> Types.LockedResponse,
 		_invalidDataHandler: (invalidData: unknown) -> Result<T>,
@@ -41,7 +47,11 @@ export type Result<T> = {
 	data: unknown?,
 }
 
-local function addHook<T>(self: Document<T>, event: Types.HookEvent, hook: (...unknown) -> ...unknown) end
+local function runHooks<T...>(hooks: { (T...) -> () }, ...: T...)
+	for i, hook in ipairs(hooks) do
+		hook(...)
+	end
+end
 
 --[=[
 	Creates a new Document class
@@ -55,11 +65,17 @@ function Document.new<T>(key: string, dataStore: DataStore, check: (value: unkno
 		_check = check,
 		_default = default,
 		_open = false,
-		_hooks = {
-			open = {},
-			close = {},
-			update = {},
-			read = {},
+		_preHooks = {
+			Open = {},
+			Close = {},
+			Update = {},
+			Read = {},
+		},
+		_postHooks = {
+			Open = {},
+			Close = {},
+			Update = {},
+			Read = {},
 		},
 		_lockedHandler = function(_lockId: string?, lastUpdated: number): Types.LockedResponse
 			if os.time() - lastUpdated > SESSION_EXPIRE_TIME then
@@ -121,12 +137,14 @@ function Document.Unlock<T>(self: Document<T>): Result<nil>
 	}
 end
 
-function Document.Close<T>(self: Document<T>): Result<T>
+function Document.Close<T>(self: Document<T>): Result<nil>
 	assert(self._open, "Document not open")
+
+	self._open = false
 
 	return {
 		success = true,
-		data = self._default,
+		data = nil,
 	}
 end
 
@@ -143,10 +161,16 @@ end
 function Document.Update<T>(self: Document<T>, transform: (data: T) -> T): Result<T>
 	assert(self._open, "Document not open")
 
-	return {
+	runHooks(self._preHooks.Update)
+
+	local result: Result<T> = {
 		success = true,
 		data = self._default,
 	}
+
+	runHooks(self._postHooks.Update, result)
+
+	return result
 end
 
 --[=[
@@ -168,13 +192,19 @@ function Document.UpdateWith<T, S>(
 	}
 end
 
-function Document.OnRead<T>(self: Document<T>, hook: (Result<T>) -> ()) end
+--[=[
+	Attaches a hook which occurs before the event
 
-function Document.OnOpen<T>(self: Document<T>, hook: (Result<T>) -> ()) end
+	@param event -- the event to hook before
+	@param hook [(args) -> (args)] a hook
+]=]
+function Document.PreHook<T, S...>(self: Document<T>, event: Types.PreHookEvent, hook: () -> ())
+	table.insert(self._preHooks[event], hook)
+end
 
-function Document.OnClose<T>(self: Document<T>, hook: (Result<T>) -> ()) end
-
-function Document.OnUpdate<T>(self: Document<T>, hook: (Result<T>) -> ()) end
+function Document.PostHook<T>(self: Document<T>, event: Types.PostHookEvent, hook: (Result<T>) -> ())
+	table.insert(self._postHooks[event], hook)
+end
 
 function Document.SetLockedHandler<T>(
 	self: Document<T>,
