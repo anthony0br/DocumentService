@@ -19,10 +19,15 @@ local function check(value)
 	}
 end
 
-local DocumentStore = DocumentService.GetDocumentStore("test", check, { test = "default" })
+local DocumentStore =
+	DocumentService.DocumentStore.new(DataStoreService:GetDataStore("name"), check, { test = "default" })
 
 local Document = DocumentStore:GetDocument("Sublivion")
 Document:Open()
+
+Document:PreHook("Update", function(transform)
+	print(transform)
+end)
 
 -- This type checks!
 local result = Document:Read()

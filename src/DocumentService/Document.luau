@@ -23,7 +23,7 @@ export type Document<T> = typeof(setmetatable(
 			Open: { () -> () },
 			Close: { () -> () },
 			Read: { () -> () },
-			Update: { () -> () },
+			Update: { (transform: (data: T) -> T) -> () },
 		},
 		_postHooks: {
 			Open: { (Result<T>) -> () },
@@ -48,7 +48,7 @@ export type Result<T> = {
 }
 
 local function runHooks<T...>(hooks: { (T...) -> () }, ...: T...)
-	for i, hook in ipairs(hooks) do
+	for _, hook in ipairs(hooks) do
 		hook(...)
 	end
 end
@@ -56,6 +56,7 @@ end
 --[=[
 	Creates a new Document class
 
+	@param key -- 
 	@param check -- a function that take and returns a value, errors if the value provided does not match the type of data we expect
 ]=]
 function Document.new<T>(key: string, dataStore: DataStore, check: (value: unknown) -> T, default: T): Document<T>
@@ -121,6 +122,11 @@ function Document.Open<T>(self: Document<T>): Result<T>
 	}
 end
 
+--[=[
+    Adds a session lock
+
+	@yields
+]=]
 function Document.Lock<T>(self: Document<T>): Result<nil>
 	assert(self._open, "Document not open")
 
@@ -129,6 +135,11 @@ function Document.Lock<T>(self: Document<T>): Result<nil>
 	}
 end
 
+--[=[
+    Removes a session lock
+
+	@yields
+]=]
 function Document.Unlock<T>(self: Document<T>): Result<nil>
 	assert(self._open, "Document not open")
 
@@ -137,6 +148,11 @@ function Document.Unlock<T>(self: Document<T>): Result<nil>
 	}
 end
 
+--[=[
+    Makes the Document uneditable until it is re-opened
+
+	@yields
+]=]
 function Document.Close<T>(self: Document<T>): Result<nil>
 	assert(self._open, "Document not open")
 
@@ -148,6 +164,11 @@ function Document.Close<T>(self: Document<T>): Result<nil>
 	}
 end
 
+--[=[
+    
+
+	@yields
+]=]
 function Document.Read<T>(self: Document<T>): Result<T>
 	return {
 		success = true,
@@ -157,11 +178,13 @@ end
 
 --[=[
     Performs a single atomic transaction on the Document
+
+	@yields
 ]=]
 function Document.Update<T>(self: Document<T>, transform: (data: T) -> T): Result<T>
 	assert(self._open, "Document not open")
 
-	runHooks(self._preHooks.Update)
+	runHooks(self._preHooks.Update, transform)
 
 	local result: Result<T> = {
 		success = true,
@@ -180,6 +203,8 @@ end
 
     @return success -- true if no errors that we cannot control occur (i.e. datastore errors)
     @return error -- the error that occurred
+
+	@yields
 ]=]
 function Document.UpdateWith<T, S>(
 	self: Document<T>,
@@ -193,15 +218,27 @@ function Document.UpdateWith<T, S>(
 end
 
 --[=[
-	Attaches a hook which occurs before the event
+	Attaches a hook which occurs before the event.
+
+	Note that if a hook yields, it will yield all methods that call it. Hooks are called in the order
+	they are added.
 
 	@param event -- the event to hook before
-	@param hook [(args) -> (args)] a hook
+	@param hook [(args) -> ()] a hook
 ]=]
-function Document.PreHook<T, S...>(self: Document<T>, event: Types.PreHookEvent, hook: () -> ())
+function Document.PreHook<T, S...>(self: Document<T>, event: Types.PreHookEvent, hook: (S...) -> ())
 	table.insert(self._preHooks[event], hook)
 end
 
+--[=[
+	Attaches a hook which occurs after the event, before the method returns.
+
+	Note that if a hook yields, it will yield all methods that call it. Hooks are called in the order
+	they are added.
+
+	@param event -- the event to hook before
+	@param hook [(args) -> ()] a hook
+]=]
 function Document.PostHook<T>(self: Document<T>, event: Types.PostHookEvent, hook: (Result<T>) -> ())
 	table.insert(self._postHooks[event], hook)
 end
