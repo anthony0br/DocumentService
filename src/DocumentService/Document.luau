@@ -101,7 +101,7 @@ end
 
 	This can heavily yield due to re-tries
 
-	@return the initial data found, if successful
+	@return result
 
 	@yields
 ]=]
@@ -125,6 +125,8 @@ end
 --[=[
 	Adds a session lock
 
+	@return result
+
 	@yields
 ]=]
 function Document.Lock<T>(self: Document<T>): Result<nil>
@@ -138,6 +140,8 @@ end
 --[=[
 	Removes a session lock
 
+	@return result
+
 	@yields
 ]=]
 function Document.Unlock<T>(self: Document<T>): Result<nil>
@@ -150,6 +154,8 @@ end
 
 --[=[
 	Makes the Document uneditable until it is re-opened
+
+	@return result
 
 	@yields
 ]=]
@@ -231,8 +237,8 @@ end
 	Note that if a hook yields, it will yield all methods that call it. Hooks are called in the order
 	they are added.
 
-	@param event -- the event to hook before
-	@param hook [(args) -> ()] a hook
+	@param event -- the operation to call the hook before
+	@param hook -- a hook function that receives the arguments passed in to the operation
 ]=]
 function Document.PreHook<T, S...>(self: Document<T>, event: Types.PreHookEvent, hook: (S...) -> ())
 	table.insert(self._preHooks[event], hook)
@@ -244,8 +250,8 @@ end
 	Note that if a hook yields, it will yield all methods that call it. Hooks are called in the order
 	they are added.
 
-	@param event -- the event to hook before
-	@param hook [(args) -> ()] a hook
+	@param event -- the operation to call the hook after
+	@param hook -- a hook function that receives the arguments passed in to the operation
 ]=]
 function Document.PostHook<T>(self: Document<T>, event: Types.PostHookEvent, hook: (Result<T>) -> ())
 	table.insert(self._postHooks[event], hook)
@@ -296,9 +302,9 @@ end
 	Checks whether a metatable passed is a Document
 
 	@param instance metatable
-	@return is it a Document
+	@return isDocument -- is it a Document
 ]=]
-function Document.isDocument(instance)
+function Document.isDocument(instance): boolean
 	return getmetatable(instance).__index == Document
 end
 

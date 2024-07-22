@@ -24,9 +24,11 @@ export type DocumentStore<T> = typeof(setmetatable(
 --[=[
 	Creates a new DocumentStore
 
-	@param dataStore The object returned by DataStoreService:GetDataStore()
-	@param check A type check function for your data, errors if types are invalid
-	@param default Default values, which are set if keys are empty
+	@param dataStore -- The object returned by DataStoreService:GetDataStore()
+	@param check -- A type check function for your data, errors if types are invalid
+	@param default -- Default values, which are set if keys are empty
+
+	@return DocumentStore
 ]=]
 function DocumentStore.new<T>(dataStore: DataStore, check: (unknown) -> T, default: T): DocumentStore<T>
 	return setmetatable({
@@ -51,7 +53,7 @@ end
 	Checks whether a metatable passed is a DocumentStore
 
 	@param instance metatable
-	@return is it a DocumentStore
+	@return isDocumentStore -- is it a DocumentStore
 ]=]
 function DocumentStore.isDocumentStore(instance): boolean
 	return getmetatable(instance).__index == DocumentStore

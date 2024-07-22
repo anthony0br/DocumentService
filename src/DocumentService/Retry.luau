@@ -4,19 +4,22 @@
 -- 21 July 2024
 
 --[=[
-    @class Retry
+	@class Retry
 ]=]
 
 --[=[
-    pcalls a function a number of times, returning the first success if any
-    
-    @param maxAttempts maximum attempts
-    @param cooldown time to wait between attempts
-    @param func function to pcall
-    @return success
-    @return ... -- if successful, the return values of func, otherwise an error string
-    @within Retry
-    @yields
+	pcalls a function a number of times, returning the first success if any
+	
+	@within Retry
+
+	@yields
+	
+	@param maxAttempts -- maximum attempts
+	@param cooldown -- time to wait between attempts
+	@param func -- function to pcall
+
+	@return success
+	@return ... -- if successful, the return values of func, otherwise an error string
 ]=]
 local function Retry<T..., S...>(maxAttempts: number, cooldown: number, func: (T...) -> S..., ...: T...): (boolean, S...)
 	local result
