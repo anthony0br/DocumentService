@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="en" dir="ltr" class="plugin-moonwave plugin-id-moonwave">
+<head>
+<meta charset="UTF-8">
+<meta name="generator" content="Docusaurus v2.3.1">
+<title data-rh="true">DocumentStore | DocumentService</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:url" content="https://anthony0br.github.io/DocumentService/api/DocumentStore"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docusaurus_tag" content="default"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docsearch:docusaurus_tag" content="default"><meta data-rh="true" property="og:title" content="DocumentStore | DocumentService"><meta data-rh="true" name="description" content="A struct that holds information about all Documents within a DataStore and provides a less
+repetitive way of instantiating documents."><meta data-rh="true" property="og:description" content="A struct that holds information about all Documents within a DataStore and provides a less
+repetitive way of instantiating documents."><link data-rh="true" rel="canonical" href="https://anthony0br.github.io/DocumentService/api/DocumentStore"><link data-rh="true" rel="alternate" href="https://anthony0br.github.io/DocumentService/api/DocumentStore" hreflang="en"><link data-rh="true" rel="alternate" href="https://anthony0br.github.io/DocumentService/api/DocumentStore" hreflang="x-default"><link rel="stylesheet" href="/DocumentService/assets/css/styles.fd8953ce.css">
+<link rel="preload" href="/DocumentService/assets/js/runtime~main.cc7c4bf8.js" as="script">
+<link rel="preload" href="/DocumentService/assets/js/main.a2620214.js" as="script">
+</head>
+<body class="navigation-with-keyboard">
+<script>!function(){function e(e){document.documentElement.setAttribute("data-theme",e)}var t=function(){var e=null;try{e=localStorage.getItem("theme")}catch(e){}return e}();null!==t?e(t):window.matchMedia("(prefers-color-scheme: dark)").matches?e("dark"):(window.matchMedia("(prefers-color-scheme: light)").matches,e("light"))}()</script><div id="__docusaurus">
+<div role="region" aria-label="Skip to main content"><a class="skipToContent_fXgn" href="#docusaurus_skipToContent_fallback">Skip to main content</a></div><nav aria-label="Main" class="navbar navbar--fixed-top"><div class="navbar__inner"><div class="navbar__items"><button aria-label="Toggle navigation bar" aria-expanded="false" class="navbar__toggle clean-btn" type="button"><svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true"><path stroke="currentColor" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2" d="M4 7h22M4 15h22M4 23h22"></path></svg></button><a class="navbar__brand" href="/DocumentService/"><b class="navbar__title text--truncate">DocumentService</b></a><a aria-current="page" class="navbar__item navbar__link navbar__link--active" href="/DocumentService/api/">API</a></div><div class="navbar__items navbar__items--right"><a href="https://github.com/anthony0br/DocumentService" target="_blank" rel="noopener noreferrer" class="navbar__item navbar__link">GitHub<svg width="13.5" height="13.5" aria-hidden="true" viewBox="0 0 24 24" class="iconExternalLink_nPIU"><path fill="currentColor" d="M21 13v10h-21v-19h12v2h-10v15h17v-8h2zm3-12h-10.988l4.035 4-6.977 7.07 2.828 2.828 6.977-7.07 4.125 4.172v-11z"></path></svg></a><div class="toggle_vylO colorModeToggle_DEke"><button class="clean-btn toggleButton_gllP toggleButtonDisabled_aARS" type="button" disabled="" title="Switch between dark and light mode (currently light mode)" aria-label="Switch between dark and light mode (currently light mode)" aria-live="polite"><svg viewBox="0 0 24 24" width="24" height="24" class="lightToggleIcon_pyhR"><path fill="currentColor" d="M12,9c1.65,0,3,1.35,3,3s-1.35,3-3,3s-3-1.35-3-3S10.35,9,12,9 M12,7c-2.76,0-5,2.24-5,5s2.24,5,5,5s5-2.24,5-5 S14.76,7,12,7L12,7z M2,13l2,0c0.55,0,1-0.45,1-1s-0.45-1-1-1l-2,0c-0.55,0-1,0.45-1,1S1.45,13,2,13z M20,13l2,0c0.55,0,1-0.45,1-1 s-0.45-1-1-1l-2,0c-0.55,0-1,0.45-1,1S19.45,13,20,13z M11,2v2c0,0.55,0.45,1,1,1s1-0.45,1-1V2c0-0.55-0.45-1-1-1S11,1.45,11,2z M11,20v2c0,0.55,0.45,1,1,1s1-0.45,1-1v-2c0-0.55-0.45-1-1-1C11.45,19,11,19.45,11,20z M5.99,4.58c-0.39-0.39-1.03-0.39-1.41,0 c-0.39,0.39-0.39,1.03,0,1.41l1.06,1.06c0.39,0.39,1.03,0.39,1.41,0s0.39-1.03,0-1.41L5.99,4.58z M18.36,16.95 c-0.39-0.39-1.03-0.39-1.41,0c-0.39,0.39-0.39,1.03,0,1.41l1.06,1.06c0.39,0.39,1.03,0.39,1.41,0c0.39-0.39,0.39-1.03,0-1.41 L18.36,16.95z M19.42,5.99c0.39-0.39,0.39-1.03,0-1.41c-0.39-0.39-1.03-0.39-1.41,0l-1.06,1.06c-0.39,0.39-0.39,1.03,0,1.41 s1.03,0.39,1.41,0L19.42,5.99z M7.05,18.36c0.39-0.39,0.39-1.03,0-1.41c-0.39-0.39-1.03-0.39-1.41,0l-1.06,1.06 c-0.39,0.39-0.39,1.03,0,1.41s1.03,0.39,1.41,0L7.05,18.36z"></path></svg><svg viewBox="0 0 24 24" width="24" height="24" class="darkToggleIcon_wfgR"><path fill="currentColor" d="M9.37,5.51C9.19,6.15,9.1,6.82,9.1,7.5c0,4.08,3.32,7.4,7.4,7.4c0.68,0,1.35-0.09,1.99-0.27C17.45,17.19,14.93,19,12,19 c-3.86,0-7-3.14-7-7C5,9.07,6.81,6.55,9.37,5.51z M12,3c-4.97,0-9,4.03-9,9s4.03,9,9,9s9-4.03,9-9c0-0.46-0.04-0.92-0.1-1.36 c-0.98,1.37-2.58,2.26-4.4,2.26c-2.98,0-5.4-2.42-5.4-5.4c0-1.81,0.89-3.42,2.26-4.4C12.92,3.04,12.46,3,12,3L12,3z"></path></svg></button></div><div class="searchBox_ZlJk"><div class="navbar__search"><span aria-label="expand searchbar" role="button" class="search-icon" tabindex="0"></span><input type="search" id="search_input_react" placeholder="Loading..." aria-label="Search" class="navbar__search-input search-bar" disabled=""></div></div></div></div><div role="presentation" class="navbar-sidebar__backdrop"></div></nav><div id="docusaurus_skipToContent_fallback" class="main-wrapper mainWrapper_z2l0 docPageContainer_wNNk"><div class="docPage_Dpn1"><div class="docSidebarContainer_o_re"><div class="sidebar_njMd"><nav aria-label="Docs sidebar" class="menu thin-scrollbar menu_SIkG"><ul class="theme-doc-sidebar-menu menu__list"><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class="menu__link" href="/DocumentService/api/Document">​Document</a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class="menu__link menu__link--active" aria-current="page" href="/DocumentService/api/DocumentStore">​Document​Store</a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class="menu__link" href="/DocumentService/api/Retry">​Retry</a></li></ul></nav></div></div><main class="docMainContainer_HJE1"><div class="container padding-vert--lg"><div class="row"><div class="col docItemCol_MU3C"><div class="docItemContainer_Wv98"><article><div class="member_J0w1 markdown"><div class="tocCollapsible_ETCw theme-doc-toc-mobile tocMobile_oUs_"><button type="button" class="clean-btn tocCollapsibleButton_TO0P">On this page</button></div><header><h1 class="docTitle_mZRt" style="text-decoration:none"><span style="display:inline-block">Document</span><span style="display:inline-block">Store</span></h1><div class="luaClassTags_EipM"></div><div>
+<p>
+  A struct that holds information about all Documents within a DataStore and provides a less
+  repetitive way of instantiating documents.
+</p>
+</div></header><h2 class="anchor anchorWithStickyNavbar_LWe7" id="functions">Functions<a href="#functions" class="hash-link" aria-label="Direct link to Functions" title="Direct link to Functions">​</a></h2><div class="divider_rE5g"></div><h3 class="anchor anchorWithStickyNavbar_LWe7" id="new"><code style="text-decoration:none">new</code><a href="#new" class="hash-link" aria-label="Direct link to new" title="Direct link to new">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/anthony0br/DocumentService/blob/master/src/DocumentService/DocumentStore.luau#L31"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>DocumentStore<!-- -->.</code><code class="green_DgR4">new</code><code>(</code><div class="inset_uKQm"><div><code>dataStore<!-- -->: </code><code class="blue_P4bS">The</code><code class="blue_P4bS">object</code><code class="blue_P4bS">returned</code><code class="blue_P4bS">by</code><code class="blue_P4bS">DataStoreService:GetDataStore()</code><code>,</code></div><div><code>check<!-- -->: </code><code class="blue_P4bS">A</code><code class="blue_P4bS">type</code><code class="blue_P4bS">check</code><code class="blue_P4bS">function</code><code class="blue_P4bS">for</code><code class="blue_P4bS">your</code><code class="blue_P4bS">data,</code><code class="blue_P4bS">errors</code><code class="blue_P4bS">if</code><code class="blue_P4bS">types</code><code class="blue_P4bS">are</code><code class="blue_P4bS">invalid</code><code>,</code></div><div><code>default<!-- -->: </code><code class="blue_P4bS">Default</code><code class="blue_P4bS">values,</code><code class="blue_P4bS">which</code><code class="blue_P4bS">are</code><code class="blue_P4bS">set</code><code class="blue_P4bS">if</code><code class="blue_P4bS">keys</code><code class="blue_P4bS">are</code><code class="blue_P4bS">empty</code></div></div><code>) → </code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/DocumentService/api/DocumentStore">DocumentStore</a></code><code class="op_lSLc">&lt;</code><code class="blue_P4bS">T</code><code class="op_lSLc">&gt;</code></div><div>
+<p>Creates a new DocumentStore</p>
+</div><div class="divider_rE5g"></div><h3 class="anchor anchorWithStickyNavbar_LWe7" id="GetDocument"><code style="text-decoration:none">GetDocument</code><a href="#GetDocument" class="hash-link" aria-label="Direct link to GetDocument" title="Direct link to GetDocument">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/anthony0br/DocumentService/blob/master/src/DocumentService/DocumentStore.luau#L46"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>DocumentStore<!-- -->.</code><code class="green_DgR4">GetDocument</code><code>(</code><div class="inset_uKQm"><div><code>self<!-- -->: </code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/DocumentService/api/DocumentStore">DocumentStore</a></code><code class="op_lSLc">&lt;</code><code class="blue_P4bS">T</code><code class="op_lSLc">&gt;</code><code>,</code></div><div><code>key<!-- -->: </code><code class="blue_P4bS">string</code></div></div><code>) → </code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/DocumentService/api/Document">Document</a></code><code class="blue_P4bS">document</code><code class="blue_P4bS">created</code></div><div>
+<p>Creates and returns a new Document based on</p>
+</div><div class="divider_rE5g"></div><h3 class="anchor anchorWithStickyNavbar_LWe7" id="isDocumentStore"><code style="text-decoration:none">isDocumentStore</code><a href="#isDocumentStore" class="hash-link" aria-label="Direct link to isDocumentStore" title="Direct link to isDocumentStore">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/anthony0br/DocumentService/blob/master/src/DocumentService/DocumentStore.luau#L56"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>DocumentStore<!-- -->.</code><code class="green_DgR4">isDocumentStore</code><code>(</code><code>instance<!-- -->: </code><code class="blue_P4bS">metatable</code><code>) → </code><code class="blue_P4bS">is</code><code class="blue_P4bS">it</code><code class="blue_P4bS">a</code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/DocumentService/api/DocumentStore">DocumentStore</a></code></div><div>
+<p>Checks whether a metatable passed is a DocumentStore</p>
+</div></div></article></div><details><summary>Show raw api</summary><pre style="max-width:100%;white-space:pre-wrap">{
+    &quot;functions&quot;: [
+        {
+            &quot;name&quot;: &quot;new&quot;,
+            &quot;desc&quot;: &quot;Creates a new DocumentStore&quot;,
+            &quot;params&quot;: [
+                {
+                    &quot;name&quot;: &quot;dataStore&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;The object returned by DataStoreService:GetDataStore()&quot;
+                },
+                {
+                    &quot;name&quot;: &quot;check&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;A type check function for your data, errors if types are invalid&quot;
+                },
+                {
+                    &quot;name&quot;: &quot;default&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;Default values, which are set if keys are empty&quot;
+                }
+            ],
+            &quot;returns&quot;: [
+                {
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;DocumentStore&lt;T&gt;\n&quot;
+                }
+            ],
+            &quot;function_type&quot;: &quot;static&quot;,
+            &quot;source&quot;: {
+                &quot;line&quot;: 31,
+                &quot;path&quot;: &quot;src/DocumentService/DocumentStore.luau&quot;
+            }
+        },
+        {
+            &quot;name&quot;: &quot;GetDocument&quot;,
+            &quot;desc&quot;: &quot;Creates and returns a new Document based on &quot;,
+            &quot;params&quot;: [
+                {
+                    &quot;name&quot;: &quot;self&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;DocumentStore&lt;T&gt;&quot;
+                },
+                {
+                    &quot;name&quot;: &quot;key&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;string&quot;
+                }
+            ],
+            &quot;returns&quot;: [
+                {
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;Document document created&quot;
+                }
+            ],
+            &quot;function_type&quot;: &quot;static&quot;,
+            &quot;source&quot;: {
+                &quot;line&quot;: 46,
+                &quot;path&quot;: &quot;src/DocumentService/DocumentStore.luau&quot;
+            }
+        },
+        {
+            &quot;name&quot;: &quot;isDocumentStore&quot;,
+            &quot;desc&quot;: &quot;Checks whether a metatable passed is a DocumentStore&quot;,
+            &quot;params&quot;: [
+                {
+                    &quot;name&quot;: &quot;instance&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;metatable&quot;
+                }
+            ],
+            &quot;returns&quot;: [
+                {
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;is it a DocumentStore&quot;
+                }
+            ],
+            &quot;function_type&quot;: &quot;static&quot;,
+            &quot;source&quot;: {
+                &quot;line&quot;: 56,
+                &quot;path&quot;: &quot;src/DocumentService/DocumentStore.luau&quot;
+            }
+        }
+    ],
+    &quot;properties&quot;: [],
+    &quot;types&quot;: [],
+    &quot;name&quot;: &quot;DocumentStore&quot;,
+    &quot;desc&quot;: &quot;A struct that holds information about all Documents within a DataStore and provides a less\nrepetitive way of instantiating documents.&quot;,
+    &quot;source&quot;: {
+        &quot;line&quot;: 12,
+        &quot;path&quot;: &quot;src/DocumentService/DocumentStore.luau&quot;
+    }
+}</pre></details></div><div class="col col--3"><div class="tableOfContents_bqdL thin-scrollbar"><ul class="table-of-contents table-of-contents__left-border"><li><a href="#types" class="table-of-contents__link toc-highlight">Types</a></li><li><a href="#properties" class="table-of-contents__link toc-highlight">Properties</a></li><li><a href="#functions" class="table-of-contents__link toc-highlight">Functions</a><ul><li><a href="#GetDocument" class="table-of-contents__link toc-highlight">.GetDocument</a></li><li><a href="#isDocumentStore" class="table-of-contents__link toc-highlight">.isDocumentStore</a></li><li><a href="#new" class="table-of-contents__link toc-highlight">.new</a></li></ul></li></ul></div></div></div></div></main></div></div><footer class="footer footer--dark"><div class="container container-fluid"><div class="footer__bottom text--center"><div class="footer__copyright">Copyright © 2024 anthony0br. Built with Moonwave and Docusaurus.</div></div></div></footer></div>
+<script src="/DocumentService/assets/js/runtime~main.cc7c4bf8.js"></script>
+<script src="/DocumentService/assets/js/main.a2620214.js"></script>
+</body>
+</html>
