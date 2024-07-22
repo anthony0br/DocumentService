@@ -6,8 +6,8 @@
 <title data-rh="true">DocumentStore | DocumentService</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:url" content="https://anthony0br.github.io/DocumentService/api/DocumentStore"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docusaurus_tag" content="default"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docsearch:docusaurus_tag" content="default"><meta data-rh="true" property="og:title" content="DocumentStore | DocumentService"><meta data-rh="true" name="description" content="A struct that holds information about all Documents within a DataStore and provides a less
 repetitive way of instantiating documents."><meta data-rh="true" property="og:description" content="A struct that holds information about all Documents within a DataStore and provides a less
 repetitive way of instantiating documents."><link data-rh="true" rel="canonical" href="https://anthony0br.github.io/DocumentService/api/DocumentStore"><link data-rh="true" rel="alternate" href="https://anthony0br.github.io/DocumentService/api/DocumentStore" hreflang="en"><link data-rh="true" rel="alternate" href="https://anthony0br.github.io/DocumentService/api/DocumentStore" hreflang="x-default"><link rel="stylesheet" href="/DocumentService/assets/css/styles.fd8953ce.css">
-<link rel="preload" href="/DocumentService/assets/js/runtime~main.cc7c4bf8.js" as="script">
-<link rel="preload" href="/DocumentService/assets/js/main.a2620214.js" as="script">
+<link rel="preload" href="/DocumentService/assets/js/runtime~main.f1d06c59.js" as="script">
+<link rel="preload" href="/DocumentService/assets/js/main.fe29283c.js" as="script">
 </head>
 <body class="navigation-with-keyboard">
 <script>!function(){function e(e){document.documentElement.setAttribute("data-theme",e)}var t=function(){var e=null;try{e=localStorage.getItem("theme")}catch(e){}return e}();null!==t?e(t):window.matchMedia("(prefers-color-scheme: dark)").matches?e("dark"):(window.matchMedia("(prefers-color-scheme: light)").matches,e("light"))}()</script><div id="__docusaurus">
@@ -16,11 +16,19 @@ repetitive way of instantiating documents."><link data-rh="true" rel="canonical"
   A struct that holds information about all Documents within a DataStore and provides a less
   repetitive way of instantiating documents.
 </p>
-</div></header><h2 class="anchor anchorWithStickyNavbar_LWe7" id="functions">Functions<a href="#functions" class="hash-link" aria-label="Direct link to Functions" title="Direct link to Functions">​</a></h2><div class="divider_rE5g"></div><h3 class="anchor anchorWithStickyNavbar_LWe7" id="new"><code style="text-decoration:none">new</code><a href="#new" class="hash-link" aria-label="Direct link to new" title="Direct link to new">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/anthony0br/DocumentService/blob/master/src/DocumentService/DocumentStore.luau#L31"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>DocumentStore<!-- -->.</code><code class="green_DgR4">new</code><code>(</code><div class="inset_uKQm"><div><code>dataStore<!-- -->: </code><code class="blue_P4bS">The</code><code class="blue_P4bS">object</code><code class="blue_P4bS">returned</code><code class="blue_P4bS">by</code><code class="blue_P4bS">DataStoreService:GetDataStore()</code><code>,</code></div><div><code>check<!-- -->: </code><code class="blue_P4bS">A</code><code class="blue_P4bS">type</code><code class="blue_P4bS">check</code><code class="blue_P4bS">function</code><code class="blue_P4bS">for</code><code class="blue_P4bS">your</code><code class="blue_P4bS">data,</code><code class="blue_P4bS">errors</code><code class="blue_P4bS">if</code><code class="blue_P4bS">types</code><code class="blue_P4bS">are</code><code class="blue_P4bS">invalid</code><code>,</code></div><div><code>default<!-- -->: </code><code class="blue_P4bS">Default</code><code class="blue_P4bS">values,</code><code class="blue_P4bS">which</code><code class="blue_P4bS">are</code><code class="blue_P4bS">set</code><code class="blue_P4bS">if</code><code class="blue_P4bS">keys</code><code class="blue_P4bS">are</code><code class="blue_P4bS">empty</code></div></div><code>) → </code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/DocumentService/api/DocumentStore">DocumentStore</a></code><code class="op_lSLc">&lt;</code><code class="blue_P4bS">T</code><code class="op_lSLc">&gt;</code></div><div>
+</div></header><h2 class="anchor anchorWithStickyNavbar_LWe7" id="functions">Functions<a href="#functions" class="hash-link" aria-label="Direct link to Functions" title="Direct link to Functions">​</a></h2><div class="divider_rE5g"></div><h3 class="anchor anchorWithStickyNavbar_LWe7" id="new"><code style="text-decoration:none">new</code><a href="#new" class="hash-link" aria-label="Direct link to new" title="Direct link to new">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/anthony0br/DocumentService/blob/master/src/DocumentService/DocumentStore.luau#L33"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>DocumentStore<!-- -->.</code><code class="green_DgR4">new</code><code>(</code><div class="inset_uKQm"><div><code>dataStore<!-- -->: </code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="https://developer.roblox.com/en-us/api-reference/class/DataStore" target="_blank" rel="noopener noreferrer">DataStore<svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" x="0px" y="0px" viewBox="0 0 100 100" width="15" height="15" class="icon outbound" style="color:gray;vertical-align:middle;margin-left:2px"><path fill="currentColor" d="M18.8,85.1h56l0,0c2.2,0,4-1.8,4-4v-32h-8v28h-48v-48h28v-8h-32l0,0c-2.2,0-4,1.8-4,4v56C14.8,83.3,16.6,85.1,18.8,85.1z"></path> <polygon fill="currentColor" points="45.7,48.7 51.3,54.3 77.2,28.5 77.2,37.2 85.2,37.2 85.2,14.9 62.8,14.9 62.8,22.9 71.5,22.9"></polygon></svg></a></code><code>,</code><span class="inlineDescription_G7Er">-- <span>
+<p>The object returned by DataStoreService:GetDataStore()</p>
+</span></span></div><div><code>check<!-- -->: </code><code class="purple_ieR2">(</code><code class="blue_P4bS">unknown</code><code class="purple_ieR2">)</code><code class="purple_ieR2"> → </code><code class="blue_P4bS">T</code><code>,</code><span class="inlineDescription_G7Er">-- <span>
+<p>A type check function for your data, errors if types are invalid</p>
+</span></span></div><div><code>default<!-- -->: </code><code class="blue_P4bS">T</code><span class="inlineDescription_G7Er">-- <span>
+<p>Default values, which are set if keys are empty</p>
+</span></span></div></div><code>) → </code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/DocumentService/api/DocumentStore">DocumentStore</a></code></div><div>
 <p>Creates a new DocumentStore</p>
-</div><div class="divider_rE5g"></div><h3 class="anchor anchorWithStickyNavbar_LWe7" id="GetDocument"><code style="text-decoration:none">GetDocument</code><a href="#GetDocument" class="hash-link" aria-label="Direct link to GetDocument" title="Direct link to GetDocument">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/anthony0br/DocumentService/blob/master/src/DocumentService/DocumentStore.luau#L46"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>DocumentStore<!-- -->.</code><code class="green_DgR4">GetDocument</code><code>(</code><div class="inset_uKQm"><div><code>self<!-- -->: </code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/DocumentService/api/DocumentStore">DocumentStore</a></code><code class="op_lSLc">&lt;</code><code class="blue_P4bS">T</code><code class="op_lSLc">&gt;</code><code>,</code></div><div><code>key<!-- -->: </code><code class="blue_P4bS">string</code></div></div><code>) → </code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/DocumentService/api/Document">Document</a></code><code class="blue_P4bS">document</code><code class="blue_P4bS">created</code></div><div>
+</div><div class="divider_rE5g"></div><h3 class="anchor anchorWithStickyNavbar_LWe7" id="GetDocument"><code style="text-decoration:none">GetDocument</code><a href="#GetDocument" class="hash-link" aria-label="Direct link to GetDocument" title="Direct link to GetDocument">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/anthony0br/DocumentService/blob/master/src/DocumentService/DocumentStore.luau#L48"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>DocumentStore<!-- -->.</code><code class="green_DgR4">GetDocument</code><code>(</code><div class="inset_uKQm"><div><code>self<!-- -->: </code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/DocumentService/api/DocumentStore">DocumentStore</a></code><code class="op_lSLc">&lt;</code><code class="blue_P4bS">T</code><code class="op_lSLc">&gt;</code><code>,</code></div><div><code>key<!-- -->: </code><code class="blue_P4bS">string</code></div></div><code>) → </code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/DocumentService/api/Document">Document</a></code><code class="blue_P4bS">document</code><code class="blue_P4bS">created</code></div><div>
 <p>Creates and returns a new Document based on</p>
-</div><div class="divider_rE5g"></div><h3 class="anchor anchorWithStickyNavbar_LWe7" id="isDocumentStore"><code style="text-decoration:none">isDocumentStore</code><a href="#isDocumentStore" class="hash-link" aria-label="Direct link to isDocumentStore" title="Direct link to isDocumentStore">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/anthony0br/DocumentService/blob/master/src/DocumentService/DocumentStore.luau#L56"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>DocumentStore<!-- -->.</code><code class="green_DgR4">isDocumentStore</code><code>(</code><code>instance<!-- -->: </code><code class="blue_P4bS">metatable</code><code>) → </code><code class="blue_P4bS">is</code><code class="blue_P4bS">it</code><code class="blue_P4bS">a</code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/DocumentService/api/DocumentStore">DocumentStore</a></code></div><div>
+</div><div class="divider_rE5g"></div><h3 class="anchor anchorWithStickyNavbar_LWe7" id="isDocumentStore"><code style="text-decoration:none">isDocumentStore</code><a href="#isDocumentStore" class="hash-link" aria-label="Direct link to isDocumentStore" title="Direct link to isDocumentStore">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/anthony0br/DocumentService/blob/master/src/DocumentService/DocumentStore.luau#L58"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>DocumentStore<!-- -->.</code><code class="green_DgR4">isDocumentStore</code><code>(</code><code>instance<!-- -->: </code><code class="blue_P4bS">metatable</code><code>) → </code><code class="blue_P4bS">isDocumentStore</code><span class="inlineDescription_G7Er">-- <span>
+<p>is it a DocumentStore</p>
+</span></span></div><div>
 <p>Checks whether a metatable passed is a DocumentStore</p>
 </div></div></article></div><details><summary>Show raw api</summary><pre style="max-width:100%;white-space:pre-wrap">{
     &quot;functions&quot;: [
@@ -30,29 +38,29 @@ repetitive way of instantiating documents."><link data-rh="true" rel="canonical"
             &quot;params&quot;: [
                 {
                     &quot;name&quot;: &quot;dataStore&quot;,
-                    &quot;desc&quot;: &quot;&quot;,
-                    &quot;lua_type&quot;: &quot;The object returned by DataStoreService:GetDataStore()&quot;
+                    &quot;desc&quot;: &quot;The object returned by DataStoreService:GetDataStore()&quot;,
+                    &quot;lua_type&quot;: &quot;DataStore&quot;
                 },
                 {
                     &quot;name&quot;: &quot;check&quot;,
-                    &quot;desc&quot;: &quot;&quot;,
-                    &quot;lua_type&quot;: &quot;A type check function for your data, errors if types are invalid&quot;
+                    &quot;desc&quot;: &quot;A type check function for your data, errors if types are invalid&quot;,
+                    &quot;lua_type&quot;: &quot;(unknown) -&gt; T&quot;
                 },
                 {
                     &quot;name&quot;: &quot;default&quot;,
-                    &quot;desc&quot;: &quot;&quot;,
-                    &quot;lua_type&quot;: &quot;Default values, which are set if keys are empty&quot;
+                    &quot;desc&quot;: &quot;Default values, which are set if keys are empty&quot;,
+                    &quot;lua_type&quot;: &quot;T&quot;
                 }
             ],
             &quot;returns&quot;: [
                 {
                     &quot;desc&quot;: &quot;&quot;,
-                    &quot;lua_type&quot;: &quot;DocumentStore&lt;T&gt;\n&quot;
+                    &quot;lua_type&quot;: &quot;DocumentStore&quot;
                 }
             ],
             &quot;function_type&quot;: &quot;static&quot;,
             &quot;source&quot;: {
-                &quot;line&quot;: 31,
+                &quot;line&quot;: 33,
                 &quot;path&quot;: &quot;src/DocumentService/DocumentStore.luau&quot;
             }
         },
@@ -79,7 +87,7 @@ repetitive way of instantiating documents."><link data-rh="true" rel="canonical"
             ],
             &quot;function_type&quot;: &quot;static&quot;,
             &quot;source&quot;: {
-                &quot;line&quot;: 46,
+                &quot;line&quot;: 48,
                 &quot;path&quot;: &quot;src/DocumentService/DocumentStore.luau&quot;
             }
         },
@@ -95,13 +103,13 @@ repetitive way of instantiating documents."><link data-rh="true" rel="canonical"
             ],
             &quot;returns&quot;: [
                 {
-                    &quot;desc&quot;: &quot;&quot;,
-                    &quot;lua_type&quot;: &quot;is it a DocumentStore&quot;
+                    &quot;desc&quot;: &quot;is it a DocumentStore&quot;,
+                    &quot;lua_type&quot;: &quot;isDocumentStore&quot;
                 }
             ],
             &quot;function_type&quot;: &quot;static&quot;,
             &quot;source&quot;: {
-                &quot;line&quot;: 56,
+                &quot;line&quot;: 58,
                 &quot;path&quot;: &quot;src/DocumentService/DocumentStore.luau&quot;
             }
         }
@@ -115,7 +123,7 @@ repetitive way of instantiating documents."><link data-rh="true" rel="canonical"
         &quot;path&quot;: &quot;src/DocumentService/DocumentStore.luau&quot;
     }
 }</pre></details></div><div class="col col--3"><div class="tableOfContents_bqdL thin-scrollbar"><ul class="table-of-contents table-of-contents__left-border"><li><a href="#types" class="table-of-contents__link toc-highlight">Types</a></li><li><a href="#properties" class="table-of-contents__link toc-highlight">Properties</a></li><li><a href="#functions" class="table-of-contents__link toc-highlight">Functions</a><ul><li><a href="#GetDocument" class="table-of-contents__link toc-highlight">.GetDocument</a></li><li><a href="#isDocumentStore" class="table-of-contents__link toc-highlight">.isDocumentStore</a></li><li><a href="#new" class="table-of-contents__link toc-highlight">.new</a></li></ul></li></ul></div></div></div></div></main></div></div><footer class="footer footer--dark"><div class="container container-fluid"><div class="footer__bottom text--center"><div class="footer__copyright">Copyright © 2024 anthony0br. Built with Moonwave and Docusaurus.</div></div></div></footer></div>
-<script src="/DocumentService/assets/js/runtime~main.cc7c4bf8.js"></script>
-<script src="/DocumentService/assets/js/main.a2620214.js"></script>
+<script src="/DocumentService/assets/js/runtime~main.f1d06c59.js"></script>
+<script src="/DocumentService/assets/js/main.fe29283c.js"></script>
 </body>
 </html>
