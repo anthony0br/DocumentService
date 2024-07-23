@@ -1,0 +1,25 @@
+{
+    "process": [
+      {
+        "rule": "convert_require",
+        "current": {
+          "name": "path",
+          "sources": {
+            "@src": "src/",
+            "@provided": "src/provided/"
+          }
+        },
+        "target": {
+          "name": "roblox",
+          "rojo_sourcemap": "sourcemap.json",
+          "indexing_style": "find_first_child"
+        }
+      },
+      "compute_expression",
+      "remove_unused_if_branch",
+      "remove_unused_while",
+      "filter_after_early_return",
+      "remove_nil_declaration",
+      "remove_empty_do"
+    ]
+  }

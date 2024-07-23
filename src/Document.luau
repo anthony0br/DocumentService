@@ -171,14 +171,14 @@ function Document.Close<T>(self: Document<T>): Result<nil>
 end
 
 --[=[
-	Reads
+	Reads from the DataStore
 	
 	@param cache -- if this is false, it will disable Roblox's GetAsync caching
 	@return result -- result containing the data read
 
 	@yields
 ]=]
-function Document.Read<T>(self: Document<T>, cache: boolean): Result<T>
+function Document.Read<T>(self: Document<T>, options: DataStoreGetOptions?): Result<T>
 	return {
 		success = true,
 		data = self._default,
@@ -186,7 +186,7 @@ function Document.Read<T>(self: Document<T>, cache: boolean): Result<T>
 end
 
 --[=[
-	Performs a single atomic transaction on the Document
+	Performs an atomic transaction on the Document
 
 	@param transform -- transform function for the transaction
 	@return result -- result containing the new data
@@ -206,29 +206,6 @@ function Document.Update<T>(self: Document<T>, transform: (data: T) -> T): Resul
 	runHooks(self._postHooks.Update, result)
 
 	return result
-end
-
---[=[
-	A joint atomic transaction involving this document, and another document.
-	
-	If either update fails, both keys will be restored to their oirginal state.
-
-	@param otherDocument -- the source of otherData
-	@param transform -- transform function for the transaction
-	@return success -- true if no errors that we cannot control occur (i.e. datastore errors)
-	@return error -- the error that occurred
-
-	@yields
-]=]
-function Document.UpdateWith<T, S>(
-	self: Document<T>,
-	otherDocument: Document<S>,
-	transform: (data: T, otherData: S) -> (T, S)
-): Result<T>
-	return {
-		success = true,
-		data = self._default,
-	}
 end
 
 --[=[

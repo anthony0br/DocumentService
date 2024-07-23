@@ -11,10 +11,10 @@
 
     "ServerScriptService": {
       "DocumentService": {
-        "$path": "src/DocumentService"
+        "$path": "src/"
       },
       "Tests": {
-        "$path": "src/tests"
+        "$path": "tests/"
       }
     }
   }
