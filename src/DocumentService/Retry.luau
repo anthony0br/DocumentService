@@ -15,13 +15,13 @@
 	@yields
 	
 	@param maxAttempts -- maximum attempts
-	@param cooldown -- time to wait between attempts
+	@param initialWait -- waits (initialWait)^lastAttempt between attempts
 	@param func -- function to pcall
 
 	@return success
 	@return ... -- if successful, the return values of func, otherwise an error string
 ]=]
-local function Retry<T..., S...>(maxAttempts: number, cooldown: number, func: (T...) -> S..., ...: T...): (boolean, S...)
+local function Retry<T..., S...>(maxAttempts: number, initialWait: number, func: (T...) -> S..., ...: T...): (boolean, S...)
 	local result
 
 	for i = 1, maxAttempts do
@@ -30,7 +30,7 @@ local function Retry<T..., S...>(maxAttempts: number, cooldown: number, func: (T
 			break
 		end
 		warn(`[Retry] Attempt {i} failed: {result[2]} {debug.traceback("\nat", 2)}`)
-		task.wait(cooldown)
+		task.wait(initialWait ^ i)
 	end
 
 	return table.unpack(result) :: any
