@@ -1,5 +1,5 @@
 {
-    "process": [
+    "rules": [
       {
         "rule": "convert_require",
         "current": {
