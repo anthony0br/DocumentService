@@ -171,14 +171,13 @@ function Document.Close<T>(self: Document<T>): Result<nil>
 end
 
 --[=[
-	Reads from the DataStore
+	Reads from the DataStore, disabling caching
 	
-	@param cache -- if this is false, it will disable Roblox's GetAsync caching
 	@return result -- result containing the data read
 
 	@yields
 ]=]
-function Document.Read<T>(self: Document<T>, options: DataStoreGetOptions?): Result<T>
+function Document.Read<T>(self: Document<T>): Result<T>
 	return {
 		success = true,
 		data = self._default,

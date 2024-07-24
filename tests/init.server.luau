@@ -3,8 +3,6 @@
 
 local DataStoreService = game:GetService("DataStoreService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local Guard = require(ReplicatedStorage.DevPackages.Guard)
-local Future = require(ReplicatedStorage.DevPackages.Future)
 local DocumentService = require(game.ServerScriptService.DocumentService)
 
 -- Test retry, assuming datastore access is off

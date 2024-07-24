@@ -1,7 +1,7 @@
 --!strict
 -- Author: Anthony O'Brien
 
-local Document = require(script.Parent.Document)
+local Document = require("./Document")
 
 --[=[
 	@class DocumentStore
