@@ -5,7 +5,6 @@
         "current": {
           "name": "path",
           "sources": {
-            "@src": "src/"
           }
         },
         "target": {
