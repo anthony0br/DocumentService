@@ -30,7 +30,7 @@ local function Retry<T..., S...>(maxAttempts: number, initialWait: number, func:
 			break
 		end
 		warn(`[Retry] Attempt {i} failed: {result[2]} {debug.traceback("\nat", 2)}`)
-		task.wait(initialWait ^ i)
+		task.wait(initialWait * (2 ^ (i - 1)))
 	end
 
 	return table.unpack(result) :: any
