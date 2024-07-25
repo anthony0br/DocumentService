@@ -13,6 +13,11 @@
           "indexing_style": "find_first_child"
         }
       },
+      {
+        "rule": "inject_global_value",
+        "identifier": "IS_ROBLOX",
+        "value": true
+      },
       "compute_expression",
       "remove_unused_if_branch",
       "remove_unused_while",

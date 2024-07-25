@@ -1,7 +1,7 @@
 --!strict
 -- Author: Anthony O'Brien
 
-local Types = require(script.Parent.Types)
+local Types = require("./Types")
 
 local SESSION_EXPIRE_TIME = 20 * 60
 local RETRY_OPEN_TIME = 5
@@ -52,6 +52,8 @@ local function runHooks<T...>(hooks: { (T...) -> () }, ...: T...)
 		hook(...)
 	end
 end
+
+local function updateAsync<T>(self: Document<T>, trans) end
 
 --[=[
 	Creates a new Document class

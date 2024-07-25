@@ -4,6 +4,16 @@ end
 
 local PLAYER_COUNT = 1
 
+if not Enum then
+	Enum = {
+		DataStoreRequestType = {
+			UpdateAsync = 2,
+			GetAsync = 0,
+			SetIncrementAsync = 1,
+		},
+	}
+end
+
 local Constants = require("./Constants")
 
 local function defaultBudget()

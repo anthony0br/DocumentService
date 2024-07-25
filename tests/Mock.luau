@@ -3,11 +3,11 @@
 
 local DocumentService = require("../src/init")
 local Guard = require("./Guard")
-local DataStoreService = require("../mock-datastore/init")
+local DataStoreService = require("../mock-datastore/init").new()
 
 -- Test retry, assuming datastore access is off
 local test = DataStoreService:GetDataStore("test1")
-local Retry = require(game.ServerScriptService.DocumentService.Retry)
+local Retry = require("../src/Retry")
 print(Retry(3, 2, test.SetAsync, test, "testkey", "testdata"))
 
 -- Test: Creating a Document Interface
