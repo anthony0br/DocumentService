@@ -15,7 +15,7 @@ DocumentStore.__index = DocumentStore
 export type DocumentStore<T> = typeof(setmetatable(
 	{} :: {
 		_dataStore: DataStore,
-		_check: (unknown) -> T,
+		_check: (unknown) -> (boolean, T),
 		_default: T,
 	},
 	DocumentStore
@@ -30,7 +30,7 @@ export type DocumentStore<T> = typeof(setmetatable(
 
 	@return DocumentStore
 ]=]
-function DocumentStore.new<T>(dataStore: DataStore, check: (unknown) -> T, default: T): DocumentStore<T>
+function DocumentStore.new<T>(dataStore: DataStore, check: (unknown) -> (boolean, T), default: T): DocumentStore<T>
 	return setmetatable({
 		_dataStore = dataStore,
 		_check = check,

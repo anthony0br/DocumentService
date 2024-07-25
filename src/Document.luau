@@ -2,9 +2,14 @@
 -- Author: Anthony O'Brien
 
 local Types = require("./Types")
+local Retry = require("./Retry")
 
 local SESSION_EXPIRE_TIME = 20 * 60
-local RETRY_OPEN_TIME = 5
+-- Fails after 32 seconds
+local RETRY = {
+	ATTEMPTS = 4,
+	INITIAL_WAIT = 2,
+}
 
 --[=[
 	@class Document
@@ -16,7 +21,7 @@ export type Document<T> = typeof(setmetatable(
 	{} :: {
 		_key: string,
 		_dataStore: DataStore,
-		_check: (unknown) -> T,
+		_check: (unknown) -> (boolean, T),
 		_default: T,
 		_open: boolean,
 		_preHooks: {
@@ -47,13 +52,47 @@ export type Result<T> = {
 	data: unknown?,
 }
 
+type KeyData<T> = {
+	documentServiceVersion: number,
+	sessionLock: string,
+	data: T,
+}
+
 local function runHooks<T...>(hooks: { (T...) -> () }, ...: T...)
 	for _, hook in ipairs(hooks) do
 		hook(...)
 	end
 end
 
-local function updateAsync<T>(self: Document<T>, trans) end
+local function updateAsync<T>(self: Document<T>, key, transform)
+	return Retry(RETRY.ATTEMPTS, RETRY.INITIAL_WAIT, function(): (unknown, DataStoreKeyInfo)
+		-- This is necessary to ensure UpdateAsyncs happen in the correct order
+		-- For example if autosaves happen in the wrong order data could be lost
+		if _G.IS_ROBLOX then
+			local budget = game:GetService("DataStoreService")
+				:GetRequestBudgetForRequestType(Enum.DataStoreRequestType.UpdateAsync)
+			assert(budget > 0, "Ran out of budget")
+		end
+
+		return self._dataStore:UpdateAsync(key, transform)
+	end)
+end
+
+local function getAsync<T>(self: Document<T>, key)
+	return Retry(RETRY.ATTEMPTS, RETRY.INITIAL_WAIT, function(): (unknown, DataStoreKeyInfo)
+		local options
+		if _G.IS_ROBLOX then
+			local budget = game:GetService("DataStoreService")
+				:GetRequestBudgetForRequestType(Enum.DataStoreRequestType.GetAsync)
+			assert(budget > 0, "Ran out of budget")
+
+			options = Instance.new("DataStoreGetOptions")
+			options.UseCache = false
+		end
+
+		return self._dataStore:GetAsync(key, options)
+	end)
+end
 
 --[=[
 	Creates a new Document class
@@ -61,7 +100,7 @@ local function updateAsync<T>(self: Document<T>, trans) end
 	@param key -- 
 	@param check -- a function that take and returns a value, errors if the value provided does not match the type of data we expect
 ]=]
-function Document.new<T>(key: string, dataStore: DataStore, check: (value: unknown) -> T, default: T): Document<T>
+function Document.new<T>(key: string, dataStore: DataStore, check: (unknown) -> (boolean, T), default: T): Document<T>
 	return setmetatable({
 		_key = key,
 		_dataStore = dataStore,
@@ -110,13 +149,15 @@ end
 function Document.Open<T>(self: Document<T>): Result<T>
 	assert(not self._open, "Document already open")
 
-	local success, result: unknown = pcall(function()
-		self._check()
-	end)
+	-- Check for DocumentService data format version 1. If not, then migrate to it.
+
+	local success, result = self._check()
 	if not success then
-		self._invalidDataHandler()
+		local handlerResult = self._invalidDataHandler(result)
+		if not handlerResult.success then
+			return handlerResult
+		end
 	end
-	self._check()
 
 	return {
 		success = true,
@@ -173,13 +214,15 @@ function Document.Close<T>(self: Document<T>): Result<nil>
 end
 
 --[=[
-	Reads from the DataStore, disabling caching
+	Reads from the DataStore, without caching
 	
 	@return result -- result containing the data read
 
 	@yields
 ]=]
 function Document.Read<T>(self: Document<T>): Result<T>
+	local success, data, keyInfo
+
 	return {
 		success = true,
 		data = self._default,

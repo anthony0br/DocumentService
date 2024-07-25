@@ -8,14 +8,14 @@ local DataStoreService = require("../mock-datastore/init").new()
 -- Test retry, assuming datastore access is off
 local test = DataStoreService:GetDataStore("test1")
 local Retry = require("../src/Retry")
-print(Retry(3, 2, test.SetAsync, test, "testkey", "testdata"))
+print(Retry(3, 2, test.UpdateAsync, test, "testkey", "testdata"))
 
 -- Test: Creating a Document Interface
-local function check(value)
+local check = Guard.Check(function(value)
 	return {
 		test = Guard.String(value),
 	}
-end
+end)
 
 local DocumentStore =
 	DocumentService.DocumentStore.new(DataStoreService:GetDataStore("name"), check, { test = "default" })
@@ -30,7 +30,7 @@ end)
 -- This type checks!
 local result = Document:Read()
 if result.success then
-	print(result.data.test)
+	print(result.data)
 else
 	print(result.failReason :: string, result.errorMessage)
 end
@@ -62,3 +62,5 @@ end
 -- Test: If session lock expired, a new session lock should be created
 
 -- Test: Transactions should fail if session stolen
+
+-- Test: Session locks should stay open
