@@ -15,7 +15,7 @@ Document.__index = Document
 export type Document<T> = typeof(setmetatable(
 	{} :: {
 		_key: string,
-		_dataStore: GlobalDataStore,
+		_dataStore: DataStore,
 		_check: (unknown) -> T,
 		_default: T,
 		_open: boolean,
@@ -61,7 +61,7 @@ local function updateAsync<T>(self: Document<T>, trans) end
 	@param key -- 
 	@param check -- a function that take and returns a value, errors if the value provided does not match the type of data we expect
 ]=]
-function Document.new<T>(key: string, dataStore: GlobalDataStore, check: (value: unknown) -> T, default: T): Document<T>
+function Document.new<T>(key: string, dataStore: DataStore, check: (value: unknown) -> T, default: T): Document<T>
 	return setmetatable({
 		_key = key,
 		_dataStore = dataStore,
