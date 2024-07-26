@@ -21,6 +21,8 @@ export type DocumentStore<T> = typeof(setmetatable(
 	DocumentStore
 ))
 
+local DocumentIndex: { [string]: Document.Document<any> } = {}
+
 --[=[
 	Creates a new DocumentStore
 
@@ -46,7 +48,23 @@ end
 	@return Document document created
 ]=]
 function DocumentStore.GetDocument<T>(self: DocumentStore<T>, key: string): Document.Document<T>
-	return Document.new(key, self._dataStore, self._check, self._default)
+	if DocumentIndex[key] then
+		return DocumentIndex[key]
+	end
+
+	local document = Document.new(key, self._dataStore, self._check, self._default)
+
+	document:HookAfter("Close", function(result: Document.Result<T>)
+		if result.success then
+			DocumentIndex[key] = nil
+		end
+
+		return result
+	end)
+
+	DocumentIndex[key] = document
+
+	return document
 end
 
 --[=[

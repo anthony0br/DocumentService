@@ -11,12 +11,17 @@ local Results = {
 	total = 0,
 }
 
-local function Test(name, test)
+local function Test(name, test, shouldFail: boolean?)
 	Results.total += 1
 
 	print(`Running test {Results.total}`)
 
 	local success, result = pcall(test)
+
+	if shouldFail then
+		success = not success
+	end
+
 	if success then
 		print(`Test {Results.total} "{name}" passed with {result}\n`)
 		Results.passed += 1
@@ -50,6 +55,29 @@ Test("Opens document no simulated errors", function()
 	assert(result.data)
 	check(result.data)
 end)
+
+Test("Cannot reopen same document retrieved by string", function()
+	local Document = DocumentStore:GetDocument("Sublivion")
+	Document:Open()
+end, true)
+
+Test("Can close document", function()
+	local Document = DocumentStore:GetDocument("Sublivion")
+	Document:Close()
+end)
+
+Test("Can reopen document after closed, retrieved by string", function()
+	local Document = DocumentStore:GetDocument("Sublivion")
+	Document:Open()
+end)
+
+do
+	local Document = DocumentStore:GetDocument("Sublivion")
+
+	Test("Can reopen document after closed, retrieved by reference", function()
+		Document:Close()
+	end)
+end
 
 -- Test: methods should fail if document not open
 
