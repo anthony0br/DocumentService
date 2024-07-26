@@ -41,11 +41,11 @@ function DocumentStore.new<T>(dataStore: DataStore, check: (unknown) -> (boolean
 end
 
 --[=[
-	Creates and returns a new Document based on 
+	Gets the document for the key given, or creates one if it does not exist.
 
 	@param key 
 
-	@return Document document created
+	@return Document
 ]=]
 function DocumentStore.GetDocument<T>(self: DocumentStore<T>, key: string): Document.Document<T>
 	if DocumentIndex[key] then

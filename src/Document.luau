@@ -160,9 +160,9 @@ function Document.new<T>(key: string, dataStore: DataStore, check: (unknown) -> 
 end
 
 --[=[
-	Validates and session locks the document, making it ready for use
+	Validates the document if one exists, or creates a default document if no document exists.
 
-	This can heavily yield due to re-tries
+	You must call this method before reading or writing to a Document.
 
 	@return result
 
@@ -186,7 +186,7 @@ function Document.Open<T>(self: Document<T>): Result<T>
 	local value
 	if typeof(getValue == "table") == "table" then
 		local tableValue = getValue :: { [unknown]: unknown }
-		if tableValue.documentServiceFormatVersion and tableValue.documentServiceFormatVersion == "1" then
+		if tableValue.documentServiceFormatVersion and tableValue.documentServiceFormatVersion == FORMAT_VERSION then
 			value = tableValue :: KeyData<unknown>
 		end
 	end
@@ -222,11 +222,11 @@ function Document.Open<T>(self: Document<T>): Result<T>
 				return handlerResult
 			end
 
-			local updateOk, result = updateAsync(self._dataStore, self._key, function(): KeyData<T>
+			local updateOk, result = updateAsync(self._dataStore, self._key, function(badValue): KeyData<T>
 				return {
 					data = handlerResult.data,
 					documentServiceFormatVersion = FORMAT_VERSION,
-					sessionLock = "",
+					sessionLock = badValue.sessionLock,
 				} :: KeyData<T>
 			end)
 
