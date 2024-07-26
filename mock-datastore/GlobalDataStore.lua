@@ -1,5 +1,6 @@
-if not task then
+if not _G.IS_ROBLOX then
 	task = require("@lune/task")
+	DateTime = require("@lune/datetime")
 end
 
 local Constants = require("./Constants")
@@ -35,7 +36,7 @@ function GlobalDataStore.new(budget, errors, yield)
 end
 
 function GlobalDataStore:write(key, data, userIds, metadata)
-	local now = DateTime.now().UnixTimestampMillis
+	local now = if _G.IS_ROBLOX then DateTime.now().UnixTimestampMillis else DateTime.now().unixTimestampMillis
 
 	local keyInfo = self.keyInfos[key]
 
