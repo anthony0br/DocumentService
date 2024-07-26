@@ -123,6 +123,8 @@ end
 	@param check -- a function that take and returns a value, errors if the value provided does not match the type of data we expect
 ]=]
 function Document.new<T>(key: string, dataStore: DataStore, check: (unknown) -> (boolean, T), default: T): Document<T>
+	assert(check(default), "Default must pass type check")
+
 	return setmetatable({
 		_key = key,
 		_dataStore = dataStore,
