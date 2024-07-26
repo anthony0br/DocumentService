@@ -32,7 +32,8 @@ local function Test(name, test, shouldFail: boolean?)
 end
 
 local CheckInterface = {
-	test = Guard.String,
+	Document = Guard.String,
+	Service = Guard.DateTime,
 }
 
 local function check(value: unknown)
@@ -40,12 +41,16 @@ local function check(value: unknown)
 	local Value: any = value
 
 	return {
-		test = CheckInterface.test(Value.test),
+		Document = CheckInterface.Document(Value.Document),
+		Service = CheckInterface.Service(Value.Service),
 	}
 end
 
-local DocumentStore =
-	DocumentService.DocumentStore.new(DataStoreService:GetDataStore("name"), Guard.Check(check), { test = "default" })
+local DocumentStore = DocumentService.DocumentStore.new(
+	DataStoreService:GetDataStore("name"),
+	Guard.Check(check),
+	{ Document = "", Service = DateTime.now() }
+)
 
 Test("Opens document no simulated errors", function()
 	local Document = DocumentStore:GetDocument("Sublivion")
