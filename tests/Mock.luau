@@ -8,10 +8,12 @@ local DataStoreService = require("../mock-datastore/init").new()
 -- Test retry, assuming datastore access is off
 local test = DataStoreService:GetDataStore("test1")
 local Retry = require("../src/Retry")
-print(Retry(3, 2, test.UpdateAsync, test, "testkey", "testdata"))
+print(Retry(3, 2, test.UpdateAsync, function(old)
+	return "new"
+end))
 
 -- Test: Creating a Document Interface
-local check = Guard.Check(function(value)
+local check = Guard.Check(function(value: unknown): { test: string }
 	return {
 		test = Guard.String(value),
 	}
@@ -23,8 +25,14 @@ local DocumentStore =
 local Document = DocumentStore:GetDocument("Sublivion")
 Document:Open()
 
-Document:PreHook("Update", function(transform)
-	print(transform)
+Document:HookBefore("Update", function(transform: DocumentService.Transform<{ test: string }>)
+	print("Hook 1")
+	return transform
+end)
+
+Document:HookBefore("Update", function(transform: DocumentService.Transform<{ test: string }>)
+	print("Hook 2")
+	return transform
 end)
 
 -- This type checks!

@@ -28,13 +28,13 @@ export type Document<T> = typeof(setmetatable(
 			Open: { () -> () },
 			Close: { () -> () },
 			Read: { () -> () },
-			Update: { (transform: (data: T) -> T) -> () },
+			Update: { (transform: (data: T) -> T) -> (data: T) -> T },
 		},
 		_postHooks: {
-			Open: { (Result<T>) -> () },
-			Close: { (Result<T>) -> () },
-			Read: { (Result<T>) -> () },
-			Update: { (Result<T>) -> () },
+			Open: { (Result<T>) -> Result<T> },
+			Close: { (Result<T>) -> Result<T> },
+			Read: { (Result<T>) -> Result<T> },
+			Update: { (Result<T>) -> Result<T> },
 		},
 		_lockedHandler: (lockId: string?, lastUpdated: number) -> Types.LockedResponse,
 		_invalidDataHandler: (invalidData: unknown) -> Result<T>,
@@ -52,52 +52,74 @@ export type Result<T> = {
 	data: unknown?,
 }
 
+export type Transform<T> = (data: T) -> T
+
 type KeyData<T> = {
-	documentServiceVersion: number,
+	documentServiceFormatVersion: string,
 	sessionLock: string,
 	data: T,
 }
 
-local function runHooks<T...>(hooks: { (T...) -> () }, ...: T...)
+local FORMAT_VERSION = "1"
+
+local function runHooks<T...>(hooks: { (T...) -> T... }, ...)
+	local result = { ... }
+
 	for _, hook in ipairs(hooks) do
-		hook(...)
+		local len = #result
+		result = { hook(table.unpack(result)) }
+		assert(#result == len, "Hooks must return all arguments")
+	end
+
+	return result
+end
+
+local function getUpdateBudget()
+	if _G.IS_ROBLOX then
+		return game:GetService("DataStoreService"):GetRequestBudgetForRequestType(Enum.DataStoreRequestType.UpdateAsync)
+	else
+		return 60
 	end
 end
 
-local function updateAsync<T>(self: Document<T>, key, transform)
+local function getGetBudget()
+	if _G.IS_ROBLOX then
+		return game:GetService("DataStoreService"):GetRequestBudgetForRequestType(Enum.DataStoreRequestType.GetAsync)
+	else
+		return 60
+	end
+end
+
+local function updateAsync<T>(dataStore: DataStore, key: string, transform)
 	return Retry(RETRY.ATTEMPTS, RETRY.INITIAL_WAIT, function(): (unknown, DataStoreKeyInfo)
 		-- This is necessary to ensure UpdateAsyncs happen in the correct order
-		-- For example if autosaves happen in the wrong order data could be lost
-		if _G.IS_ROBLOX then
-			local budget = game:GetService("DataStoreService")
-				:GetRequestBudgetForRequestType(Enum.DataStoreRequestType.UpdateAsync)
-			assert(budget > 0, "Ran out of budget")
-		end
+		-- since the throttle 'queue' does not respect FILO
+		-- If autosaves happen in the wrong order data could be lost
+		assert(getUpdateBudget() > 0, "Ran out of budget")
 
-		return self._dataStore:UpdateAsync(key, transform)
+		return dataStore:UpdateAsync(key, transform)
 	end)
 end
 
-local function getAsync<T>(self: Document<T>, key)
+local function getAsync<T>(dataStore: DataStore, key)
 	return Retry(RETRY.ATTEMPTS, RETRY.INITIAL_WAIT, function(): (unknown, DataStoreKeyInfo)
 		local options
-		if _G.IS_ROBLOX then
-			local budget = game:GetService("DataStoreService")
-				:GetRequestBudgetForRequestType(Enum.DataStoreRequestType.GetAsync)
-			assert(budget > 0, "Ran out of budget")
 
+		if _G.IS_ROBLOX then
 			options = Instance.new("DataStoreGetOptions")
 			options.UseCache = false
 		end
 
-		return self._dataStore:GetAsync(key, options)
+		assert(getGetBudget() > 0, "Ran out of budget")
+
+		return dataStore:GetAsync(key, options)
 	end)
 end
 
 --[=[
 	Creates a new Document class
 
-	@param key -- 
+	@param dataStore -- A DataStore object
 	@param check -- a function that take and returns a value, errors if the value provided does not match the type of data we expect
 ]=]
 function Document.new<T>(key: string, dataStore: DataStore, check: (unknown) -> (boolean, T), default: T): Document<T>
@@ -149,24 +171,88 @@ end
 function Document.Open<T>(self: Document<T>): Result<T>
 	assert(not self._open, "Document already open")
 
-	-- Check for DocumentService data format version 1. If not, then migrate to it.
+	runHooks(self._preHooks.Open)
 
-	local success, result = self._check()
-	if not success then
-		local handlerResult = self._invalidDataHandler(result)
-		if not handlerResult.success then
-			return handlerResult
+	local getOk, getValue = getAsync(self._dataStore, self._key)
+
+	if not getOk then
+		return {
+			success = false,
+			failReason = "RobloxAPIFail",
+			errorMessage = getValue :: string,
+		}
+	end
+
+	local value
+	if typeof(getValue == "table") == "table" then
+		local tableValue = getValue :: { [unknown]: unknown }
+		if tableValue.documentServiceFormatVersion and tableValue.documentServiceFormatVersion == "1" then
+			value = tableValue :: KeyData<unknown>
 		end
 	end
 
-	return {
+	-- Create a new key, or check an existing one
+	local finalData
+	if not value then
+		local updateOk, result = updateAsync(self._dataStore, self._key, function(): KeyData<T>
+			return {
+				data = self._default,
+				documentServiceFormatVersion = FORMAT_VERSION,
+				sessionLock = "",
+			}
+		end)
+
+		if not updateOk then
+			return {
+				success = false,
+				failReason = "RobloxAPIFail",
+				errorMessage = result :: string,
+			}
+		end
+
+		finalData = self._default
+	else
+		local checkOk, checkedData = self._check(value.data)
+		finalData = checkedData
+
+		if not checkOk then
+			local handlerResult = self._invalidDataHandler(checkedData)
+
+			if not handlerResult.success then
+				return handlerResult
+			end
+
+			local updateOk, result = updateAsync(self._dataStore, self._key, function(): KeyData<T>
+				return {
+					data = handlerResult.data,
+					documentServiceFormatVersion = FORMAT_VERSION,
+					sessionLock = "",
+				} :: KeyData<T>
+			end)
+
+			if not updateOk then
+				return {
+					success = false,
+					failReason = "RobloxAPIFail",
+					errorMessage = result :: string,
+				}
+			end
+
+			-- Since updateOk is true, we know result is KeyData<T>
+			finalData = (result :: KeyData<T>).data
+		end
+	end
+
+	self._open = true
+
+	return runHooks(self._postHooks.Open, {
 		success = true,
-		data = self._default,
-	}
+		data = finalData,
+	}) :: Result<T>
 end
 
 --[=[
-	Adds a session lock
+	Adds a session lock and enables auto-saves.
 
 	@return result
 
@@ -174,6 +260,8 @@ end
 ]=]
 function Document.Lock<T>(self: Document<T>): Result<nil>
 	assert(self._open, "Document not open")
+
+	-- On bind to close: Loop adding save requests, yield until there datastore budget available
 
 	return {
 		success = true,
@@ -237,7 +325,7 @@ end
 
 	@yields
 ]=]
-function Document.Update<T>(self: Document<T>, transform: (data: T) -> T): Result<T>
+function Document.Update<T>(self: Document<T>, transform: Transform<T>): Result<T>
 	assert(self._open, "Document not open")
 
 	runHooks(self._preHooks.Update, transform)
@@ -258,10 +346,16 @@ end
 	Note that if a hook yields, it will yield all methods that call it. Hooks are called in the order
 	they are added.
 
+	Explicitly annotate the transform type with DocumentService.Transform to avoid luau typechecking limitations.
+
 	@param event -- the operation to call the hook before
 	@param hook -- a hook function that receives the arguments passed in to the operation
 ]=]
-function Document.PreHook<T, S...>(self: Document<T>, event: Types.PreHookEvent, hook: (S...) -> ())
+function Document.HookBefore<T, S...>(
+	self: Document<T>,
+	event: Types.PreHookEvent,
+	hook: ((Transform<T>) -> Transform<T>) | (() -> ())
+)
 	table.insert(self._preHooks[event], hook)
 end
 
@@ -274,7 +368,7 @@ end
 	@param event -- the operation to call the hook after
 	@param hook -- a hook function that receives the arguments passed in to the operation
 ]=]
-function Document.PostHook<T>(self: Document<T>, event: Types.PostHookEvent, hook: (Result<T>) -> ())
+function Document.HookAfter<T>(self: Document<T>, event: Types.PostHookEvent, hook: (Result<T>) -> Result<T>)
 	table.insert(self._postHooks[event], hook)
 end
 
