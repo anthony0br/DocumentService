@@ -5,43 +5,51 @@ local DocumentService = require("../src/init")
 local Guard = require("./Guard")
 local DataStoreService = require("../mock-datastore/init").new()
 
--- Test retry, assuming datastore access is off
-local test = DataStoreService:GetDataStore("test1")
-local Retry = require("../src/Retry")
-print(Retry(3, 2, test.UpdateAsync, function(old)
-	return "new"
-end))
+local Results = {
+	passed = 0,
+	failed = 0,
+	total = 0,
+}
 
--- Test: Creating a Document Interface
-local check = Guard.Check(function(value: unknown): { test: string }
+local function Test(name, test)
+	Results.total += 1
+
+	print(`Running test {Results.total}`)
+
+	local success, result = pcall(test)
+	if success then
+		print(`Test {Results.total} "{name}" passed with {result}\n`)
+		Results.passed += 1
+	else
+		warn(`Test {Results.total} "{name}" failed with {result}\n`)
+		Results.failed += 1
+	end
+end
+
+local CheckInterface = {
+	test = Guard.String,
+}
+
+local function check(value: unknown)
+	assert(type(value) == "table")
+	local Value: any = value
+
 	return {
-		test = Guard.String(value),
+		test = CheckInterface.test(Value.test),
 	}
-end)
+end
 
 local DocumentStore =
-	DocumentService.DocumentStore.new(DataStoreService:GetDataStore("name"), check, { test = "default" })
+	DocumentService.DocumentStore.new(DataStoreService:GetDataStore("name"), Guard.Check(check), { test = "default" })
 
-local Document = DocumentStore:GetDocument("Sublivion")
-Document:Open()
-
-Document:HookBefore("Update", function(transform: DocumentService.Transform<{ test: string }>)
-	print("Hook 1")
-	return transform
+Test("Opens document no simulated errors", function()
+	local Document = DocumentStore:GetDocument("Sublivion")
+	local result = Document:Open()
+	print(result)
+	assert(result.success == true)
+	assert(result.data)
+	check(result.data)
 end)
-
-Document:HookBefore("Update", function(transform: DocumentService.Transform<{ test: string }>)
-	print("Hook 2")
-	return transform
-end)
-
--- This type checks!
-local result = Document:Read()
-if result.success then
-	print(result.data)
-else
-	print(result.failReason :: string, result.errorMessage)
-end
 
 -- Test: methods should fail if document not open
 
@@ -72,3 +80,5 @@ end
 -- Test: Transactions should fail if session stolen
 
 -- Test: Session locks should stay open
+
+print(`Tests complete. {Results.passed} passed, {Results.failed} failed`)
