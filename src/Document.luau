@@ -71,7 +71,7 @@ local function runHooks<T...>(hooks: { (T...) -> T... }, ...)
 		assert(#result == len, "Hooks must return all arguments")
 	end
 
-	return result
+	return table.unpack(result)
 end
 
 local function getUpdateBudget()
@@ -245,10 +245,10 @@ function Document.Open<T>(self: Document<T>): Result<T>
 
 	self._open = true
 
-	return runHooks(self._postHooks.Open, {
+	return table.freeze(runHooks(self._postHooks.Open, {
 		success = true,
 		data = finalData,
-	}) :: Result<T>
+	})) :: Result<T>
 end
 
 --[=[
