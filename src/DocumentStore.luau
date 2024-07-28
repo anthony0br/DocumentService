@@ -8,7 +8,7 @@ local Types = require("./Types")
 	@class DocumentStore
 
 	A struct that holds information about all Documents within a DataStore and provides a less
-	repetitive way of instantiating documents.
+	repetitive way of instantiating documents. This can be seen as an abstraction over a DataStore.
 ]=]
 local DocumentStore = {}
 DocumentStore.__index = DocumentStore
@@ -18,11 +18,11 @@ export type DocumentStore<T> = typeof(setmetatable(
 		_dataStore: DataStore,
 		_check: (unknown) -> (boolean, T),
 		_default: T,
+		_invalidDataHandler: Types.InvalidDataHandler<T>,
+		_documents: { [string]: Document.Document<any> },
 	},
 	DocumentStore
 ))
-
-local DocumentIndex: { [string]: Document.Document<any> } = {}
 
 --[=[
 	Creates a new DocumentStore
@@ -33,11 +33,18 @@ local DocumentIndex: { [string]: Document.Document<any> } = {}
 
 	@return DocumentStore
 ]=]
-function DocumentStore.new<T>(dataStore: DataStore, check: (unknown) -> (boolean, T), default: T): DocumentStore<T>
+function DocumentStore.new<T>(
+	dataStore: DataStore,
+	check: (unknown) -> (boolean, T),
+	default: T,
+	invalidDataHandler: Types.InvalidDataHandler<T>
+): DocumentStore<T>
 	return setmetatable({
 		_dataStore = dataStore,
 		_check = check,
 		_default = default,
+		_invalidDataHandler = invalidDataHandler,
+		_documents = {},
 	}, DocumentStore)
 end
 
@@ -49,21 +56,21 @@ end
 	@return Document
 ]=]
 function DocumentStore.GetDocument<T>(self: DocumentStore<T>, key: string): Document.Document<T>
-	if DocumentIndex[key] then
-		return DocumentIndex[key]
+	if self._documents[key] then
+		return self._documents[key]
 	end
 
-	local document = Document.new(key, self._dataStore, self._check, self._default)
+	local document = Document.new(key, self._dataStore, self._check, self._default, self._invalidDataHandler)
 
 	document:HookAfter("Close", function(result: Types.Result<T>)
 		if result.success then
-			DocumentIndex[key] = nil
+			self._documents[key] = nil
 		end
 
 		return result
 	end)
 
-	DocumentIndex[key] = document
+	self._documents[key] = document
 
 	return document
 end
