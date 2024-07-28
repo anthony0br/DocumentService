@@ -6,7 +6,7 @@ export type PreHookEvent = "Open" | "Close" | "Update" | "Read"
 
 export type PostHookEvent = "Open" | "Close" | "Update" | "Read"
 
-export type FailReason = "RobloxAPIFail" | "InvalidDataNotHandled" | "KeyFormatCorrupted" | "LockStolen"
+export type FailReason = "RobloxAPIFail" | "InvalidDataNotHandled" | "KeyFormatCorrupted" | "SessionLocked"
 
 export type Result<T> = {
 	success: true,
@@ -15,7 +15,9 @@ export type Result<T> = {
 	success: false,
 	failReason: FailReason,
 	errorMessage: string,
-	data: unknown?,
+	data: nil,
 }
+
+export type InvalidDataHandler<T> = (invalidData: unknown) -> T
 
 return {}

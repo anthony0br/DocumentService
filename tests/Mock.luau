@@ -36,7 +36,7 @@ end
 
 local CheckInterface = {
 	Document = Guard.String,
-	Service = Guard.DateTime,
+	Service = Guard.Number,
 }
 
 local function check(value: unknown)
@@ -52,7 +52,13 @@ end
 local DocumentStore = DocumentService.DocumentStore.new(
 	DataStoreService:GetDataStore("name"),
 	Guard.Check(check),
-	{ Document = "", Service = DateTime.now() }
+	{ Document = "", Service = 2 },
+	function()
+		return {
+			Document = "",
+			Service = 3,
+		}
+	end
 )
 
 Test("Opens document no simulated errors", function()
@@ -61,36 +67,36 @@ Test("Opens document no simulated errors", function()
 	assert(result.success == true)
 	assert(result.data)
 	check(result.data)
-
-	return result
 end)
 
 Test("Cannot reopen same document retrieved by string", function()
 	local Document = DocumentStore:GetDocument("Sublivion")
 	shouldFail(function()
-		Document:Close()
+		Document:Open()
 	end)
 end)
 
 Test("Can close document", function()
 	local Document = DocumentStore:GetDocument("Sublivion")
-	return Document:Close()
+	Document:Close()
 end)
 
 Test("Can reopen document after closed, retrieved by string", function()
 	local Document = DocumentStore:GetDocument("Sublivion")
-	return Document:Open()
+	Document:Open()
 end)
 
 do
 	local Document = DocumentStore:GetDocument("Sublivion")
 
 	Test("Can reopen document after closed, retrieved by reference", function()
-		return Document:Close()
+		Document:Close()
 	end)
 end
 
 -- Test: Migrate from 'flat data' to DocumentService
+
+-- Test: DocumentStores are independent
 
 -- Test: Corrupt key data
 

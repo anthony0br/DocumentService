@@ -8,6 +8,8 @@ local SESSION_EXPIRE_TIME = 15 * 60
 
 --[=[
 	@class Document
+
+	An abstraction over key, value pairs in a DataStore.
 ]=]
 local Document = {}
 Document.__index = Document
@@ -32,7 +34,7 @@ export type Document<T> = typeof(setmetatable(
 			Read: { (Result<T>) -> Result<T> },
 			Update: { (Result<T>) -> Result<T> },
 		},
-		_invalidDataHandler: (invalidData: unknown) -> Result<T>,
+		_invalidDataHandler: Types.InvalidDataHandler<T>,
 	},
 	Document
 ))
@@ -68,10 +70,19 @@ end
 
 	Don't create more than one Document for the same key, they will be considered different sessions.
 
-	@param dataStore -- A DataStore object
-	@param check -- a function that take and returns a value, errors if the value provided does not match the type of data we expect
+	@param key -- The datastore key
+	@param dataStore -- The object returned by DataStoreService:GetDataStore()
+	@param check -- A type check function for your data, errors if types are invalid
+	@param default -- Default values, which are set if keys are empty
+	@param invalidDataHandler -- Fixes invalid data e.g. through migrations. Unfixable data should be reset.
 ]=]
-function Document.new<T>(key: string, dataStore: DataStore, check: (unknown) -> (boolean, T), default: T): Document<T>
+function Document.new<T>(
+	key: string,
+	dataStore: DataStore,
+	check: (unknown) -> (boolean, T),
+	default: T,
+	invalidDataHandler: Types.InvalidDataHandler<T>
+): Document<T>
 	assert(check(default), "Default must pass type check")
 
 	return setmetatable({
@@ -93,14 +104,7 @@ function Document.new<T>(key: string, dataStore: DataStore, check: (unknown) -> 
 			Update = {},
 			Read = {},
 		},
-		_invalidDataHandler = function(invalidData: unknown): Result<T>
-			return {
-				success = false,
-				failReason = "InvalidDataNotHandled",
-				errorMessage = "Data check function failed and no handler set",
-				data = invalidData,
-			}
-		end,
+		_invalidDataHandler = invalidDataHandler,
 	}, Document)
 end
 
@@ -108,6 +112,10 @@ end
 	Validates the document if one exists, or creates a default document if no document exists.
 
 	You must call this method before reading or writing to a Document.
+
+	Can fail for the following reasons: RobloxAPIFail or SessionLocked.
+	
+	These should usually be handled by kicking the player.
 
 	@return result
 
@@ -128,7 +136,8 @@ function Document.Open<T>(self: Document<T>): Result<T>
 		}
 	end
 
-	local keyData
+	local isValidDocumentService = false
+	local keyData: KeyData<unknown>?
 	if typeof(getValue == "table") == "table" then
 		local tableValue = getValue :: { [unknown]: unknown }
 
@@ -136,8 +145,9 @@ function Document.Open<T>(self: Document<T>): Result<T>
 		-- we assume we are migrating from no library to DocumentService
 		if tableValue.documentServiceFormatVersion then
 			if tableValue.documentServiceFormatVersion == "1" then
-				-- The keyData assignment should only happen for the latest version
+				-- The validity assignment should only happen for the latest version
 				keyData = tableValue :: KeyData<unknown>
+				isValidDocumentService = true
 				-- Insert migrations here
 				-- e.g. insert new values for version 2, set version to 2
 			end
@@ -169,21 +179,37 @@ function Document.Open<T>(self: Document<T>): Result<T>
 
 		finalData = self._default
 	else
-		-- If we already have a valid keyData, data from there, if not then try to migrate from no library to DocumentService
-		local uncheckedData = if keyData then keyData.data else getValue
-		local checkOk, checkedData = self._check(uncheckedData)
-		finalData = checkedData
+		-- If we have keyData, look for session locks, otherwise 'make' keyData by migrating from 'no library'
+		if isValidDocumentService and keyData then
+			local locked = keyData.isLocked and (keyData.lockTimestamp - os.time() < SESSION_EXPIRE_TIME)
 
-		if not checkOk then
+			if locked and (keyData.sessionLockId ~= self._sessionId) then
+				return {
+					success = false,
+					failReason = "SessionLocked",
+					errorMessage = "An active session lock exists.",
+				}
+			end
+		else
+			keyData = {
+				data = getValue,
+				documentServiceFormatVersion = FORMAT_VERSION,
+				sessionLockId = "",
+				lockTimestamp = 0,
+				isLocked = false,
+			}
+		end
+
+		local checkOk, checkedData = self._check(keyData)
+
+		if checkOk then
+			finalData = checkedData
+		else
 			local handlerResult = self._invalidDataHandler(checkedData)
 
-			if not handlerResult.success then
-				return handlerResult
-			end
-
-			local updateOk, result = Util.updateAsync(self._dataStore, self._key, function(badValue): KeyData<T>
+			local updateOk, err = Util.updateAsync(self._dataStore, self._key, function(badValue): KeyData<T>
 				return {
-					data = handlerResult.data,
+					data = handlerResult,
 					documentServiceFormatVersion = FORMAT_VERSION,
 					sessionLockId = badValue.sessionLockId,
 					lockTimestamp = 0,
@@ -195,12 +221,12 @@ function Document.Open<T>(self: Document<T>): Result<T>
 				return {
 					success = false,
 					failReason = "RobloxAPIFail",
-					errorMessage = result :: string,
+					errorMessage = err :: string,
 				}
 			end
 
 			-- Since updateOk is true, we know result is KeyData<T>
-			finalData = (result :: KeyData<T>).data
+			finalData = handlerResult
 		end
 	end
 
@@ -236,7 +262,7 @@ end
 
 	@yields
 ]=]
-function Document.Unlock<T>(self: Document<T>): Result<nil>
+function Document.RemoveLock<T>(self: Document<T>): Result<nil>
 	assert(self._open, "Document not open")
 
 	return {
@@ -340,7 +366,7 @@ function Document.Update<T>(self: Document<T>, transform: Transform<T>): Result<
 	if lockStolen then
 		return {
 			success = false,
-			failReason = "LockStolen",
+			failReason = "SessionLocked",
 			errorMessage = "Document is locked by another session",
 		}
 	end
@@ -386,17 +412,6 @@ end
 ]=]
 function Document.HookAfter<T>(self: Document<T>, event: Types.PostHookEvent, hook: (Result<T>) -> Result<T>)
 	table.insert(self._postHooks[event], hook)
-end
-
---[=[
-	Sets the function which responds to invalid data while opening a Document.
-
-	This can migrate data (by returning a successful result with new data), or fail.
-
-	@param handler
-]=]
-function Document.SetInvalidDataHandler<T>(self: Document<T>, handler: (invalidData: unknown) -> Result<T>)
-	self._invalidDataHandler = handler
 end
 
 --[=[

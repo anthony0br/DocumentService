@@ -53,7 +53,11 @@ end
 --[=[
 	A wrapper for UpdateAsync that retries with exponential backoff and prevents use of the throttle 'queue'
 ]=]
-function Util.updateAsync<T>(dataStore: DataStore, key: string, transform)
+function Util.updateAsync<T>(
+	dataStore: DataStore,
+	key: string,
+	transform: (any, DataStoreKeyInfo) -> (any, { number }?, {}?)
+): (boolean, unknown, DataStoreKeyInfo)
 	return Retry(RETRY.ATTEMPTS, RETRY.INITIAL_WAIT, function(): (unknown, DataStoreKeyInfo)
 		-- This is necessary to ensure UpdateAsyncs happen in the correct order
 		-- since the throttle 'queue' does not respect FILO
@@ -81,7 +85,5 @@ function Util.getAsync<T>(dataStore: DataStore, key: string): (boolean, unknown,
 		return dataStore:GetAsync(key, options)
 	end)
 end
-
-function Util.log<T>(event: Types.PostHookEvent, result: Types.Result<T>, logDataStore: DataStore) end
 
 return Util

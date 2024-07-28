@@ -30,6 +30,7 @@ export type DocumentStore<T> = typeof(setmetatable(
 	@param dataStore -- The object returned by DataStoreService:GetDataStore()
 	@param check -- A type check function for your data, errors if types are invalid
 	@param default -- Default values, which are set if keys are empty
+	@param invalidDataHandler -- Fixes invalid data e.g. through migrations. Unfixable data should be reset.
 
 	@return DocumentStore
 ]=]
