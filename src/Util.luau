@@ -19,6 +19,14 @@ local RETRY = {
 	INITIAL_WAIT = 1,
 }
 
+-- Written this way to be removed by darklua
+if not _G.IS_ROBLOX then
+	RETRY = {
+		ATTEMPTS = 5,
+		INITIAL_WAIT = 1 / 30,
+	}
+end
+
 local function getUpdateBudget()
 	if _G.IS_ROBLOX then
 		return game:GetService("DataStoreService"):GetRequestBudgetForRequestType(Enum.DataStoreRequestType.UpdateAsync)
