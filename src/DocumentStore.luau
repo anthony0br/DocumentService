@@ -2,6 +2,7 @@
 -- Author: Anthony O'Brien
 
 local Document = require("./Document")
+local Types = require("./Types")
 
 --[=[
 	@class DocumentStore
@@ -54,7 +55,7 @@ function DocumentStore.GetDocument<T>(self: DocumentStore<T>, key: string): Docu
 
 	local document = Document.new(key, self._dataStore, self._check, self._default)
 
-	document:HookAfter("Close", function(result: Document.Result<T>)
+	document:HookAfter("Close", function(result: Types.Result<T>)
 		if result.success then
 			DocumentIndex[key] = nil
 		end

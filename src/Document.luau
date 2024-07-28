@@ -2,14 +2,9 @@
 -- Author: Anthony O'Brien
 
 local Types = require("./Types")
-local Retry = require("./Retry")
+local Util = require("./Util")
 
-local SESSION_EXPIRE_TIME = 20 * 60
--- Fails after 32 seconds
-local RETRY = {
-	ATTEMPTS = 4,
-	INITIAL_WAIT = 2,
-}
+local SESSION_EXPIRE_TIME = 15 * 60
 
 --[=[
 	@class Document
@@ -24,6 +19,7 @@ export type Document<T> = typeof(setmetatable(
 		_check: (unknown) -> (boolean, T),
 		_default: T,
 		_open: boolean,
+		_sessionId: string,
 		_preHooks: {
 			Open: { () -> () },
 			Close: { () -> () },
@@ -36,27 +32,20 @@ export type Document<T> = typeof(setmetatable(
 			Read: { (Result<T>) -> Result<T> },
 			Update: { (Result<T>) -> Result<T> },
 		},
-		_lockedHandler: (lockId: string?, lastUpdated: number) -> Types.LockedResponse,
 		_invalidDataHandler: (invalidData: unknown) -> Result<T>,
 	},
 	Document
 ))
 
-export type Result<T> = {
-	success: true,
-	data: T,
-} | {
-	success: false,
-	failReason: Types.FailReason,
-	errorMessage: string,
-	data: unknown?,
-}
+type Result<T> = Types.Result<T>
 
 export type Transform<T> = (data: T) -> T
 
 type KeyData<T> = {
 	documentServiceFormatVersion: string,
-	sessionLock: string,
+	sessionLockId: string,
+	lockTimestamp: number,
+	isLocked: boolean,
 	data: T,
 }
 
@@ -74,50 +63,10 @@ local function runHooks<T...>(hooks: { (T...) -> T... }, ...)
 	return table.unpack(result)
 end
 
-local function getUpdateBudget()
-	if _G.IS_ROBLOX then
-		return game:GetService("DataStoreService"):GetRequestBudgetForRequestType(Enum.DataStoreRequestType.UpdateAsync)
-	else
-		return 60
-	end
-end
-
-local function getGetBudget()
-	if _G.IS_ROBLOX then
-		return game:GetService("DataStoreService"):GetRequestBudgetForRequestType(Enum.DataStoreRequestType.GetAsync)
-	else
-		return 60
-	end
-end
-
-local function updateAsync<T>(dataStore: DataStore, key: string, transform)
-	return Retry(RETRY.ATTEMPTS, RETRY.INITIAL_WAIT, function(): (unknown, DataStoreKeyInfo)
-		-- This is necessary to ensure UpdateAsyncs happen in the correct order
-		-- since the throttle 'queue' does not respect FILO
-		-- If autosaves happen in the wrong order data could be lost
-		assert(getUpdateBudget() > 0, "Ran out of budget")
-
-		return dataStore:UpdateAsync(key, transform)
-	end)
-end
-
-local function getAsync<T>(dataStore: DataStore, key)
-	return Retry(RETRY.ATTEMPTS, RETRY.INITIAL_WAIT, function(): (unknown, DataStoreKeyInfo)
-		local options
-
-		if _G.IS_ROBLOX then
-			options = Instance.new("DataStoreGetOptions")
-			options.UseCache = false
-		end
-
-		assert(getGetBudget() > 0, "Ran out of budget")
-
-		return dataStore:GetAsync(key, options)
-	end)
-end
-
 --[=[
 	Creates a new Document class
+
+	Don't create more than one Document for the same key, they will be considered different sessions.
 
 	@param dataStore -- A DataStore object
 	@param check -- a function that take and returns a value, errors if the value provided does not match the type of data we expect
@@ -131,6 +80,7 @@ function Document.new<T>(key: string, dataStore: DataStore, check: (unknown) -> 
 		_check = check,
 		_default = default,
 		_open = false,
+		_sessionId = Util.uuid(),
 		_preHooks = {
 			Open = {},
 			Close = {},
@@ -143,13 +93,6 @@ function Document.new<T>(key: string, dataStore: DataStore, check: (unknown) -> 
 			Update = {},
 			Read = {},
 		},
-		_lockedHandler = function(_lockId: string?, lastUpdated: number): Types.LockedResponse
-			if os.time() - lastUpdated > SESSION_EXPIRE_TIME then
-				return "Steal"
-			end
-
-			return "Await"
-		end,
 		_invalidDataHandler = function(invalidData: unknown): Result<T>
 			return {
 				success = false,
@@ -175,7 +118,7 @@ function Document.Open<T>(self: Document<T>): Result<T>
 
 	runHooks(self._preHooks.Open)
 
-	local getOk, getValue = getAsync(self._dataStore, self._key)
+	local getOk, getValue = Util.getAsync(self._dataStore, self._key)
 
 	if not getOk then
 		return {
@@ -185,22 +128,34 @@ function Document.Open<T>(self: Document<T>): Result<T>
 		}
 	end
 
-	local value
+	local keyData
 	if typeof(getValue == "table") == "table" then
 		local tableValue = getValue :: { [unknown]: unknown }
-		if tableValue.documentServiceFormatVersion and tableValue.documentServiceFormatVersion == FORMAT_VERSION then
-			value = tableValue :: KeyData<unknown>
+
+		-- If the value does not contain documentServiceFormatVersion,
+		-- we assume we are migrating from no library to DocumentService
+		if tableValue.documentServiceFormatVersion then
+			if tableValue.documentServiceFormatVersion == "1" then
+				-- The keyData assignment should only happen for the latest version
+				keyData = tableValue :: KeyData<unknown>
+				-- Insert migrations here
+				-- e.g. insert new values for version 2, set version to 2
+			end
+			-- Insert migrations here
+			-- e.g. if tableValue.documentServiceFormatVersion == "2"
 		end
 	end
 
 	-- Create a new key, or check an existing one
 	local finalData
-	if not value then
-		local updateOk, result = updateAsync(self._dataStore, self._key, function(): KeyData<T>
+	if not getValue then
+		local updateOk, result = Util.updateAsync(self._dataStore, self._key, function(): KeyData<T>
 			return {
 				data = self._default,
 				documentServiceFormatVersion = FORMAT_VERSION,
-				sessionLock = "",
+				sessionLockId = "",
+				lockTimestamp = 0,
+				isLocked = false,
 			}
 		end)
 
@@ -214,7 +169,9 @@ function Document.Open<T>(self: Document<T>): Result<T>
 
 		finalData = self._default
 	else
-		local checkOk, checkedData = self._check(value.data)
+		-- If we already have a valid keyData, data from there, if not then try to migrate from no library to DocumentService
+		local uncheckedData = if keyData then keyData.data else getValue
+		local checkOk, checkedData = self._check(uncheckedData)
 		finalData = checkedData
 
 		if not checkOk then
@@ -224,12 +181,14 @@ function Document.Open<T>(self: Document<T>): Result<T>
 				return handlerResult
 			end
 
-			local updateOk, result = updateAsync(self._dataStore, self._key, function(badValue): KeyData<T>
+			local updateOk, result = Util.updateAsync(self._dataStore, self._key, function(badValue): KeyData<T>
 				return {
 					data = handlerResult.data,
 					documentServiceFormatVersion = FORMAT_VERSION,
-					sessionLock = badValue.sessionLock,
-				} :: KeyData<T>
+					sessionLockId = badValue.sessionLockId,
+					lockTimestamp = 0,
+					isLocked = false,
+				}
 			end)
 
 			if not updateOk then
@@ -332,9 +291,64 @@ function Document.Update<T>(self: Document<T>, transform: Transform<T>): Result<
 
 	runHooks(self._preHooks.Update, transform)
 
+	local lockStolen
+	local transformInvalid
+	local success, updatedData = Util.updateAsync(self._dataStore, self._key, function(keyData: KeyData<T>): KeyData<T>?
+		-- Reset error flags in case callback runs multiple times
+		lockStolen = false
+		transformInvalid = false
+
+		-- Check if lock has been stolen
+		local locked = keyData.isLocked and (keyData.lockTimestamp - os.time() < SESSION_EXPIRE_TIME)
+		local lockedByUs = locked and (keyData.sessionLockId == self._sessionId)
+
+		if locked and not lockedByUs then
+			lockStolen = true
+			return
+		end
+
+		local newDataIsValid, newData = self._check(transform(keyData.data))
+
+		if not newDataIsValid then
+			-- We do not call the invalid data handler, since this is for migrating old data and not fixing programmer mistakes.
+			transformInvalid = true
+			return
+		end
+
+		return {
+			documentServiceFormatVersion = FORMAT_VERSION,
+			sessionLockId = keyData.sessionLockId,
+			lockTimestamp = if lockedByUs then os.time() else keyData.lockTimestamp,
+			isLocked = keyData.isLocked,
+			data = newData,
+		}
+	end)
+
+	-- This should be a LOUD error! The developer is doing something wrong.
+	if transformInvalid then
+		error("Invalid transform function: return value did not pass the check function.")
+	end
+
+	if not success then
+		return {
+			success = false,
+			failReason = "RobloxAPIFail",
+			errorMessage = updatedData :: any,
+		}
+	end
+
+	if lockStolen then
+		return {
+			success = false,
+			failReason = "LockStolen",
+			errorMessage = "Document is locked by another session",
+		}
+	end
+
 	local result: Result<T> = {
 		success = true,
-		data = self._default,
+		-- Cast to T since updatedData has already passed self._check
+		data = updatedData :: T,
 	}
 
 	runHooks(self._postHooks.Update, result)
@@ -372,18 +386,6 @@ end
 ]=]
 function Document.HookAfter<T>(self: Document<T>, event: Types.PostHookEvent, hook: (Result<T>) -> Result<T>)
 	table.insert(self._postHooks[event], hook)
-end
-
---[=[
-	Sets the function which determines how to respond to a session lock while opening a Document.
-
-	@param handler
-]=]
-function Document.SetLockedHandler<T>(
-	self: Document<T>,
-	handler: (lockId: string?, timestamp: number) -> Types.LockedResponse
-)
-	self._lockedHandler = handler
 end
 
 --[=[
