@@ -13,10 +13,10 @@ local Retry = require("./Retry")
 ]=]
 local Util = {}
 
--- Fails after 32 seconds
+-- Fails after 15 seconds + request time
 local RETRY = {
-	ATTEMPTS = 4,
-	INITIAL_WAIT = 2,
+	ATTEMPTS = 5,
+	INITIAL_WAIT = 1,
 }
 
 local function getUpdateBudget()

@@ -265,6 +265,8 @@ end
 function Document.RemoveLock<T>(self: Document<T>): Result<nil>
 	assert(self._open, "Document not open")
 
+	-- We need to queue RemoveLock until all updates finished!
+
 	return {
 		success = true,
 	}
