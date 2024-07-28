@@ -5,6 +5,8 @@ local DocumentService = require("../src/init")
 local Guard = require("./Guard")
 local DataStoreService = require("../mock-datastore/init").new()
 
+local mockDataStore = DataStoreService:GetDataStore("name")
+
 local Results = {
 	passed = 0,
 	failed = 0,
@@ -50,7 +52,7 @@ local function check(value: unknown)
 end
 
 local DocumentStore = DocumentService.DocumentStore.new(
-	DataStoreService:GetDataStore("name"),
+	mockDataStore,
 	Guard.Check(check),
 	{ Document = "", Service = 2 },
 	function()
@@ -88,11 +90,28 @@ end)
 
 do
 	local Document = DocumentStore:GetDocument("Sublivion")
+	Document:Close()
 
 	Test("Can reopen document after closed, retrieved by reference", function()
-		Document:Close()
+		Document:Open()
 	end)
 end
+
+Test("Opens document with simulated error", function()
+	mockDataStore.errors:addSimulatedErrors(1)
+	local Document = DocumentStore:GetDocument("Sublivion1")
+	local result = Document:Open()
+	assert(result.success == true)
+	assert(result.data)
+	check(result.data)
+end)
+
+Test("Opens document with 5 simulated errors", function()
+	mockDataStore.errors:addSimulatedErrors(5)
+	local Document = DocumentStore:GetDocument("Sublivion2")
+	local result = Document:Open()
+	assert(result.success == false)
+end)
 
 -- Test: Migrate from 'flat data' to DocumentService
 
