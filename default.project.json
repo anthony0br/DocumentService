@@ -1,15 +1,6 @@
 {
-  "name": "DocumentService",
+  "name": "documentservice",
   "tree": {
-    "$className": "DataModel",
-
-    "ServerScriptService": {
-      "DocumentService": {
-        "$path": "src/"
-      },
-      "Tests": {
-        "$path": "tests/"
-      }
-    }
+    "$path": "roblox-build"
   }
 }

@@ -1,0 +1,14 @@
+{
+  "name": "DocumentServiceTests",
+  "tree": {
+    "$className": "DataModel",
+    "ServerScriptService": {
+      "DocumentService": {
+        "$path": "../roblox-build"
+      },
+      "Tests": {
+        "$path": "Mock.luau"
+      }
+    }
+  }
+}
