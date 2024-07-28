@@ -11,16 +11,19 @@ local Results = {
 	total = 0,
 }
 
-local function Test(name, test, shouldFail: boolean?)
+local function shouldFail(func: (...any) -> ())
+	local success = pcall(func)
+	if success then
+		error(debug.traceback("Should fail", 2))
+	end
+end
+
+local function Test(name, test)
 	Results.total += 1
 
 	print(`Running test {Results.total}`)
 
 	local success, result = pcall(test)
-
-	if shouldFail then
-		success = not success
-	end
 
 	if success then
 		print(`Test {Results.total} "{name}" passed with {result}\n`)
@@ -55,38 +58,45 @@ local DocumentStore = DocumentService.DocumentStore.new(
 Test("Opens document no simulated errors", function()
 	local Document = DocumentStore:GetDocument("Sublivion")
 	local result = Document:Open()
-	print(result)
 	assert(result.success == true)
 	assert(result.data)
 	check(result.data)
+
+	return result
 end)
 
 Test("Cannot reopen same document retrieved by string", function()
 	local Document = DocumentStore:GetDocument("Sublivion")
-	Document:Open()
-end, true)
+	shouldFail(function()
+		Document:Close()
+	end)
+end)
 
 Test("Can close document", function()
 	local Document = DocumentStore:GetDocument("Sublivion")
-	Document:Close()
+	return Document:Close()
 end)
 
 Test("Can reopen document after closed, retrieved by string", function()
 	local Document = DocumentStore:GetDocument("Sublivion")
-	Document:Open()
+	return Document:Open()
 end)
 
 do
 	local Document = DocumentStore:GetDocument("Sublivion")
 
 	Test("Can reopen document after closed, retrieved by reference", function()
-		Document:Close()
+		return Document:Close()
 	end)
 end
 
--- Test: methods should fail if document not open
+-- Test: Migrate from 'flat data' to DocumentService
 
--- Test: document open and closing
+-- Test: Corrupt key data
+
+-- Test: out of datastore budget with _G.NO_BUDGET
+
+-- Test: methods should fail if document not open
 
 -- Test: Data in datastore does not match interface should run invalid data handler
 
