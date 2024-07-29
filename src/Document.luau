@@ -34,7 +34,8 @@ export type Document<T> = typeof(setmetatable(
 			Read: { (Result<T>) -> Result<T> },
 			Update: { (Result<T>) -> Result<T> },
 		},
-		_invalidDataHandler: Types.InvalidDataHandler<T>,
+		_migrations: Types.Migrations<T>,
+		_cache: T?,
 	},
 	Document
 ))
@@ -44,14 +45,15 @@ type Result<T> = Types.Result<T>
 export type Transform<T> = (data: T) -> T
 
 type KeyData<T> = {
-	documentServiceFormatVersion: string,
+	documentServiceFormatVersion: number,
 	sessionLockId: string,
 	lockTimestamp: number,
 	isLocked: boolean,
+	dataVersion: number,
 	data: T,
 }
 
-local FORMAT_VERSION = "1"
+local FORMAT_VERSION = 0
 
 local function runHooks<T...>(hooks: { (T...) -> T... }, ...)
 	local result = { ... }
@@ -65,6 +67,26 @@ local function runHooks<T...>(hooks: { (T...) -> T... }, ...)
 	return table.unpack(result)
 end
 
+local function runMigrations<T>(self: Document<T>, initialData: unknown, initialVersion: number): (boolean, T, number)
+	local data = initialData
+	local version = initialVersion
+
+	for i, func in ipairs(self._migrations) do
+		if i > initialVersion then
+			data = func(data)
+			version += 1
+		end
+	end
+
+	local success, latestData = self._check(data)
+
+	return success, latestData, version
+end
+
+local function latestDataVersion<T>(self: Document<T>)
+	return #self._migrations
+end
+
 --[=[
 	Creates a new Document class
 
@@ -74,16 +96,17 @@ end
 	@param dataStore -- The object returned by DataStoreService:GetDataStore()
 	@param check -- A type check function for your data, errors if types are invalid
 	@param default -- Default values, which are set if keys are empty
-	@param invalidDataHandler -- Fixes invalid data e.g. through migrations. Unfixable data should be reset.
+	@param migrations -- Fixes invalid data e.g. through migrations. Unfixable data should be reset.
 ]=]
 function Document.new<T>(
 	key: string,
 	dataStore: DataStore,
 	check: (unknown) -> (boolean, T),
 	default: T,
-	invalidDataHandler: Types.InvalidDataHandler<T>
+	migrations: Types.Migrations<T>
 ): Document<T>
 	assert(check(default), "Default must pass type check")
+	assert(typeof(default) == "table", "Non-table values are not supported - group your data.")
 
 	return setmetatable({
 		_key = key,
@@ -104,8 +127,16 @@ function Document.new<T>(
 			Update = {},
 			Read = {},
 		},
-		_invalidDataHandler = invalidDataHandler,
+		_migrations = migrations,
 	}, Document)
+end
+
+function Document.Peek<T>(self: Document<T>): Result<unknown>
+	return {
+		success = false,
+		failReason = "RobloxAPIFail",
+		errorMessage = "Not implemented",
+	}
 end
 
 --[=[
@@ -137,7 +168,7 @@ function Document.Open<T>(self: Document<T>): Result<T>
 	end
 
 	local isValidDocumentService = false
-	local keyData: KeyData<unknown>?
+	local keyData
 	if typeof(getValue == "table") == "table" then
 		local tableValue = getValue :: { [unknown]: unknown }
 
@@ -162,6 +193,7 @@ function Document.Open<T>(self: Document<T>): Result<T>
 		local updateOk, result = Util.updateAsync(self._dataStore, self._key, function(): KeyData<T>
 			return {
 				data = self._default,
+				dataVersion = 0,
 				documentServiceFormatVersion = FORMAT_VERSION,
 				sessionLockId = "",
 				lockTimestamp = 0,
@@ -193,6 +225,7 @@ function Document.Open<T>(self: Document<T>): Result<T>
 		else
 			keyData = {
 				data = getValue,
+				dataVersion = 1,
 				documentServiceFormatVersion = FORMAT_VERSION,
 				sessionLockId = "",
 				lockTimestamp = 0,
@@ -200,18 +233,27 @@ function Document.Open<T>(self: Document<T>): Result<T>
 			}
 		end
 
-		local checkOk, checkedData = self._check(keyData)
+		local checkOk, checkedData = self._check(keyData.data)
 
 		if checkOk then
 			finalData = checkedData
 		else
-			local handlerResult = self._invalidDataHandler(checkedData)
+			local migrationOk, migratedData, version = runMigrations(self, keyData.data, keyData.dataVersion)
 
-			local updateOk, err = Util.updateAsync(self._dataStore, self._key, function(badValue): KeyData<T>
+			if not migrationOk then
 				return {
-					data = handlerResult,
+					success = false,
+					failReason = "MigrationFailed",
+					errorMessage = "Failed to migrate data",
+				}
+			end
+
+			local updateOk, err = Util.updateAsync(self._dataStore, self._key, function(old): KeyData<T>
+				return {
+					data = migratedData,
+					dataVersion = version,
 					documentServiceFormatVersion = FORMAT_VERSION,
-					sessionLockId = badValue.sessionLockId,
+					sessionLockId = old.sessionLockId,
 					lockTimestamp = 0,
 					isLocked = false,
 				}
@@ -225,8 +267,8 @@ function Document.Open<T>(self: Document<T>): Result<T>
 				}
 			end
 
-			-- Since updateOk is true, we know result is KeyData<T>
-			finalData = handlerResult
+			-- Since updateOk is true, the migratedData has been set
+			finalData = migratedData
 		end
 	end
 
@@ -290,6 +332,20 @@ function Document.Close<T>(self: Document<T>): Result<nil>
 	}
 end
 
+function Document.SetCache<T>(self: Document<T>, newCache: T)
+	-- TO DO: Throw error if not session locked
+
+	Util.deepFreeze(newCache)
+end
+
+function Document.GetCache<T>(self: Document<T>)
+	-- TO DO: Throw error if not session locked
+
+	return Util.deepFreeze(self._cache)
+end
+
+function Document.UpdateCache<T>(self: Document<T>, transform: Transform<T>) end
+
 --[=[
 	Reads from the DataStore, without caching
 	
@@ -349,6 +405,7 @@ function Document.Update<T>(self: Document<T>, transform: Transform<T>): Result<
 			lockTimestamp = if lockedByUs then os.time() else keyData.lockTimestamp,
 			isLocked = keyData.isLocked,
 			data = newData,
+			dataVersion = 1,
 		}
 	end)
 

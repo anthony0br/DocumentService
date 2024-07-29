@@ -18,7 +18,7 @@ export type DocumentStore<T> = typeof(setmetatable(
 		_dataStore: DataStore,
 		_check: (unknown) -> (boolean, T),
 		_default: T,
-		_invalidDataHandler: Types.InvalidDataHandler<T>,
+		_migrations: Types.Migrations<T>,
 		_documents: { [string]: Document.Document<any> },
 	},
 	DocumentStore
@@ -30,7 +30,7 @@ export type DocumentStore<T> = typeof(setmetatable(
 	@param dataStore -- The object returned by DataStoreService:GetDataStore()
 	@param check -- A type check function for your data, errors if types are invalid
 	@param default -- Default values, which are set if keys are empty
-	@param invalidDataHandler -- Fixes invalid data e.g. through migrations. Unfixable data should be reset.
+	@param migrations -- Fixes invalid data e.g. through migrations. Unfixable data should be reset.
 
 	@return DocumentStore
 ]=]
@@ -38,13 +38,13 @@ function DocumentStore.new<T>(
 	dataStore: DataStore,
 	check: (unknown) -> (boolean, T),
 	default: T,
-	invalidDataHandler: Types.InvalidDataHandler<T>
+	migrations: Types.Migrations<T>
 ): DocumentStore<T>
 	return setmetatable({
 		_dataStore = dataStore,
 		_check = check,
 		_default = default,
-		_invalidDataHandler = invalidDataHandler,
+		_migrations = migrations,
 		_documents = {},
 	}, DocumentStore)
 end
@@ -61,7 +61,7 @@ function DocumentStore.GetDocument<T>(self: DocumentStore<T>, key: string): Docu
 		return self._documents[key]
 	end
 
-	local document = Document.new(key, self._dataStore, self._check, self._default, self._invalidDataHandler)
+	local document = Document.new(key, self._dataStore, self._check, self._default, self._migrations)
 
 	document:HookAfter("Close", function(result: Types.Result<T>)
 		if result.success then

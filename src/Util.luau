@@ -94,4 +94,32 @@ function Util.getAsync<T>(dataStore: DataStore, key: string): (boolean, unknown,
 	end)
 end
 
+--[=[
+	Deeply freezes a table (not entering metatables)
+
+	@param table -- table to freeze
+	@return frozenTable
+]=]
+function Util.deepFreeze<T>(object: T): T
+	if typeof(object) ~= "table" then
+		return object
+	end
+
+	if getmetatable(object) ~= nil then
+		return object
+	end
+
+	if table.isfrozen(object) then
+		return object
+	end
+
+	table.freeze(object)
+
+	for _, value in object do
+		Util.deepFreeze(value)
+	end
+
+	return object
+end
+
 return Util
