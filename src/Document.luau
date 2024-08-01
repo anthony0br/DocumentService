@@ -326,6 +326,9 @@ function Document.Close<T>(self: Document<T>): Result<nil>
 
 	self._open = false
 
+	setmetatable(self :: any, nil)
+	table.clear(self :: any)
+
 	return {
 		success = true,
 		data = nil,
@@ -471,17 +474,6 @@ end
 ]=]
 function Document.HookAfter<T>(self: Document<T>, event: Types.PostHookEvent, hook: (Result<T>) -> Result<T>)
 	table.insert(self._postHooks[event], hook)
-end
-
---[=[
-	Closes and destroys the class
-]=]
-function Document.Destroy<T>(self: Document<T>)
-	if self._open then
-		self:Close()
-	end
-	setmetatable(self :: any, nil)
-	table.clear(self :: any)
 end
 
 --[=[
