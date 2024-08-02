@@ -5,6 +5,7 @@ local Types = require("./Types")
 local Util = require("./Util")
 
 local SESSION_EXPIRE_TIME = 15 * 60
+local AUTOSAVE_PERIOD = 120
 
 --[=[
 	@class Document
@@ -21,6 +22,7 @@ export type Document<T> = typeof(setmetatable(
 		_check: (unknown) -> (boolean, T),
 		_default: T,
 		_open: boolean,
+		_lockedByUs: boolean,
 		_sessionId: string,
 		_preHooks: {
 			Open: { () -> () },
@@ -40,16 +42,16 @@ export type Document<T> = typeof(setmetatable(
 	Document
 ))
 
-type Result<T> = Types.Result<T>
-
 export type Transform<T> = (data: T) -> T
+
+type Result<T> = Types.Result<T>
 
 type KeyData<T> = {
 	documentServiceFormatVersion: number,
 	sessionLockId: string,
 	lockTimestamp: number,
 	isLocked: boolean,
-	dataVersion: number,
+	dataFormatVersion: number,
 	data: T,
 }
 
@@ -83,10 +85,6 @@ local function runMigrations<T>(self: Document<T>, initialData: unknown, initial
 	return success, latestData, version
 end
 
-local function latestDataVersion<T>(self: Document<T>)
-	return #self._migrations
-end
-
 --[=[
 	Creates a new Document class
 
@@ -114,6 +112,7 @@ function Document.new<T>(
 		_check = check,
 		_default = default,
 		_open = false,
+		_lockedByUs = false,
 		_sessionId = Util.uuid(),
 		_preHooks = {
 			Open = {},
@@ -131,6 +130,14 @@ function Document.new<T>(
 	}, Document)
 end
 
+--[=[
+	Reads the data of a potentially locked or unopened Document.
+
+	Does not update the cache.
+
+	If the data is not a table or not in the DocumentService format (see KeyData<T>),
+	the data will be nil.
+]=]
 function Document.Peek<T>(self: Document<T>): Result<unknown>
 	return {
 		success = false,
@@ -169,7 +176,7 @@ function Document.Open<T>(self: Document<T>): Result<T>
 
 	local isValidDocumentService = false
 	local keyData
-	if typeof(getValue == "table") == "table" then
+	if typeof(getValue) == "table" then
 		local tableValue = getValue :: { [unknown]: unknown }
 
 		-- If the value does not contain documentServiceFormatVersion,
@@ -193,7 +200,7 @@ function Document.Open<T>(self: Document<T>): Result<T>
 		local updateOk, result = Util.updateAsync(self._dataStore, self._key, function(): KeyData<T>
 			return {
 				data = self._default,
-				dataVersion = 0,
+				dataFormatVersion = 0,
 				documentServiceFormatVersion = FORMAT_VERSION,
 				sessionLockId = "",
 				lockTimestamp = 0,
@@ -224,8 +231,8 @@ function Document.Open<T>(self: Document<T>): Result<T>
 			end
 		else
 			keyData = {
-				data = getValue,
-				dataVersion = 1,
+				data = if typeof(getValue) == "table" then getValue :: { any } else { getValue },
+				dataFormatVersion = 0,
 				documentServiceFormatVersion = FORMAT_VERSION,
 				sessionLockId = "",
 				lockTimestamp = 0,
@@ -234,11 +241,12 @@ function Document.Open<T>(self: Document<T>): Result<T>
 		end
 
 		local checkOk, checkedData = self._check(keyData.data)
+		local isLatestDataFormat = keyData.dataFormatVersion == #self._migrations
 
-		if checkOk then
+		if checkOk and isLatestDataFormat then
 			finalData = checkedData
 		else
-			local migrationOk, migratedData, version = runMigrations(self, keyData.data, keyData.dataVersion)
+			local migrationOk, migratedData, version = runMigrations(self, keyData.data, keyData.dataFormatVersion)
 
 			if not migrationOk then
 				return {
@@ -251,7 +259,7 @@ function Document.Open<T>(self: Document<T>): Result<T>
 			local updateOk, err = Util.updateAsync(self._dataStore, self._key, function(old): KeyData<T>
 				return {
 					data = migratedData,
-					dataVersion = version,
+					dataFormatVersion = version,
 					documentServiceFormatVersion = FORMAT_VERSION,
 					sessionLockId = old.sessionLockId,
 					lockTimestamp = 0,
@@ -274,10 +282,10 @@ function Document.Open<T>(self: Document<T>): Result<T>
 
 	self._open = true
 
-	return table.freeze(runHooks(self._postHooks.Open, {
+	return runHooks(self._postHooks.Open, {
 		success = true,
 		data = finalData,
-	})) :: Result<T>
+	}) :: Result<T>
 end
 
 --[=[
@@ -331,7 +339,6 @@ function Document.Close<T>(self: Document<T>): Result<nil>
 
 	return {
 		success = true,
-		data = nil,
 	}
 end
 
@@ -350,18 +357,36 @@ end
 function Document.UpdateCache<T>(self: Document<T>, transform: Transform<T>) end
 
 --[=[
-	Reads from the DataStore, without caching
+	Reads from the DataStore.
+
+	Warning: Overrides the cache. If you are using session locking, you should only read once.
 	
 	@return result -- result containing the data read
 
 	@yields
 ]=]
 function Document.Read<T>(self: Document<T>): Result<T>
-	local success, data, keyInfo
+	assert(self._open, "Document not open - open it or use Peek instead")
+
+	local success, getData = Util.getAsync(self._dataStore, self._key)
+	-- As the Document is open we know the data is valid
+	local keyData: KeyData<T> = getData :: KeyData<T>
+	-- Unless it has been edited outside of the library, in which case error
+	assert(keyData.data, "Key data missing")
+
+	if success then
+		self._cache = keyData.data
+
+		return {
+			success = true,
+			data = keyData.data,
+		}
+	end
 
 	return {
-		success = true,
-		data = self._default,
+		success = false,
+		failReason = "RobloxAPIFail",
+		errorMessage = getData :: string,
 	}
 end
 
@@ -395,6 +420,7 @@ function Document.Update<T>(self: Document<T>, transform: Transform<T>): Result<
 		end
 
 		local newDataIsValid, newData = self._check(transform(keyData.data))
+		newDataIsValid = newDataIsValid and typeof(newData) == "table"
 
 		if not newDataIsValid then
 			-- We do not call the invalid data handler, since this is for migrating old data and not fixing programmer mistakes.
@@ -408,13 +434,13 @@ function Document.Update<T>(self: Document<T>, transform: Transform<T>): Result<
 			lockTimestamp = if lockedByUs then os.time() else keyData.lockTimestamp,
 			isLocked = keyData.isLocked,
 			data = newData,
-			dataVersion = 1,
+			dataFormatVersion = 1,
 		}
 	end)
 
 	-- This should be a LOUD error! The developer is doing something wrong.
 	if transformInvalid then
-		error("Invalid transform function: return value did not pass the check function.")
+		error("Invalid transform function: return value did not pass the check function or is not a table.")
 	end
 
 	if not success then
@@ -442,6 +468,19 @@ function Document.Update<T>(self: Document<T>, transform: Transform<T>): Result<
 	runHooks(self._postHooks.Update, result)
 
 	return result
+end
+
+--[=[
+	Wipes all data associated with the key and closes the document
+
+	Satisfies compliance with GDPR right of erasure
+]=]
+function Document.Erase<T>(self: Document<T>)
+	assert(self._open, "Document not open")
+
+	Util.setAsync(self._dataStore, self._key, nil)
+
+	self:Close()
 end
 
 --[=[
