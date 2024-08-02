@@ -11,7 +11,8 @@ DocumentService does not use promises. This enables better type support and allo
 - Simple session locking API
 - Run hooks before and after operations, e.g. logging
 - Automatic retry with exponential backoff
-- Automatically transfers existing 
+- Automatically uses existing data
+- Checks your data can be stored in JSON
 
 ## Long-term goals
 - ACID transactions involving multiple Documents
