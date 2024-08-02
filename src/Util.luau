@@ -35,6 +35,15 @@ local function getUpdateBudget()
 	end
 end
 
+local function getSetBudget()
+	if _G.IS_ROBLOX then
+		return game:GetService("DataStoreService")
+			:GetRequestBudgetForRequestType(Enum.DataStoreRequestType.SetIncrementAsync)
+	else
+		return _G.NO_BUDGET or 60
+	end
+end
+
 local function getGetBudget()
 	if _G.IS_ROBLOX then
 		return game:GetService("DataStoreService"):GetRequestBudgetForRequestType(Enum.DataStoreRequestType.GetAsync)
@@ -60,6 +69,8 @@ end
 
 --[=[
 	A wrapper for UpdateAsync that retries with exponential backoff and prevents use of the throttle 'queue'
+
+	@yields
 ]=]
 function Util.updateAsync<T>(
 	dataStore: DataStore,
@@ -78,6 +89,8 @@ end
 
 --[=[
 	A wrapper for GetAsync that retries with exponential backoff and prevents use of the throttle 'queue'
+
+	@yields
 ]=]
 function Util.getAsync<T>(dataStore: DataStore, key: string): (boolean, unknown, DataStoreKeyInfo)
 	return Retry(RETRY.ATTEMPTS, RETRY.INITIAL_WAIT, function(): (unknown, DataStoreKeyInfo)
@@ -91,6 +104,24 @@ function Util.getAsync<T>(dataStore: DataStore, key: string): (boolean, unknown,
 		assert(getGetBudget() > 0, "Ran out of budget")
 
 		return dataStore:GetAsync(key, options)
+	end)
+end
+
+--[=[
+	A wrapper for SetAsync that retries with exponential backoff and prevents use of the throttle 'queue'.
+
+	I recommend you only use this for edge cases like erasing data.
+
+	@yields
+]=]
+function Util.setAsync<T>(dataStore: DataStore, key: string, value: any)
+	return Retry(RETRY.ATTEMPTS, RETRY.INITIAL_WAIT, function()
+		-- This is necessary to ensure UpdateAsyncs happen in the correct order
+		-- since the throttle 'queue' does not respect FILO
+		-- If autosaves happen in the wrong order data could be lost
+		assert(getSetBudget() > 0, "Ran out of budget")
+
+		return dataStore:SetAsync(key, value)
 	end)
 end
 
@@ -120,6 +151,40 @@ function Util.deepFreeze<T>(object: T): T
 	end
 
 	return object
+end
+
+--[=[
+	Errors if the data passed is not storable in JSON
+
+	Rejects:
+		NaN (all numbers must equal themselves)
+		Mixed table index types
+		Non sequential tables indexed by numbers
+		Non-string or number table indexes
+		Cyclic tables
+		type(value) == "userdata"
+
+	@param data
+]=]
+function Util.isStorable(data: unknown)
+	local indexDataType = nil
+
+	-- Check for NaN, inf, -inf
+	assert(data == data, "NaN is not storable")
+
+	assert(type(data) ~= "userdata", "userdata is not storable")
+
+	if type(data) == "table" then
+		for i, v in data :: {} do
+			if not indexDataType then
+			end
+			local first = true
+
+			if indexDataType and typeof(data) ~= indexDataType then
+				error("Tables with multiple index types are not storable")
+			end
+		end
+	end
 end
 
 return Util
