@@ -55,12 +55,7 @@ local DocumentStore = DocumentService.DocumentStore.new(
 	mockDataStore,
 	Guard.Check(check),
 	{ Document = "", Service = 2 },
-	function()
-		return {
-			Document = "",
-			Service = 3,
-		}
-	end
+	{}
 )
 
 Test("Opens document no simulated errors", function()
@@ -111,6 +106,10 @@ Test("Opens document with 5 simulated errors", function()
 	local Document = DocumentStore:GetDocument("Sublivion2")
 	local result = Document:Open()
 	assert(result.success == false)
+end)
+
+Test("Non-table data fails", function()
+	local DocumentStore = DocumentService.DocumentStore.new(mockDataStore, Guard.Check(Guard.Number), 3, {})
 end)
 
 -- Test: Migrate from 'flat data' to DocumentService
