@@ -17,12 +17,14 @@ export type DocumentStore<T> = typeof(setmetatable(
 	{} :: {
 		_dataStore: DataStore,
 		_check: (unknown) -> (boolean, T),
-		_default: T,
+		_default: Table<T>,
 		_migrations: Types.Migrations<T>,
 		_documents: { [string]: Document.Document<any> },
 	},
 	DocumentStore
 ))
+
+type Table<T> = T & {}
 
 --[=[
 	Creates a new DocumentStore
@@ -37,7 +39,7 @@ export type DocumentStore<T> = typeof(setmetatable(
 function DocumentStore.new<T>(
 	dataStore: DataStore,
 	check: (unknown) -> (boolean, T),
-	default: T,
+	default: Table<T>,
 	migrations: Types.Migrations<T>
 ): DocumentStore<T>
 	return setmetatable({
