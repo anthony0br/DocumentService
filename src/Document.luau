@@ -5,7 +5,7 @@ local Types = require("./Types")
 local Util = require("./Util")
 
 local SESSION_EXPIRE_TIME = 15 * 60
-local AUTOSAVE_PERIOD = 120
+local AUTOSAVE_PERIOD = 180
 
 --[=[
 	@class Document
@@ -38,6 +38,7 @@ export type Document<T> = typeof(setmetatable(
 		},
 		_migrations: Types.Migrations<T>,
 		_cache: T?,
+		_saveOnCloseConn: RBXScriptConnection?,
 	},
 	Document
 ))
@@ -85,6 +86,10 @@ local function runMigrations<T>(self: Document<T>, initialData: unknown, initial
 	return success, latestData, version
 end
 
+local function latestDataFormatVersion<T>(self: Document<T>)
+	return #self._migrations
+end
+
 --[=[
 	Creates a new Document class
 
@@ -106,7 +111,7 @@ function Document.new<T>(
 	assert(check(default), "Default must pass type check")
 	assert(typeof(default) == "table", "Non-table values are not supported - group your data.")
 
-	return setmetatable({
+	local self = setmetatable({
 		_key = key,
 		_dataStore = dataStore,
 		_check = check,
@@ -128,6 +133,17 @@ function Document.new<T>(
 		},
 		_migrations = migrations,
 	}, Document)
+
+	-- Save on bind to close in a Roblox runtime, if session locked
+	if _G.IS_ROBLOX then
+		game:BindToClose(function()
+			if self._lockedByUs and self._open then
+				self:Save()
+			end
+		end)
+	end
+
+	return self
 end
 
 --[=[
@@ -200,7 +216,8 @@ function Document.Open<T>(self: Document<T>): Result<T>
 		local updateOk, result = Util.updateAsync(self._dataStore, self._key, function(): KeyData<T>
 			return {
 				data = self._default,
-				dataFormatVersion = 0,
+				-- The default should always be the latest version
+				dataFormatVersion = latestDataFormatVersion(self),
 				documentServiceFormatVersion = FORMAT_VERSION,
 				sessionLockId = "",
 				lockTimestamp = 0,
@@ -241,7 +258,7 @@ function Document.Open<T>(self: Document<T>): Result<T>
 		end
 
 		local checkOk, checkedData = self._check(keyData.data)
-		local isLatestDataFormat = keyData.dataFormatVersion == #self._migrations
+		local isLatestDataFormat = keyData.dataFormatVersion == latestDataFormatVersion(self)
 
 		if checkOk and isLatestDataFormat then
 			finalData = checkedData
@@ -297,8 +314,57 @@ end
 ]=]
 function Document.Lock<T>(self: Document<T>): Result<nil>
 	assert(self._open, "Document not open")
+	assert(not self._lockedByUs, "Document already locked")
 
-	-- On bind to close: Loop adding save requests, yield until there datastore budget available
+	local alreadyLocked
+	local success, updatedData = Util.updateAsync(self._dataStore, self._key, function(keyData: KeyData<T>): KeyData<T>?
+		-- Reset error flags in case callback runs multiple times
+		alreadyLocked = false
+
+		self:SetCache(keyData.data)
+
+		local locked = keyData.isLocked and (keyData.lockTimestamp - os.time() < SESSION_EXPIRE_TIME)
+
+		if locked then
+			alreadyLocked = true
+			return
+		end
+
+		return {
+			documentServiceFormatVersion = FORMAT_VERSION,
+			sessionLockId = self._sessionId,
+			lockTimestamp = os.time(),
+			isLocked = true,
+			data = keyData.data,
+			dataFormatVersion = keyData.dataFormatVersion,
+		}
+	end)
+
+	if not success then
+		return {
+			success = false,
+			failReason = "RobloxAPIFail",
+			errorMessage = updatedData :: any,
+		}
+	end
+
+	if alreadyLocked then
+		return {
+			success = false,
+			failReason = "SessionLocked",
+			errorMessage = "Document is already locked",
+		}
+	end
+
+	self._lockedByUs = true
+
+	-- Autosave
+	task.spawn(function()
+		while self._lockedByUs do
+			self:Save()
+			task.wait(AUTOSAVE_PERIOD)
+		end
+	end)
 
 	return {
 		success = true,
@@ -315,7 +381,46 @@ end
 function Document.RemoveLock<T>(self: Document<T>): Result<nil>
 	assert(self._open, "Document not open")
 
-	-- We need to queue RemoveLock until all updates finished!
+	local lockedByOther
+	local success, updatedData = Util.updateAsync(self._dataStore, self._key, function(keyData: KeyData<T>): KeyData<T>?
+		-- Reset error flags in case callback runs multiple times
+		lockedByOther = false
+
+		local locked = keyData.isLocked and (keyData.lockTimestamp - os.time() < SESSION_EXPIRE_TIME)
+		local lockedByUs = locked and (keyData.sessionLockId == self._sessionId)
+
+		if locked and not lockedByUs then
+			lockedByOther = true
+			return
+		end
+
+		return {
+			documentServiceFormatVersion = FORMAT_VERSION,
+			sessionLockId = "",
+			lockTimestamp = 0,
+			isLocked = false,
+			data = keyData.data,
+			dataFormatVersion = keyData.dataFormatVersion,
+		}
+	end)
+
+	if not success then
+		return {
+			success = false,
+			failReason = "RobloxAPIFail",
+			errorMessage = updatedData :: any,
+		}
+	end
+
+	if lockedByOther then
+		return {
+			success = false,
+			failReason = "SessionLocked",
+			errorMessage = "Document is locked by another session.",
+		}
+	end
+
+	self._lockedByUs = false
 
 	return {
 		success = true,
@@ -343,18 +448,28 @@ function Document.Close<T>(self: Document<T>): Result<nil>
 end
 
 function Document.SetCache<T>(self: Document<T>, newCache: T)
-	-- TO DO: Throw error if not session locked
+	assert(self._lockedByUs, "Cache is only supported for session locked data")
 
-	Util.deepFreeze(newCache)
+	self._cache = Util.deepFreeze(newCache)
 end
 
 function Document.GetCache<T>(self: Document<T>)
-	-- TO DO: Throw error if not session locked
+	assert(self._lockedByUs, "Cache is only supported for session locked data")
 
-	return Util.deepFreeze(self._cache)
+	return self._cache
 end
 
-function Document.UpdateCache<T>(self: Document<T>, transform: Transform<T>) end
+--[=[
+	Updates the cache.
+
+	Note you must use immutable operations, i.e. clone any table you intend to edit
+]=]
+function Document.UpdateCache<T>(self: Document<T>, transform: Transform<T>)
+	assert(self._lockedByUs, "Cache is only supported for session locked data")
+	assert(self._cache, "No existing cache to update")
+
+	self._cache = Util.deepFreeze(transform(self._cache))
+end
 
 --[=[
 	Reads from the DataStore.
@@ -375,7 +490,7 @@ function Document.Read<T>(self: Document<T>): Result<T>
 	assert(keyData.data, "Key data missing")
 
 	if success then
-		self._cache = keyData.data
+		self:SetCache(keyData.data)
 
 		return {
 			success = true,
@@ -391,7 +506,9 @@ function Document.Read<T>(self: Document<T>): Result<T>
 end
 
 --[=[
-	Performs an atomic transaction on the Document
+	Performs an atomic transaction on the Document, writing to the DataStore.
+
+	If using session locking, transforms will build on cached data.
 
 	@param transform -- transform function for the transaction
 	@return result -- result containing the new data
@@ -403,40 +520,51 @@ function Document.Update<T>(self: Document<T>, transform: Transform<T>): Result<
 
 	runHooks(self._preHooks.Update, transform)
 
-	local lockStolen
+	local lockedByOther
 	local transformInvalid
-	local success, updatedData = Util.updateAsync(self._dataStore, self._key, function(keyData: KeyData<T>): KeyData<T>?
-		-- Reset error flags in case callback runs multiple times
-		lockStolen = false
-		transformInvalid = false
+	local success, updatedKeyData = Util.updateAsync(
+		self._dataStore,
+		self._key,
+		function(keyData: KeyData<T>): KeyData<T>?
+			-- Reset error flags in case callback runs multiple times
+			lockedByOther = false
+			transformInvalid = false
 
-		-- Check if lock has been stolen
-		local locked = keyData.isLocked and (keyData.lockTimestamp - os.time() < SESSION_EXPIRE_TIME)
-		local lockedByUs = locked and (keyData.sessionLockId == self._sessionId)
+			-- Check if lock has been stolen
+			local locked = keyData.isLocked and (keyData.lockTimestamp - os.time() < SESSION_EXPIRE_TIME)
+			local lockedByUs = locked and (keyData.sessionLockId == self._sessionId)
 
-		if locked and not lockedByUs then
-			lockStolen = true
-			return
+			if locked and not lockedByUs then
+				lockedByOther = true
+				return
+			end
+
+			local newData = keyData.data
+			if lockedByUs and self._cache then
+				newData = transform(self._cache)
+			else
+				newData = transform(keyData.data)
+			end
+
+			local newDataIsValid = self._check(newData)
+			newDataIsValid = newDataIsValid and typeof(newData) == "table"
+
+			if not newDataIsValid then
+				-- We do not call the invalid data handler, since this is for migrating old data and not fixing programmer mistakes.
+				transformInvalid = true
+				return
+			end
+
+			return {
+				documentServiceFormatVersion = FORMAT_VERSION,
+				sessionLockId = keyData.sessionLockId,
+				lockTimestamp = if lockedByUs then os.time() else keyData.lockTimestamp,
+				isLocked = keyData.isLocked,
+				data = newData,
+				dataFormatVersion = keyData.dataFormatVersion,
+			}
 		end
-
-		local newDataIsValid, newData = self._check(transform(keyData.data))
-		newDataIsValid = newDataIsValid and typeof(newData) == "table"
-
-		if not newDataIsValid then
-			-- We do not call the invalid data handler, since this is for migrating old data and not fixing programmer mistakes.
-			transformInvalid = true
-			return
-		end
-
-		return {
-			documentServiceFormatVersion = FORMAT_VERSION,
-			sessionLockId = keyData.sessionLockId,
-			lockTimestamp = if lockedByUs then os.time() else keyData.lockTimestamp,
-			isLocked = keyData.isLocked,
-			data = newData,
-			dataFormatVersion = 1,
-		}
-	end)
+	)
 
 	-- This should be a LOUD error! The developer is doing something wrong.
 	if transformInvalid then
@@ -447,27 +575,47 @@ function Document.Update<T>(self: Document<T>, transform: Transform<T>): Result<
 		return {
 			success = false,
 			failReason = "RobloxAPIFail",
-			errorMessage = updatedData :: any,
+			errorMessage = updatedKeyData :: any,
 		}
 	end
 
-	if lockStolen then
+	if lockedByOther then
 		return {
 			success = false,
 			failReason = "SessionLocked",
-			errorMessage = "Document is locked by another session",
+			errorMessage = "Document is locked by another session.",
 		}
+	end
+
+	-- Cast to KeyData<T> since the new data has already passed self._check and the update succeeded
+	local updatedData: T = (updatedKeyData :: KeyData<T>).data
+
+	if self._lockedByUs then
+		self:SetCache(updatedData)
 	end
 
 	local result: Result<T> = {
 		success = true,
-		-- Cast to T since updatedData has already passed self._check
-		data = updatedData :: T,
+		data = updatedData,
 	}
 
 	runHooks(self._postHooks.Update, result)
 
 	return result
+end
+
+--[=[
+	Saves a Document's cache to its DataStore.
+
+	For session-locked data only.
+]=]
+function Document.Save<T>(self: Document<T>)
+	assert(self._open, "Document not open")
+	assert(self._lockedByUs, "Must be session locked to access cache")
+
+	return self:Update(function(cache)
+		return cache
+	end)
 end
 
 --[=[
