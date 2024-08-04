@@ -6,11 +6,7 @@ export type PreHookEvent = "Open" | "Close" | "Update" | "Read"
 
 export type PostHookEvent = "Open" | "Close" | "Update" | "Read"
 
-export type FailReason =
-	| "RobloxAPIFail"
-	| "InvalidDataNotHandled"
-	| "SessionLocked"
-	| "MigrationFailed"
+export type FailReason = "RobloxAPIFail" | "InvalidDataNotHandled" | "SessionLocked" | "MigrationFailed"
 
 export type Result<T> = {
 	success: true,
