@@ -27,7 +27,7 @@ if not _G.IS_ROBLOX then
 	}
 end
 
-local function getUpdateBudget()
+function Util.getUpdateBudget()
 	if _G.IS_ROBLOX then
 		return game:GetService("DataStoreService"):GetRequestBudgetForRequestType(Enum.DataStoreRequestType.UpdateAsync)
 	else
@@ -35,7 +35,7 @@ local function getUpdateBudget()
 	end
 end
 
-local function getSetBudget()
+function Util.getSetBudget()
 	if _G.IS_ROBLOX then
 		return game:GetService("DataStoreService")
 			:GetRequestBudgetForRequestType(Enum.DataStoreRequestType.SetIncrementAsync)
@@ -44,7 +44,7 @@ local function getSetBudget()
 	end
 end
 
-local function getGetBudget()
+function Util.getGetBudget()
 	if _G.IS_ROBLOX then
 		return game:GetService("DataStoreService"):GetRequestBudgetForRequestType(Enum.DataStoreRequestType.GetAsync)
 	else
@@ -81,7 +81,7 @@ function Util.updateAsync<T>(
 		-- This is necessary to ensure UpdateAsyncs happen in the correct order
 		-- since the throttle 'queue' does not respect FILO
 		-- If autosaves happen in the wrong order data could be lost
-		assert(getUpdateBudget() > 0, "Ran out of budget")
+		assert(Util.getUpdateBudget() > 0, "Ran out of budget")
 
 		return dataStore:UpdateAsync(key, transform)
 	end)
@@ -101,7 +101,7 @@ function Util.getAsync<T>(dataStore: DataStore, key: string): (boolean, unknown,
 			options.UseCache = false
 		end
 
-		assert(getGetBudget() > 0, "Ran out of budget")
+		assert(Util.getGetBudget() > 0, "Ran out of budget")
 
 		return dataStore:GetAsync(key, options)
 	end)
@@ -119,7 +119,7 @@ function Util.setAsync<T>(dataStore: DataStore, key: string, value: any)
 		-- This is necessary to ensure UpdateAsyncs happen in the correct order
 		-- since the throttle 'queue' does not respect FILO
 		-- If autosaves happen in the wrong order data could be lost
-		assert(getSetBudget() > 0, "Ran out of budget")
+		assert(Util.getSetBudget() > 0, "Ran out of budget")
 
 		return dataStore:SetAsync(key, value)
 	end)

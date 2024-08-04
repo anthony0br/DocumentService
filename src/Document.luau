@@ -134,15 +134,6 @@ function Document.new<T>(
 		_migrations = migrations,
 	}, Document)
 
-	-- Save on bind to close in a Roblox runtime, if session locked
-	if _G.IS_ROBLOX then
-		game:BindToClose(function()
-			if self._lockedByUs and self._open then
-				self:Save()
-			end
-		end)
-	end
-
 	return self
 end
 
@@ -154,11 +145,27 @@ end
 	If the data is not a table or not in the DocumentService format (see KeyData<T>),
 	the data will be nil.
 ]=]
-function Document.Peek<T>(self: Document<T>): Result<unknown>
+function Document.Peek<T>(self: Document<T>): Result<any>
+	assert(not self._open, "Document open - use Read instead")
+
+	local success, getData: any = Util.getAsync(self._dataStore, self._key)
+
+	local data
+	if type(getData) == "table" then
+		data = getData.data
+	end
+
+	if success then
+		return {
+			success = true,
+			data = data,
+		}
+	end
+
 	return {
 		success = false,
 		failReason = "RobloxAPIFail",
-		errorMessage = "Not implemented",
+		errorMessage = getData :: string,
 	}
 end
 
@@ -308,6 +315,8 @@ end
 --[=[
 	Adds a session lock and enables auto-saves.
 
+	This is a separate method for DX, however unlocking is combined with saving to avoid hitting limits during server shutdowns.
+
 	@return result
 
 	@yields
@@ -359,10 +368,10 @@ function Document.Lock<T>(self: Document<T>): Result<nil>
 	self._lockedByUs = true
 
 	-- Autosave
-	task.spawn(function()
+	task.defer(function()
 		while self._lockedByUs do
-			self:Save()
 			task.wait(AUTOSAVE_PERIOD)
+			self:Save()
 		end
 	end)
 
@@ -372,63 +381,9 @@ function Document.Lock<T>(self: Document<T>): Result<nil>
 end
 
 --[=[
-	Removes a session lock
+	Destroys the document instance.
 
-	@return result
-
-	@yields
-]=]
-function Document.RemoveLock<T>(self: Document<T>): Result<nil>
-	assert(self._open, "Document not open")
-
-	local lockedByOther
-	local success, updatedData = Util.updateAsync(self._dataStore, self._key, function(keyData: KeyData<T>): KeyData<T>?
-		-- Reset error flags in case callback runs multiple times
-		lockedByOther = false
-
-		local locked = keyData.isLocked and (keyData.lockTimestamp - os.time() < SESSION_EXPIRE_TIME)
-		local lockedByUs = locked and (keyData.sessionLockId == self._sessionId)
-
-		if locked and not lockedByUs then
-			lockedByOther = true
-			return
-		end
-
-		return {
-			documentServiceFormatVersion = FORMAT_VERSION,
-			sessionLockId = "",
-			lockTimestamp = 0,
-			isLocked = false,
-			data = keyData.data,
-			dataFormatVersion = keyData.dataFormatVersion,
-		}
-	end)
-
-	if not success then
-		return {
-			success = false,
-			failReason = "RobloxAPIFail",
-			errorMessage = updatedData :: any,
-		}
-	end
-
-	if lockedByOther then
-		return {
-			success = false,
-			failReason = "SessionLocked",
-			errorMessage = "Document is locked by another session.",
-		}
-	end
-
-	self._lockedByUs = false
-
-	return {
-		success = true,
-	}
-end
-
---[=[
-	Makes the Document uneditable until it is re-opened
+	If session locked, will save the document and remove the lock first.
 
 	@return result
 
@@ -437,7 +392,9 @@ end
 function Document.Close<T>(self: Document<T>): Result<nil>
 	assert(self._open, "Document not open")
 
-	self._open = false
+	if self._lockedByUs then
+		self:SaveAndUnlock()
+	end
 
 	setmetatable(self :: any, nil)
 	table.clear(self :: any)
@@ -447,34 +404,61 @@ function Document.Close<T>(self: Document<T>): Result<nil>
 	}
 end
 
-function Document.SetCache<T>(self: Document<T>, newCache: T)
+--[=[
+	Sets the cache.
+
+	Note you must use immutable operations, i.e. clone any table you intend to edit
+
+	@param newCache
+	@return newCache
+]=]
+function Document.SetCache<T>(self: Document<T>, newCache: T): T?
+	assert(self._open, "Document not open")
 	assert(self._lockedByUs, "Cache is only supported for session locked data")
 
 	self._cache = Util.deepFreeze(newCache)
+
+	return self._cache
 end
 
-function Document.GetCache<T>(self: Document<T>)
+--[=[
+	Retrieves the cache.
+
+	Note you must use immutable operations, i.e. clone any table you intend to edit
+
+	@return cache
+]=]
+function Document.GetCache<T>(self: Document<T>): T?
+	assert(self._open, "Document not open")
 	assert(self._lockedByUs, "Cache is only supported for session locked data")
 
 	return self._cache
 end
 
 --[=[
-	Updates the cache.
+	Transforms the cache.
 
 	Note you must use immutable operations, i.e. clone any table you intend to edit
+
+	@param transform
+	@return cache
 ]=]
-function Document.UpdateCache<T>(self: Document<T>, transform: Transform<T>)
+function Document.UpdateCache<T>(self: Document<T>, transform: Transform<T>): T
+	assert(self._open, "Document not open")
 	assert(self._lockedByUs, "Cache is only supported for session locked data")
 	assert(self._cache, "No existing cache to update")
 
 	self._cache = Util.deepFreeze(transform(self._cache))
+
+	return self._cache
 end
 
 --[=[
 	Reads from the DataStore.
 
-	Warning: Overrides the cache. If you are using session locking, you should only read once.
+	:::warning
+	Overrides the cache. If you are using session locking, you should only read once.
+	:::
 	
 	@return result -- result containing the data read
 
@@ -510,12 +494,13 @@ end
 
 	If using session locking, transforms will build on cached data.
 
-	@param transform -- transform function for the transaction
-	@return result -- result containing the new data
+	@param transform -- Transform function for the transaction.
+	@param shouldUnlock -- Should this update also remove the session lock? This reduces budget usage by combining updates and unlocks.
+	@return result -- Result containing the new data.
 
 	@yields
 ]=]
-function Document.Update<T>(self: Document<T>, transform: Transform<T>): Result<T>
+function Document.Update<T>(self: Document<T>, transform: Transform<T>, shouldUnlock: boolean?): Result<T>
 	assert(self._open, "Document not open")
 
 	runHooks(self._preHooks.Update, transform)
@@ -555,14 +540,25 @@ function Document.Update<T>(self: Document<T>, transform: Transform<T>): Result<
 				return
 			end
 
-			return {
-				documentServiceFormatVersion = FORMAT_VERSION,
-				sessionLockId = keyData.sessionLockId,
-				lockTimestamp = if lockedByUs then os.time() else keyData.lockTimestamp,
-				isLocked = keyData.isLocked,
-				data = newData,
-				dataFormatVersion = keyData.dataFormatVersion,
-			}
+			if not shouldUnlock then
+				return {
+					documentServiceFormatVersion = FORMAT_VERSION,
+					sessionLockId = keyData.sessionLockId,
+					lockTimestamp = os.time(),
+					isLocked = keyData.isLocked,
+					data = newData,
+					dataFormatVersion = keyData.dataFormatVersion,
+				}
+			else
+				return {
+					documentServiceFormatVersion = FORMAT_VERSION,
+					sessionLockId = "",
+					lockTimestamp = 0,
+					isLocked = false,
+					data = newData,
+					dataFormatVersion = keyData.dataFormatVersion,
+				}
+			end
 		end
 	)
 
@@ -605,7 +601,7 @@ function Document.Update<T>(self: Document<T>, transform: Transform<T>): Result<
 end
 
 --[=[
-	Saves a Document's cache to its DataStore.
+	Saves a Document's cache to its DataStore. Equivalent to calling Update without transforming the data.
 
 	For session-locked data only.
 ]=]
@@ -619,6 +615,20 @@ function Document.Save<T>(self: Document<T>)
 end
 
 --[=[
+	Saves a Document's cache to its DataStore and removes the session lock.
+
+	For session-locked data only.
+]=]
+function Document.SaveAndUnlock<T>(self: Document<T>)
+	assert(self._open, "Document not open")
+	assert(self._lockedByUs, "Must be session locked to access cache")
+
+	return self:Update(function(cache)
+		return cache
+	end, true)
+end
+
+--[=[
 	Wipes all data associated with the key and closes the document
 
 	Satisfies compliance with GDPR right of erasure
@@ -626,9 +636,18 @@ end
 function Document.Erase<T>(self: Document<T>)
 	assert(self._open, "Document not open")
 
-	Util.setAsync(self._dataStore, self._key, nil)
-
+	-- Set lockedByUs to false so we don't try to remove the lock
+	self._lockedByUs = false
 	self:Close()
+
+	Util.setAsync(self._dataStore, self._key, nil)
+end
+
+--[=[
+	Returns whether we hold a session lock on the document and can access caching methods
+]=]
+function Document.IsLockedByUs<T>(self: Document<T>): boolean
+	return self._lockedByUs
 end
 
 --[=[

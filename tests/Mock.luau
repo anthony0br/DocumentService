@@ -128,10 +128,6 @@ end)
 
 -- Test: locking
 
--- Test: Steal mode
-
--- Test: Await mode
-
 -- Test: Data matches interface
 
 -- Test: Data reads correctly
@@ -147,5 +143,7 @@ end)
 -- Test: Transactions should fail if session stolen
 
 -- Test: Session locks should stay open
+
+-- No budget tests
 
 print(`Tests complete. {Results.passed} passed, {Results.failed} failed`)

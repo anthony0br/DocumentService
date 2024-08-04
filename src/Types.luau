@@ -9,7 +9,6 @@ export type PostHookEvent = "Open" | "Close" | "Update" | "Read"
 export type FailReason =
 	| "RobloxAPIFail"
 	| "InvalidDataNotHandled"
-	| "KeyFormatCorrupted"
 	| "SessionLocked"
 	| "MigrationFailed"
 

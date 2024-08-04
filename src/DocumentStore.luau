@@ -3,6 +3,7 @@
 
 local Document = require("./Document")
 local Types = require("./Types")
+local Util = require("./Util")
 
 --[=[
 	@class DocumentStore
@@ -19,10 +20,12 @@ export type DocumentStore<T> = typeof(setmetatable(
 		_check: (unknown) -> (boolean, T),
 		_default: Table<T>,
 		_migrations: Types.Migrations<T>,
-		_documents: { [string]: Document.Document<any> },
+		_documents: { [string]: Document<T> },
 	},
 	DocumentStore
 ))
+
+type Document<T> = Document.Document<T>
 
 type Table<T> = T & {}
 
@@ -42,13 +45,22 @@ function DocumentStore.new<T>(
 	default: Table<T>,
 	migrations: Types.Migrations<T>
 ): DocumentStore<T>
-	return setmetatable({
+	local self = setmetatable({
 		_dataStore = dataStore,
 		_check = check,
 		_default = default,
 		_migrations = migrations,
 		_documents = {},
 	}, DocumentStore)
+
+	-- Save and close all documents as fast as possible on BindToClose
+	if _G.IS_ROBLOX then
+		game:BindToClose(function()
+			self:CloseDocuments()
+		end)
+	end
+
+	return self
 end
 
 --[=[
@@ -58,12 +70,12 @@ end
 
 	@return Document
 ]=]
-function DocumentStore.GetDocument<T>(self: DocumentStore<T>, key: string): Document.Document<T>
+function DocumentStore.GetDocument<T>(self: DocumentStore<T>, key: string): Document<T>
 	if self._documents[key] then
 		return self._documents[key]
 	end
 
-	local document = Document.new(key, self._dataStore, self._check, self._default, self._migrations)
+	local document: Document<T> = Document.new(key, self._dataStore, self._check, self._default, self._migrations)
 
 	document:HookAfter("Close", function(result: Types.Result<T>)
 		if result.success then
@@ -76,6 +88,31 @@ function DocumentStore.GetDocument<T>(self: DocumentStore<T>, key: string): Docu
 	self._documents[key] = document
 
 	return document
+end
+
+--[=[
+	Closes all documents as fast as possible
+]=]
+function DocumentStore.CloseDocuments<T>(self: DocumentStore<T>)
+	local open = true
+	while open do
+		local budget = Util.getUpdateBudget()
+		local count = 0
+		open = false
+		for i, v: Document<T> in pairs(self._documents) do
+			open = true
+			if count >= budget then
+				break
+			end
+			if v:IsLockedByUs() then
+				count += 1
+			end
+			task.spawn(function()
+				v:Close()
+			end)
+		end
+		task.wait()
+	end
 end
 
 --[=[
