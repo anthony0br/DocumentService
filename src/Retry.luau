@@ -20,6 +20,8 @@
 
 	@return success
 	@return ... -- if successful, the return values of func, otherwise an error string
+
+	@private
 ]=]
 local function Retry<T..., S...>(maxAttempts: number, initialWait: number, func: (T...) -> S..., ...: T...): (boolean, S...)
 	local result

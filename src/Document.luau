@@ -36,12 +36,18 @@ export type Document<T> = typeof(setmetatable(
 			Read: { (Result<T>) -> Result<T> },
 			Update: { (Result<T>) -> Result<T> },
 		},
-		_migrations: Types.Migrations<T>,
+		_migrations: Migrations<T>,
 		_cache: T?,
 		_saveOnCloseConn: RBXScriptConnection?,
 	},
 	Document
 ))
+
+export type Migrations<T> = Types.Migrations<T>
+
+export type PreHookEvent = Types.PreHookEvent
+
+export type PostHookEvent = Types.PostHookEvent
 
 export type Transform<T> = (data: T) -> T
 
@@ -100,6 +106,8 @@ end
 	@param check -- A type check function for your data, errors if types are invalid
 	@param default -- Default values, which are set if keys are empty
 	@param migrations -- Fixes invalid data e.g. through migrations. Unfixable data should be reset.
+
+	@private
 ]=]
 function Document.new<T>(
 	key: string,
@@ -146,6 +154,8 @@ end
 
 	If the data is not a table or not in the DocumentService format (see KeyData<T>),
 	the data will be nil.
+
+	@yields
 ]=]
 function Document.Peek<T>(self: Document<T>): Result<any>
 	assert(not self._open, "Document open - use Read instead")
@@ -629,6 +639,8 @@ end
 	Saves a Document's cache to its DataStore. Equivalent to calling Update without transforming the data.
 
 	For session-locked data only.
+
+	@yields
 ]=]
 function Document.Save<T>(self: Document<T>)
 	assert(self._open, "Document not open")
@@ -643,6 +655,8 @@ end
 	Saves a Document's cache to its DataStore and removes the session lock.
 
 	For session-locked data only.
+
+	@yields
 ]=]
 function Document.SaveAndUnlock<T>(self: Document<T>)
 	assert(self._open, "Document not open")
@@ -656,7 +670,9 @@ end
 --[=[
 	Wipes all data associated with the key and closes the document
 
-	Satisfies compliance with GDPR right of erasure
+	Satisfies compliance with GDPR right of erasure.
+
+	@yields
 ]=]
 function Document.Erase<T>(self: Document<T>)
 	assert(self._open, "Document not open")
@@ -688,7 +704,7 @@ end
 ]=]
 function Document.HookBefore<T, S...>(
 	self: Document<T>,
-	event: Types.PreHookEvent,
+	event: PreHookEvent,
 	hook: ((Transform<T>) -> Transform<T>) | (() -> ())
 )
 	table.insert(self._preHooks[event], hook)
@@ -703,7 +719,7 @@ end
 	@param event -- the operation to call the hook after
 	@param hook -- a hook function that receives the arguments passed in to the operation
 ]=]
-function Document.HookAfter<T>(self: Document<T>, event: Types.PostHookEvent, hook: (Result<T>) -> Result<T>)
+function Document.HookAfter<T>(self: Document<T>, event: PostHookEvent, hook: (Result<T>) -> Result<T>)
 	table.insert(self._postHooks[event], hook)
 end
 

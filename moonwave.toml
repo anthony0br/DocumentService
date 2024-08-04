@@ -1,0 +1,20 @@
+title = "DocumentService"
+gitRepoUrl = "https://github.com/anthony0br/DocumentService" # From Git
+
+gitSourceBranch = "main"
+changelog = true
+classOrder = [
+    "DocumentService",
+    "DocumentStore",
+    "Document",
+    "Util",
+    "Retry"
+]
+
+[docusaurus]
+onBrokenLinks = "throw"
+onBrokenMarkdownLinks = "warn"
+
+[footer]
+style = "dark"
+copyright = "Copyright © 2021 Anthony O'Brien. Built with Moonwave and Docusaurus"

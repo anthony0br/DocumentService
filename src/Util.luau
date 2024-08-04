@@ -2,13 +2,15 @@
 -- Contains util functions, such useful hooks, reconciling, migrations
 -- Author: Anthony O'Brien
 
-local Types = require("./Types")
 local Retry = require("./Retry")
 
 --[=[
 	@class Util
 
-	A collection of utility functions for DocumentService.
+	A collection of utility functions for handling datastores.
+
+	If you need to access any datastores directly while using DocumentService, it is recommended you use these
+	functions or similar implementations.
 
 ]=]
 local Util = {}
@@ -73,7 +75,7 @@ end
 	@yields
 ]=]
 function Util.updateAsync<T>(
-	dataStore: DataStore,
+	dataStore: GlobalDataStore,
 	key: string,
 	transform: (any, DataStoreKeyInfo) -> (any, { number }?, {}?)
 ): (boolean, unknown, DataStoreKeyInfo)
@@ -92,7 +94,7 @@ end
 
 	@yields
 ]=]
-function Util.getAsync<T>(dataStore: DataStore, key: string): (boolean, unknown, DataStoreKeyInfo)
+function Util.getAsync<T>(dataStore: GlobalDataStore, key: string): (boolean, unknown, DataStoreKeyInfo)
 	return Retry(RETRY.ATTEMPTS, RETRY.INITIAL_WAIT, function(): (unknown, DataStoreKeyInfo)
 		local options
 
@@ -114,7 +116,7 @@ end
 
 	@yields
 ]=]
-function Util.setAsync<T>(dataStore: DataStore, key: string, value: any)
+function Util.setAsync<T>(dataStore: GlobalDataStore, key: string, value: any)
 	return Retry(RETRY.ATTEMPTS, RETRY.INITIAL_WAIT, function()
 		-- This is necessary to ensure UpdateAsyncs happen in the correct order
 		-- since the throttle 'queue' does not respect FILO
@@ -128,7 +130,7 @@ end
 --[=[
 	Deeply freezes a table (not entering metatables)
 
-	@param table -- table to freeze
+	@param object -- table to freeze
 	@return frozenTable
 ]=]
 function Util.deepFreeze<T>(object: T): T

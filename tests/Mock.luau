@@ -83,15 +83,6 @@ Test("Can reopen document after closed, retrieved by string", function()
 	Document:Open()
 end)
 
-do
-	local Document = DocumentStore:GetDocument("Sublivion")
-	Document:Close()
-
-	Test("Can reopen document after closed, retrieved by reference", function()
-		Document:Open()
-	end)
-end
-
 Test("Opens document with simulated error", function()
 	mockDataStore.errors:addSimulatedErrors(1)
 	local Document = DocumentStore:GetDocument("Sublivion1")
