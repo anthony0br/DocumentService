@@ -111,6 +111,8 @@ function Document.new<T>(
 	assert(check(default), "Default must pass type check")
 	assert(typeof(default) == "table", "Non-table values are not supported - group your data.")
 
+	Util.assertStorable(default)
+
 	local self = setmetatable({
 		_key = key,
 		_dataStore = dataStore,
@@ -505,8 +507,11 @@ function Document.Update<T>(self: Document<T>, transform: Transform<T>, shouldUn
 
 	runHooks(self._preHooks.Update, transform)
 
-	local lockedByOther
-	local transformInvalid
+	local lockedByOther: boolean
+	local transformInvalid: boolean
+	local notStorable: boolean
+	local notStorableErr: string
+
 	local success, updatedKeyData = Util.updateAsync(
 		self._dataStore,
 		self._key,
@@ -514,6 +519,8 @@ function Document.Update<T>(self: Document<T>, transform: Transform<T>, shouldUn
 			-- Reset error flags in case callback runs multiple times
 			lockedByOther = false
 			transformInvalid = false
+			notStorable = false
+			notStorableErr = ""
 
 			-- Check if lock has been stolen
 			local locked = keyData.isLocked and (keyData.lockTimestamp - os.time() < SESSION_EXPIRE_TIME)
@@ -533,6 +540,16 @@ function Document.Update<T>(self: Document<T>, transform: Transform<T>, shouldUn
 
 			local newDataIsValid = self._check(newData)
 			newDataIsValid = newDataIsValid and typeof(newData) == "table"
+
+			local isStorable, err = pcall(function()
+				Util.assertStorable(newData)
+			end)
+
+			if not isStorable then
+				notStorable = true
+				notStorableErr = err
+				return
+			end
 
 			if not newDataIsValid then
 				-- We do not call the invalid data handler, since this is for migrating old data and not fixing programmer mistakes.
@@ -564,7 +581,11 @@ function Document.Update<T>(self: Document<T>, transform: Transform<T>, shouldUn
 
 	-- This should be a LOUD error! The developer is doing something wrong.
 	if transformInvalid then
-		error("Invalid transform function: return value did not pass the check function or is not a table.")
+		error("Invalid transform function")
+	end
+
+	if notStorable then
+		error("Not storable: " .. notStorableErr)
 	end
 
 	if not success then

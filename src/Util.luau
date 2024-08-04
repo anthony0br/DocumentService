@@ -166,7 +166,7 @@ end
 
 	@param data
 ]=]
-function Util.isStorable(data: unknown)
+function Util.assertStorable(data: unknown)
 	local indexDataType = nil
 
 	-- Check for NaN, inf, -inf
@@ -175,14 +175,33 @@ function Util.isStorable(data: unknown)
 	assert(type(data) ~= "userdata", "userdata is not storable")
 
 	if type(data) == "table" then
+		local last
 		for i, v in data :: {} do
 			if not indexDataType then
-			end
-			local first = true
+				indexDataType = type(i)
 
-			if indexDataType and typeof(data) ~= indexDataType then
+				if not (indexDataType == "string" or indexDataType == "number") then
+					error("Table indexes must be strings or numbers")
+				end
+			end
+
+			if indexDataType and type(i) ~= indexDataType then
 				error("Tables with multiple index types are not storable")
 			end
+
+			if type(i) == "number" and last then
+				if i - last ~= 1 then
+					error("Tables with number indexes must be sequential")
+				end
+
+				last = i
+			end
+
+			if v == data then
+				error("Tables cannot be cyclic")
+			end
+
+			Util.assertStorable(data)
 		end
 	end
 end
