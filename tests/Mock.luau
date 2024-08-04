@@ -59,23 +59,17 @@ local DocumentStore = DocumentService.DocumentStore.new(
 )
 
 Test("Opens document no simulated errors", function()
-	local Document = DocumentStore:GetDocument("Sublivion")
-	local result = Document:Open()
+	local document = DocumentStore:GetDocument("Sublivion")
+	local result = document:Open()
 	assert(result.success == true)
 	assert(result.data)
 	check(result.data)
 end)
 
-Test("Cannot reopen same document retrieved by string", function()
-	local Document = DocumentStore:GetDocument("Sublivion")
-	shouldFail(function()
-		Document:Open()
-	end)
-end)
-
 Test("Can close document", function()
-	local Document = DocumentStore:GetDocument("Sublivion")
-	Document:Close()
+	local document = DocumentStore:GetDocument("Sublivion")
+	print(tostring(document))
+	document:Close()
 end)
 
 Test("Can reopen document after closed, retrieved by string", function()

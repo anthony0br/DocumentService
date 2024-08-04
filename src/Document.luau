@@ -410,12 +410,14 @@ function Document.Close<T>(self: Document<T>): Result<nil>
 		self:SaveAndUnlock()
 	end
 
+	local result = runHooks(self._postHooks.Close, {
+		success = true,
+	})
+
 	setmetatable(self :: any, nil)
 	table.clear(self :: any)
 
-	return runHooks(self._postHooks.Close, {
-		success = true,
-	})
+	return result
 end
 
 --[=[
