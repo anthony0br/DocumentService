@@ -201,7 +201,7 @@ function Util.assertStorable(data: unknown)
 				error("Tables cannot be cyclic")
 			end
 
-			Util.assertStorable(data)
+			Util.assertStorable(v)
 		end
 	end
 end
