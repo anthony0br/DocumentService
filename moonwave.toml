@@ -17,4 +17,4 @@ onBrokenMarkdownLinks = "warn"
 
 [footer]
 style = "dark"
-copyright = "Copyright © 2021 Anthony O'Brien. Built with Moonwave and Docusaurus"
+copyright = "Copyright © 2024 Anthony O'Brien. Built with Moonwave and Docusaurus"
