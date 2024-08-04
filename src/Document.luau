@@ -394,6 +394,8 @@ end
 function Document.Close<T>(self: Document<T>): Result<nil>
 	assert(self._open, "Document not open")
 
+	runHooks(self._preHooks.Close)
+
 	if self._lockedByUs then
 		self:SaveAndUnlock()
 	end
@@ -401,9 +403,9 @@ function Document.Close<T>(self: Document<T>): Result<nil>
 	setmetatable(self :: any, nil)
 	table.clear(self :: any)
 
-	return {
+	return runHooks(self._postHooks.Close, {
 		success = true,
-	}
+	})
 end
 
 --[=[
@@ -469,6 +471,8 @@ end
 function Document.Read<T>(self: Document<T>): Result<T>
 	assert(self._open, "Document not open - open it or use Peek instead")
 
+	runHooks(self._preHooks.Read)
+
 	local success, getData = Util.getAsync(self._dataStore, self._key)
 	-- As the Document is open we know the data is valid
 	local keyData: KeyData<T> = getData :: KeyData<T>
@@ -484,11 +488,11 @@ function Document.Read<T>(self: Document<T>): Result<T>
 		}
 	end
 
-	return {
+	return runHooks(self._postHooks.Read, {
 		success = false,
 		failReason = "RobloxAPIFail",
 		errorMessage = getData :: string,
-	}
+	})
 end
 
 --[=[
