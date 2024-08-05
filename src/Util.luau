@@ -75,14 +75,13 @@ end
 	@yields
 ]=]
 function Util.updateAsync<T>(
+	transform: (any, DataStoreKeyInfo) -> (any, { number }?, {}?),
 	dataStore: GlobalDataStore,
-	key: string,
-	transform: (any, DataStoreKeyInfo) -> (any, { number }?, {}?)
+	key: string
 ): (boolean, unknown, DataStoreKeyInfo)
 	return Retry(RETRY.ATTEMPTS, RETRY.INITIAL_WAIT, function(): (unknown, DataStoreKeyInfo)
-		-- This is necessary to ensure UpdateAsyncs happen in the correct order
-		-- since the throttle 'queue' does not respect FILO
-		-- If autosaves happen in the wrong order data could be lost
+		-- This is necessary to ensure autosaves happen in the correct order and saves have predictable timeouts
+		-- since Retry will give up long before the next autosave and the throttle 'queue' does not respect FIFO
 		assert(Util.getUpdateBudget() > 0, "Ran out of budget")
 
 		return dataStore:UpdateAsync(key, transform)
@@ -116,9 +115,6 @@ end
 ]=]
 function Util.removeAsync<T>(dataStore: GlobalDataStore, key: string)
 	return Retry(RETRY.ATTEMPTS, RETRY.INITIAL_WAIT, function()
-		-- This is necessary to ensure UpdateAsyncs happen in the correct order
-		-- since the throttle 'queue' does not respect FILO
-		-- If autosaves happen in the wrong order data could be lost
 		assert(Util.getSetBudget() > 0, "Ran out of budget")
 
 		return dataStore:SetAsync(key)

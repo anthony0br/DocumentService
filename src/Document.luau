@@ -225,94 +225,89 @@ function Document.Open<T>(self: Document<T>, shouldLock: boolean?): Result<T>
 
 	runHooks(self._preHooks.Open)
 
-	local updateOk, updatedKeyData = Util.updateAsync(
-		self._dataStore,
-		self._key,
-		function(getValue: unknown): KeyData<T>?
-			-- Reset error flags in case function re-runs
-			locked = false
-			incompatibleVersion = false
-			failedCheck = false
+	local updateOk, updatedKeyData = Util.updateAsync(function(getValue: unknown): KeyData<T>?
+		-- Reset error flags in case function re-runs
+		locked = false
+		incompatibleVersion = false
+		failedCheck = false
 
-			local dataToCheck: unknown
-			local keyData
+		local dataToCheck: unknown
+		local keyData
 
-			if not getValue then
-				dataToCheck = self._default
-			else
-				-- If we have a valid document service format, use the data field
-				-- Otherwise, asssume we want to use the whole data stored at that key as the data field
-				-- for migrating from 'no library'
-				if typeof(getValue) == "table" then
-					local tableValue = getValue :: { [unknown]: unknown }
+		if not getValue then
+			dataToCheck = self._default
+		else
+			-- If we have a valid document service format, use the data field
+			-- Otherwise, asssume we want to use the whole data stored at that key as the data field
+			-- for migrating from 'no library'
+			if typeof(getValue) == "table" then
+				local tableValue = getValue :: { [unknown]: unknown }
 
-					-- Structured this way to facilitate migrations within DocumentService itself
-					if tableValue.documentServiceFormatVersion then
-						if tableValue.documentServiceFormatVersion == "1" then
-							keyData = tableValue :: KeyData<unknown>
-						end
+				-- Structured this way to facilitate migrations within DocumentService itself
+				if tableValue.documentServiceFormatVersion then
+					if tableValue.documentServiceFormatVersion == "1" then
+						keyData = tableValue :: KeyData<unknown>
 					end
 				end
-
-				if keyData then
-					dataToCheck = keyData.data
-				else
-					dataToCheck = if typeof(getValue) == "table" then getValue else { getValue }
-				end
 			end
 
-			-- Migrate
-			local migrationResult = runMigrations(self, dataToCheck, if keyData then keyData.dataFormatVersion else 0)
-
-			-- If keyData exists, the data could be in a future version, so check it is compatible
 			if keyData then
-				local isCompatible = false
+				dataToCheck = keyData.data
+			else
+				dataToCheck = if typeof(getValue) == "table" then getValue else { getValue }
+			end
+		end
 
-				-- This is for the case where a player joins a new server, their data is migrated, then they rejoin an old server
-				-- We are the old server, so migrationResult.version is the old version, which should be an element of compatibleDataFormatVersions
-				if
-					keyData.dataFormatVersion > migrationResult.version
-					and table.find(keyData.compatibleDataFormatVersions, migrationResult.version)
-				then
-					isCompatible = true
-				end
-				-- It's compatible because we can migrate it
-				if keyData.dataFormatVersion <= migrationResult.version then
-					isCompatible = true
-				end
+		-- Migrate
+		local migrationResult = runMigrations(self, dataToCheck, if keyData then keyData.dataFormatVersion else 0)
 
-				if not isCompatible then
-					incompatibleVersion = true
-					return
-				end
+		-- If keyData exists, the data could be in a future version, and data could be session locked
+		if keyData then
+			local isCompatible = false
+
+			-- This is for the case where a player joins a new server, their data is migrated, then they rejoin an old server
+			-- We are the old server, so migrationResult.version is the old version, which should be an element of compatibleDataFormatVersions
+			if
+				keyData.dataFormatVersion > migrationResult.version
+				and table.find(keyData.compatibleDataFormatVersions, migrationResult.version)
+			then
+				isCompatible = true
+			end
+			-- It's compatible because we can migrate it
+			if keyData.dataFormatVersion <= migrationResult.version then
+				isCompatible = true
 			end
 
-			local ok, checkedData = self._check(migrationResult.data)
-
-			if not ok then
-				failedCheck = true
+			if not isCompatible then
+				incompatibleVersion = true
 				return
 			end
 
-			-- We're ready to write: now check for session locks
 			locked = keyData.isLocked and (keyData.lockTimestamp - os.time() < SESSION_EXPIRE_TIME)
 			if locked then
 				return
 			end
-
-			return {
-				documentServiceFormatVersion = FORMAT_VERSION,
-				sessionLockId = self._sessionId,
-				lockTimestamp = os.time(),
-				isLocked = if shouldLock then true else false,
-				-- We use migrationResult.version, which could potentially downgrade the version if we are in an old
-				-- server, but this is fine because we confirmed backwards compatibility
-				dataFormatVersion = migrationResult.version,
-				compatibleDataFormatVersions = migrationResult.compatibleVersions,
-				data = checkedData,
-			}
 		end
-	)
+
+		local ok, checkedData = self._check(migrationResult.data)
+
+		if not ok then
+			failedCheck = true
+			return
+		end
+
+		return {
+			documentServiceFormatVersion = FORMAT_VERSION,
+			sessionLockId = self._sessionId,
+			lockTimestamp = os.time(),
+			isLocked = if shouldLock then true else false,
+			-- We use migrationResult.version, which could potentially downgrade the version if we are in an old
+			-- server, but this is fine because we confirmed backwards compatibility
+			dataFormatVersion = migrationResult.version,
+			compatibleDataFormatVersions = migrationResult.compatibleVersions,
+			data = checkedData,
+		}
+	end, self._dataStore, self._key)
 
 	if not updateOk then
 		return {
@@ -330,19 +325,19 @@ function Document.Open<T>(self: Document<T>, shouldLock: boolean?): Result<T>
 		}
 	end
 
-	if failedCheck then
-		return {
-			success = false,
-			failReason = "CheckFailed",
-			errorMessage = "Check function failed after migrations ran.",
-		}
-	end
-
 	if locked then
 		return {
 			success = false,
 			failReason = "SessionLocked",
 			errorMessage = "Data is reserved by another session. Try again later.",
+		}
+	end
+
+	if failedCheck then
+		return {
+			success = false,
+			failReason = "CheckFailed",
+			errorMessage = "Check function failed after migrations ran.",
 		}
 	end
 
@@ -503,74 +498,70 @@ function Document.Update<T>(self: Document<T>, transform: Transform<T>, shouldUn
 	local notStorable: boolean
 	local notStorableErr: string
 
-	local success, updatedKeyData = Util.updateAsync(
-		self._dataStore,
-		self._key,
-		function(keyData: KeyData<T>): KeyData<T>?
-			-- Reset error flags in case callback runs multiple times
-			lockedByOther = false
-			transformInvalid = false
-			notStorable = false
-			notStorableErr = ""
+	local success, updatedKeyData = Util.updateAsync(function(keyData: KeyData<T>): KeyData<T>?
+		-- Reset error flags in case callback runs multiple times
+		lockedByOther = false
+		transformInvalid = false
+		notStorable = false
+		notStorableErr = ""
 
-			-- Check if lock has been stolen
-			local locked = keyData.isLocked and (keyData.lockTimestamp - os.time() < SESSION_EXPIRE_TIME)
-			local lockedByUs = locked and (keyData.sessionLockId == self._sessionId)
+		-- Check if lock has been stolen
+		local locked = keyData.isLocked and (keyData.lockTimestamp - os.time() < SESSION_EXPIRE_TIME)
+		local lockedByUs = locked and (keyData.sessionLockId == self._sessionId)
 
-			if locked and not lockedByUs then
-				lockedByOther = true
-				return
-			end
-
-			local newData = keyData.data
-			if lockedByUs and self._cache then
-				newData = transform(self._cache)
-			else
-				newData = transform(keyData.data)
-			end
-
-			local newDataIsValid = self._check(newData)
-			newDataIsValid = newDataIsValid and typeof(newData) == "table"
-
-			local isStorable, err = pcall(function()
-				Util.assertStorable(newData)
-			end)
-
-			if not isStorable then
-				notStorable = true
-				notStorableErr = err
-				return
-			end
-
-			if not newDataIsValid then
-				-- We do not call the invalid data handler, since this is for migrating old data and not fixing programmer mistakes.
-				transformInvalid = true
-				return
-			end
-
-			if not shouldUnlock then
-				return {
-					documentServiceFormatVersion = FORMAT_VERSION,
-					sessionLockId = keyData.sessionLockId,
-					lockTimestamp = os.time(),
-					isLocked = keyData.isLocked,
-					data = newData,
-					dataFormatVersion = keyData.dataFormatVersion,
-					compatibleDataFormatVersions = keyData.compatibleDataFormatVersions,
-				}
-			else
-				return {
-					documentServiceFormatVersion = FORMAT_VERSION,
-					sessionLockId = "",
-					lockTimestamp = 0,
-					isLocked = false,
-					data = newData,
-					dataFormatVersion = keyData.dataFormatVersion,
-					compatibleDataFormatVersions = keyData.compatibleDataFormatVersions,
-				}
-			end
+		if locked and not lockedByUs then
+			lockedByOther = true
+			return
 		end
-	)
+
+		local newData = keyData.data
+		if lockedByUs and self._cache then
+			newData = transform(self._cache)
+		else
+			newData = transform(keyData.data)
+		end
+
+		local newDataIsValid = self._check(newData)
+		newDataIsValid = newDataIsValid and typeof(newData) == "table"
+
+		local isStorable, err = pcall(function()
+			Util.assertStorable(newData)
+		end)
+
+		if not isStorable then
+			notStorable = true
+			notStorableErr = err
+			return
+		end
+
+		if not newDataIsValid then
+			-- We do not call the invalid data handler, since this is for migrating old data and not fixing programmer mistakes.
+			transformInvalid = true
+			return
+		end
+
+		if not shouldUnlock then
+			return {
+				documentServiceFormatVersion = FORMAT_VERSION,
+				sessionLockId = keyData.sessionLockId,
+				lockTimestamp = os.time(),
+				isLocked = keyData.isLocked,
+				data = newData,
+				dataFormatVersion = keyData.dataFormatVersion,
+				compatibleDataFormatVersions = keyData.compatibleDataFormatVersions,
+			}
+		else
+			return {
+				documentServiceFormatVersion = FORMAT_VERSION,
+				sessionLockId = "",
+				lockTimestamp = 0,
+				isLocked = false,
+				data = newData,
+				dataFormatVersion = keyData.dataFormatVersion,
+				compatibleDataFormatVersions = keyData.compatibleDataFormatVersions,
+			}
+		end
+	end, self._dataStore, self._key)
 
 	-- This should be a LOUD error! The developer is doing something wrong.
 	if transformInvalid then
