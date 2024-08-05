@@ -264,9 +264,10 @@ function Document.Open<T>(self: Document<T>, shouldLock: boolean?): Result<T>
 			-- Migrate
 			local migrationResult = runMigrations(self, dataToCheck, if keyData then keyData.dataFormatVersion else 0)
 
-			-- Check the data is a compatible version
-			local isCompatible = false
+			-- If keyData exists, the data could be in a future version, so check it is compatible
 			if keyData then
+				local isCompatible = false
+
 				-- This is for the case where a player joins a new server, their data is migrated, then they rejoin an old server
 				-- We are the old server, so migrationResult.version is the old version, which should be an element of compatibleDataFormatVersions
 				if
@@ -275,15 +276,15 @@ function Document.Open<T>(self: Document<T>, shouldLock: boolean?): Result<T>
 				then
 					isCompatible = true
 				end
-				-- It's compatible because we can successfully migrate it
+				-- It's compatible because we can migrate it
 				if keyData.dataFormatVersion <= migrationResult.version then
 					isCompatible = true
 				end
-			end
 
-			if not isCompatible then
-				incompatibleVersion = true
-				return
+				if not isCompatible then
+					incompatibleVersion = true
+					return
+				end
 			end
 
 			local ok, checkedData = self._check(migrationResult.data)
