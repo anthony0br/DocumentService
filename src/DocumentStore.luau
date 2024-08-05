@@ -35,8 +35,10 @@ type Table<T> = T & {}
 	Creates a new DocumentStore
 
 	:::warning
-	This should only be called once per server for each DataStore in a live game. If there are multiple instances of a DocumentStore for one key,
-	any Documents will be treated as if they are from different sessions. This is useful for unit testing but can lead to weird bugs in production.
+	This should only be called once per server for each DataStore in a live game.
+	If there are multiple instances of a DocumentStore for one key, any Documents
+	will be treated as if they are from different sessions. This is useful for
+	unit testing but can lead to weird bugs in production.
 	:::
 
 	@param dataStore -- The object returned by DataStoreService:GetDataStore()
@@ -61,7 +63,8 @@ function DocumentStore.new<T>(
 	}, DocumentStore)
 
 	-- Save and close all documents as fast as possible on BindToClose
-	-- Yielding on BindToClose in studio can cause studio to take a very long time to stop play test sessions, so we don't do that
+	-- Yielding on BindToClose in studio can cause studio to take a very long
+	-- time to stop play test sessions, so we check :IsStudio()
 	if _G.IS_ROBLOX and not game:GetService("RunService"):IsStudio() then
 		game:BindToClose(function()
 			self:CloseAllDocuments()
@@ -83,7 +86,7 @@ function DocumentStore.GetDocument<T>(self: DocumentStore<T>, key: string): Docu
 		return self._documents[key]
 	end
 
-	local document: Document<T> = Document.new(key, self._dataStore, self._check, self._default, self._migrations)
+	local document = Document.new(key, self._dataStore, self._check, self._default, self._migrations)
 
 	document:HookAfter("Close", function(result: Types.Result<T>)
 		if result.success then
