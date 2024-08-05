@@ -167,7 +167,7 @@ function Document.new<T>(
 			Update = {},
 			Read = {},
 		},
-		_migrations = table.freeze(migrations),
+		_migrations = Util.deepFreeze(migrations),
 		_isClosing = false,
 	}, Document)
 
