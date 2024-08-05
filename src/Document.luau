@@ -236,6 +236,7 @@ end
 ]=]
 function Document.Open<T>(self: Document<T>, shouldLock: boolean?): Result<T>
 	assert(not self._open, "Already open")
+	assert(not self._isClosing, "Document is closing")
 
 	-- Error flags
 	local locked: boolean
