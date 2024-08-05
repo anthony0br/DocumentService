@@ -38,7 +38,7 @@ export type Document<T> = typeof(setmetatable(
 		},
 		_migrations: Migrations<T>,
 		_cache: T?,
-		_saveOnCloseConn: RBXScriptConnection?,
+		_isClosing: boolean,
 	},
 	Document
 ))
@@ -59,7 +59,7 @@ type KeyData<T> = {
 	lockTimestamp: number,
 	isLocked: boolean,
 	dataFormatVersion: number,
-	compatibleDataFormatVersions: { number },
+	lastCompatibleVersion: number,
 	data: T,
 }
 
@@ -77,36 +77,49 @@ local function runHooks<T...>(hooks: { (T...) -> T... }, ...)
 	return table.unpack(result)
 end
 
+-- Based off of Lapis by nezuo's backwards compatibility checking
+local function getLastCompatibleVersion<T>(migrations: Migrations<T>): number
+	for version = #migrations, 1, -1 do
+		local migration = migrations[version]
+
+		if not migration.backwardsCompatible then
+			return version
+		end
+	end
+
+	return 0
+end
+
 local function runMigrations<T>(
-	self: Document<T>,
+	migrations: Migrations<T>,
 	initialData: unknown,
 	initialVersion: number
 ): {
 	data: unknown,
 	version: number,
-	compatibleVersions: { number },
+	lastCompatibleVersion: number,
 }
 	local data = initialData
 	local dataVersion = initialVersion
-	local compatibleVersions = {}
 
-	for _, migration in ipairs(self._migrations) do
-		if migration.fromVersion == dataVersion then
-			data = data
-			if migration.backwardsCompatible then
-				table.insert(compatibleVersions, dataVersion)
-			else
-				compatibleVersions = {}
-			end
-			dataVersion = migration.toVersion
+	for i, migration in ipairs(migrations) do
+		local fromVersion = i - 1
+		local targetVersion = i
+		if fromVersion == dataVersion then
+			data = migration.migrate(data)
+			dataVersion = targetVersion
 		end
 	end
 
 	return {
 		data = data,
 		version = dataVersion,
-		compatibleVersions = compatibleVersions,
+		lastCompatibleVersion = getLastCompatibleVersion(migrations),
 	}
+end
+
+local function isLocked(keyData: KeyData<any>): boolean
+	return keyData.isLocked and (os.time() - keyData.lockTimestamp < SESSION_EXPIRE_TIME)
 end
 
 --[=[
@@ -155,6 +168,7 @@ function Document.new<T>(
 			Read = {},
 		},
 		_migrations = migrations,
+		_isClosing = false,
 	}, Document)
 
 	return self
@@ -258,32 +272,19 @@ function Document.Open<T>(self: Document<T>, shouldLock: boolean?): Result<T>
 			end
 		end
 
-		-- Migrate
-		local migrationResult = runMigrations(self, dataToCheck, if keyData then keyData.dataFormatVersion else 0)
+		local migrationResult =
+			runMigrations(self._migrations, dataToCheck, if keyData then keyData.dataFormatVersion else 0)
 
-		-- If keyData exists, the data could be in a future version, and data could be session locked
+		-- If keyData exists, the data could be in a future version, or the data could be session locked
 		if keyData then
-			local isCompatible = false
-
 			-- This is for the case where a player joins a new server, their data is migrated, then they rejoin an old server
 			-- We are the old server, so migrationResult.version is the old version, which should be an element of compatibleDataFormatVersions
-			if
-				keyData.dataFormatVersion > migrationResult.version
-				and table.find(keyData.compatibleDataFormatVersions, migrationResult.version)
-			then
-				isCompatible = true
-			end
-			-- It's compatible because we can migrate it
-			if keyData.dataFormatVersion <= migrationResult.version then
-				isCompatible = true
-			end
-
-			if not isCompatible then
+			if migrationResult.version < keyData.lastCompatibleVersion then
 				incompatibleVersion = true
 				return
 			end
 
-			locked = keyData.isLocked and (keyData.lockTimestamp - os.time() < SESSION_EXPIRE_TIME)
+			locked = isLocked(keyData)
 			if locked then
 				return
 			end
@@ -304,7 +305,7 @@ function Document.Open<T>(self: Document<T>, shouldLock: boolean?): Result<T>
 			-- We use migrationResult.version, which could potentially downgrade the version if we are in an old
 			-- server, but this is fine because we confirmed backwards compatibility
 			dataFormatVersion = migrationResult.version,
-			compatibleDataFormatVersions = migrationResult.compatibleVersions,
+			lastCompatibleVersion = migrationResult.lastCompatibleVersion,
 			data = checkedData,
 		}
 	end, self._dataStore, self._key)
@@ -376,8 +377,10 @@ function Document.Close<T>(self: Document<T>): Result<nil>
 
 	runHooks(self._preHooks.Close)
 
+	self._isClosing = true
+
 	if self._lockedByUs then
-		self:SaveAndUnlock()
+		self:Save()
 	end
 
 	local result = runHooks(self._postHooks.Close, {
@@ -483,13 +486,17 @@ end
 	If using session locking, transforms will build on cached data.
 
 	@param transform -- Transform function for the transaction.
-	@param shouldUnlock -- Should this update also remove the session lock? This reduces budget usage by combining updates and unlocks.
 	@return result -- Result containing the new data.
 
 	@yields
 ]=]
-function Document.Update<T>(self: Document<T>, transform: Transform<T>, shouldUnlock: boolean?): Result<T>
+function Document.Update<T>(self: Document<T>, transform: Transform<T>): Result<T>
 	assert(self._open, "Document not open")
+
+	-- If we are closing, reject any future operations
+	if self._isClosing then
+		self._open = false
+	end
 
 	runHooks(self._preHooks.Update, transform)
 
@@ -506,7 +513,7 @@ function Document.Update<T>(self: Document<T>, transform: Transform<T>, shouldUn
 		notStorableErr = ""
 
 		-- Check if lock has been stolen
-		local locked = keyData.isLocked and (keyData.lockTimestamp - os.time() < SESSION_EXPIRE_TIME)
+		local locked = isLocked(keyData)
 		local lockedByUs = locked and (keyData.sessionLockId == self._sessionId)
 
 		if locked and not lockedByUs then
@@ -540,27 +547,16 @@ function Document.Update<T>(self: Document<T>, transform: Transform<T>, shouldUn
 			return
 		end
 
-		if not shouldUnlock then
-			return {
-				documentServiceFormatVersion = FORMAT_VERSION,
-				sessionLockId = keyData.sessionLockId,
-				lockTimestamp = os.time(),
-				isLocked = keyData.isLocked,
-				data = newData,
-				dataFormatVersion = keyData.dataFormatVersion,
-				compatibleDataFormatVersions = keyData.compatibleDataFormatVersions,
-			}
-		else
-			return {
-				documentServiceFormatVersion = FORMAT_VERSION,
-				sessionLockId = "",
-				lockTimestamp = 0,
-				isLocked = false,
-				data = newData,
-				dataFormatVersion = keyData.dataFormatVersion,
-				compatibleDataFormatVersions = keyData.compatibleDataFormatVersions,
-			}
-		end
+		return {
+			documentServiceFormatVersion = FORMAT_VERSION,
+			sessionLockId = keyData.sessionLockId,
+			lockTimestamp = os.time(),
+			-- If the Document is closing, it is our last save and we remove the lock
+			isLocked = if self._isClosing then false else keyData.isLocked,
+			data = newData,
+			dataFormatVersion = keyData.dataFormatVersion,
+			lastCompatibleVersion = keyData.lastCompatibleVersion,
+		}
 	end, self._dataStore, self._key)
 
 	-- This should be a LOUD error! The developer is doing something wrong.
@@ -619,22 +615,6 @@ function Document.Save<T>(self: Document<T>)
 	return self:Update(function(cache)
 		return cache
 	end)
-end
-
---[=[
-	Saves a Document's cache to its DataStore and removes the session lock.
-
-	For session-locked data only.
-
-	@yields
-]=]
-function Document.SaveAndUnlock<T>(self: Document<T>)
-	assert(self._open, "Document not open")
-	assert(self._lockedByUs, "Must be session locked to access cache")
-
-	return self:Update(function(cache)
-		return cache
-	end, true)
 end
 
 --[=[

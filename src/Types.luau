@@ -41,19 +41,19 @@ export type Result<T> = {
 }
 
 --[=[
-	@type Migrations<T> { { fromVersion: number, toVersion: number, backwardsCompatible: boolean, migrate: (data: unknown) -> unknown, } }
+	@type Migrations<T> { { backwardsCompatible: boolean, migrate: (data: unknown) -> unknown, } }
 
-	Data version starts at 0
+	Data format versions start at 0. The first migration should migrate from 0 to 1.
 
-	E.g. the first element should migrate from 0 to 1.
+	If you have data existing in the key before you open a Document, this will be considered version 0 and migrations will run.
+
+	If backwardsCompatible is false, loading this version and later versions in an older server without this migration defined will fail.
 
 	@within DocumentService
 
 ]=]
 export type Migrations<T> = {
 	{
-		fromVersion: number,
-		toVersion: number,
 		backwardsCompatible: boolean,
 		migrate: (data: unknown) -> unknown,
 	}
