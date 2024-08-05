@@ -34,6 +34,11 @@ type Table<T> = T & {}
 --[=[
 	Creates a new DocumentStore
 
+	:::warning
+	This should only be called once per server for each DataStore in a live game. If there are multiple instances of a DocumentStore for one key,
+	any Documents will be treated as if they are from different sessions. This is useful for unit testing but can lead to weird bugs in production.
+	:::
+
 	@param dataStore -- The object returned by DataStoreService:GetDataStore()
 	@param check -- A type check function for your data, errors if types are invalid
 	@param default -- Default values, which are set if keys are empty

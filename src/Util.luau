@@ -110,20 +110,18 @@ function Util.getAsync<T>(dataStore: GlobalDataStore, key: string): (boolean, un
 end
 
 --[=[
-	A wrapper for SetAsync that retries with exponential backoff and prevents use of the throttle 'queue'.
-
-	I recommend you only use this for edge cases like erasing data.
+	A wrapper for RemoveAsync
 
 	@yields
 ]=]
-function Util.setAsync<T>(dataStore: GlobalDataStore, key: string, value: any)
+function Util.removeAsync<T>(dataStore: GlobalDataStore, key: string)
 	return Retry(RETRY.ATTEMPTS, RETRY.INITIAL_WAIT, function()
 		-- This is necessary to ensure UpdateAsyncs happen in the correct order
 		-- since the throttle 'queue' does not respect FILO
 		-- If autosaves happen in the wrong order data could be lost
 		assert(Util.getSetBudget() > 0, "Ran out of budget")
 
-		return dataStore:SetAsync(key, value)
+		return dataStore:SetAsync(key)
 	end)
 end
 

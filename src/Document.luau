@@ -59,6 +59,7 @@ type KeyData<T> = {
 	lockTimestamp: number,
 	isLocked: boolean,
 	dataFormatVersion: number,
+	compatibleDataFormatVersions: { number },
 	data: T,
 }
 
@@ -76,24 +77,36 @@ local function runHooks<T...>(hooks: { (T...) -> T... }, ...)
 	return table.unpack(result)
 end
 
-local function runMigrations<T>(self: Document<T>, initialData: unknown, initialVersion: number): (boolean, T, number)
+local function runMigrations<T>(
+	self: Document<T>,
+	initialData: unknown,
+	initialVersion: number
+): {
+	data: unknown,
+	version: number,
+	compatibleVersions: { number },
+}
 	local data = initialData
-	local version = initialVersion
+	local dataVersion = initialVersion
+	local compatibleVersions = {}
 
-	for i, func in ipairs(self._migrations) do
-		if i > initialVersion then
-			data = func(data)
-			version += 1
+	for _, migration in ipairs(self._migrations) do
+		if migration.fromVersion == dataVersion then
+			data = data
+			if migration.backwardsCompatible then
+				table.insert(compatibleVersions, dataVersion)
+			else
+				compatibleVersions = {}
+			end
+			dataVersion = migration.toVersion
 		end
 	end
 
-	local success, latestData = self._check(data)
-
-	return success, latestData, version
-end
-
-local function latestDataFormatVersion<T>(self: Document<T>)
-	return #self._migrations
+	return {
+		data = data,
+		version = dataVersion,
+		compatibleVersions = compatibleVersions,
+	}
 end
 
 --[=[
@@ -184,200 +197,158 @@ end
 --[=[
 	Validates the document if one exists, or creates a default document if no document exists.
 
+	If shouldLock is true, Open will session lock the document. While this does violate the  single responsibility principle,
+	it is far more efficient and safer to do multiple things within one UpdateAsync!
+
 	You must call this method before reading or writing to a Document.
 
-	Can fail for the following reasons: RobloxAPIFail or SessionLocked.
+	Can fail for the following reasons: RobloxAPIFail, NotBackwardsCompatible, FailedCheck.
+
+	NotBackwardsCompatible indicates the data has been migrated to a version on a newer server that isn't compatible with this server's latest version.
+
+	FailedCheck indicates the migrations failed to convert the data to a form that passes the check function and matches the expected type interface.
 	
 	These should usually be handled by kicking the player.
 
+	@param shouldLock
 	@return result
 
 	@yields
 ]=]
-function Document.Open<T>(self: Document<T>): Result<T>
-	assert(not self._open, "Document already open")
+function Document.Open<T>(self: Document<T>, shouldLock: boolean): Result<T>
+	assert(not self._open, "Already open")
+
+	-- Error flags
+	local locked: boolean
+	local incompatibleVersion: boolean
+	local failedCheck: boolean
 
 	runHooks(self._preHooks.Open)
 
-	local getOk, getValue = Util.getAsync(self._dataStore, self._key)
+	local updateOk, updatedKeyData = Util.updateAsync(
+		self._dataStore,
+		self._key,
+		function(getValue: unknown): KeyData<T>?
+			-- Reset error flags in case function re-runs
+			locked = false
+			incompatibleVersion = false
+			failedCheck = false
 
-	if not getOk then
+			local dataToCheck: unknown
+			local keyData
+
+			if not getValue then
+				dataToCheck = self._default
+			else
+				-- If we have a valid document service format, use the data field
+				-- Otherwise, asssume we want to use the whole data stored at that key as the data field
+				-- for migrating from 'no library'
+				if typeof(getValue) == "table" then
+					local tableValue = getValue :: { [unknown]: unknown }
+
+					-- Structured this way to facilitate migrations within DocumentService itself
+					if tableValue.documentServiceFormatVersion then
+						if tableValue.documentServiceFormatVersion == "1" then
+							keyData = tableValue :: KeyData<unknown>
+						end
+					end
+				end
+
+				if keyData then
+					dataToCheck = keyData.data
+				else
+					dataToCheck = if typeof(getValue) == "table" then getValue else { getValue }
+				end
+			end
+
+			-- Migrate
+			local migrationResult = runMigrations(self, dataToCheck, if keyData then keyData.dataFormatVersion else 0)
+
+			-- Check the data is a compatible version
+			local isCompatible = false
+			if keyData then
+				-- This is for the case where a player joins a new server, their data is migrated, then they rejoin an old server
+				-- We are the old server, so migrationResult.version is the old version, which should be an element of compatibleDataFormatVersions
+				if
+					keyData.dataFormatVersion > migrationResult.version
+					and table.find(keyData.compatibleDataFormatVersions, migrationResult.version)
+				then
+					isCompatible = true
+				end
+				-- It's compatible because we can successfully migrate it
+				if keyData.dataFormatVersion <= migrationResult.version then
+					isCompatible = true
+				end
+			end
+
+			if not isCompatible then
+				incompatibleVersion = true
+				return
+			end
+
+			local ok, checkedData = self._check(migrationResult.data)
+
+			if not ok then
+				failedCheck = true
+				return
+			end
+
+			-- We're ready to write: now check for session locks
+			locked = keyData.isLocked and (keyData.lockTimestamp - os.time() < SESSION_EXPIRE_TIME)
+			if locked then
+				return
+			end
+
+			return {
+				documentServiceFormatVersion = FORMAT_VERSION,
+				sessionLockId = self._sessionId,
+				lockTimestamp = os.time(),
+				isLocked = shouldLock,
+				-- We use migrationResult.version, which could potentially downgrade the version if we are in an old
+				-- server, but this is fine because we confirmed backwards compatibility
+				dataFormatVersion = migrationResult.version,
+				compatibleDataFormatVersions = migrationResult.compatibleVersions,
+				data = checkedData,
+			}
+		end
+	)
+
+	if not updateOk then
 		return {
 			success = false,
 			failReason = "RobloxAPIFail",
-			errorMessage = getValue :: string,
+			errorMessage = updatedKeyData :: any,
 		}
 	end
 
-	local isValidDocumentService = false
-	local keyData
-	if typeof(getValue) == "table" then
-		local tableValue = getValue :: { [unknown]: unknown }
-
-		-- If the value does not contain documentServiceFormatVersion,
-		-- we assume we are migrating from no library to DocumentService
-		if tableValue.documentServiceFormatVersion then
-			if tableValue.documentServiceFormatVersion == "1" then
-				-- The validity assignment should only happen for the latest version
-				keyData = tableValue :: KeyData<unknown>
-				isValidDocumentService = true
-				-- Insert migrations here
-				-- e.g. insert new values for version 2, set version to 2
-			end
-			-- Insert migrations here
-			-- e.g. if tableValue.documentServiceFormatVersion == "2"
-		end
-	end
-
-	-- Create a new key, or check an existing one
-	local finalData
-	if not getValue then
-		local updateOk, result = Util.updateAsync(self._dataStore, self._key, function(): KeyData<T>
-			return {
-				data = self._default,
-				-- The default should always be the latest version
-				dataFormatVersion = latestDataFormatVersion(self),
-				documentServiceFormatVersion = FORMAT_VERSION,
-				sessionLockId = "",
-				lockTimestamp = 0,
-				isLocked = false,
-			}
-		end)
-
-		if not updateOk then
-			return {
-				success = false,
-				failReason = "RobloxAPIFail",
-				errorMessage = result :: string,
-			}
-		end
-
-		finalData = self._default
-	else
-		-- If we have keyData, look for session locks, otherwise 'make' keyData by migrating from 'no library'
-		if isValidDocumentService and keyData then
-			local locked = keyData.isLocked and (keyData.lockTimestamp - os.time() < SESSION_EXPIRE_TIME)
-
-			if locked and (keyData.sessionLockId ~= self._sessionId) then
-				return {
-					success = false,
-					failReason = "SessionLocked",
-					errorMessage = "An active session lock exists.",
-				}
-			end
-		else
-			keyData = {
-				data = if typeof(getValue) == "table" then getValue :: { any } else { getValue },
-				dataFormatVersion = 0,
-				documentServiceFormatVersion = FORMAT_VERSION,
-				sessionLockId = "",
-				lockTimestamp = 0,
-				isLocked = false,
-			}
-		end
-
-		local checkOk, checkedData = self._check(keyData.data)
-		local isLatestDataFormat = keyData.dataFormatVersion == latestDataFormatVersion(self)
-
-		if checkOk and isLatestDataFormat then
-			finalData = checkedData
-		else
-			local migrationOk, migratedData, version = runMigrations(self, keyData.data, keyData.dataFormatVersion)
-
-			if not migrationOk then
-				return {
-					success = false,
-					failReason = "MigrationFailed",
-					errorMessage = "Failed to migrate data",
-				}
-			end
-
-			local updateOk, err = Util.updateAsync(self._dataStore, self._key, function(old): KeyData<T>
-				return {
-					data = migratedData,
-					dataFormatVersion = version,
-					documentServiceFormatVersion = FORMAT_VERSION,
-					sessionLockId = old.sessionLockId,
-					lockTimestamp = 0,
-					isLocked = false,
-				}
-			end)
-
-			if not updateOk then
-				return {
-					success = false,
-					failReason = "RobloxAPIFail",
-					errorMessage = err :: string,
-				}
-			end
-
-			-- Since updateOk is true, the migratedData has been set
-			finalData = migratedData
-		end
-	end
-
-	self._open = true
-
-	return runHooks(self._postHooks.Open, {
-		success = true,
-		data = finalData,
-	}) :: Result<T>
-end
-
---[=[
-	Adds a session lock and enables auto-saves.
-
-	This is a separate method for DX, however unlocking is combined with saving to avoid hitting limits during server shutdowns.
-
-	@return result
-
-	@yields
-]=]
-function Document.Lock<T>(self: Document<T>): Result<nil>
-	assert(self._open, "Document not open")
-	assert(not self._lockedByUs, "Document already locked")
-
-	local alreadyLocked
-	local success, updatedData = Util.updateAsync(self._dataStore, self._key, function(keyData: KeyData<T>): KeyData<T>?
-		-- Reset error flags in case callback runs multiple times
-		alreadyLocked = false
-
-		self:SetCache(keyData.data)
-
-		local locked = keyData.isLocked and (keyData.lockTimestamp - os.time() < SESSION_EXPIRE_TIME)
-
-		if locked then
-			alreadyLocked = true
-			return
-		end
-
-		return {
-			documentServiceFormatVersion = FORMAT_VERSION,
-			sessionLockId = self._sessionId,
-			lockTimestamp = os.time(),
-			isLocked = true,
-			data = keyData.data,
-			dataFormatVersion = keyData.dataFormatVersion,
-		}
-	end)
-
-	if not success then
+	if incompatibleVersion then
 		return {
 			success = false,
-			failReason = "RobloxAPIFail",
-			errorMessage = updatedData :: any,
+			failReason = "NotBackwardsCompatible",
+			errorMessage = "Data format is not backwards compatible with the latest version on this server.",
 		}
 	end
 
-	if alreadyLocked then
+	if failedCheck then
+		return {
+			success = false,
+			failReason = "CheckFailed",
+			errorMessage = "Check function failed after migrations ran.",
+		}
+	end
+
+	if locked then
 		return {
 			success = false,
 			failReason = "SessionLocked",
-			errorMessage = "Document is already locked",
+			errorMessage = "Data is reserved by another session. Try again later.",
 		}
 	end
 
-	self._lockedByUs = true
+	-- At this point we can assume everything happened successfully
+	if shouldLock then
+		self._lockedByUs = true
+	end
 
 	-- Autosave
 	task.defer(function()
@@ -387,9 +358,12 @@ function Document.Lock<T>(self: Document<T>): Result<nil>
 		end
 	end)
 
-	return {
+	self._open = true
+
+	return runHooks(self._postHooks.Open, {
 		success = true,
-	}
+		data = (updatedKeyData :: KeyData<T>).data,
+	}) :: Result<T>
 end
 
 --[=[
@@ -473,7 +447,7 @@ end
 	Reads from the DataStore.
 
 	:::warning
-	Overrides the cache. If you are using session locking, you should only read once.
+	Overwrites the cache. If you are using session locking, you should only read once.
 	:::
 	
 	@return result -- result containing the data read
@@ -581,6 +555,7 @@ function Document.Update<T>(self: Document<T>, transform: Transform<T>, shouldUn
 					isLocked = keyData.isLocked,
 					data = newData,
 					dataFormatVersion = keyData.dataFormatVersion,
+					compatibleDataFormatVersions = keyData.compatibleDataFormatVersions,
 				}
 			else
 				return {
@@ -590,6 +565,7 @@ function Document.Update<T>(self: Document<T>, transform: Transform<T>, shouldUn
 					isLocked = false,
 					data = newData,
 					dataFormatVersion = keyData.dataFormatVersion,
+					compatibleDataFormatVersions = keyData.compatibleDataFormatVersions,
 				}
 			end
 		end
@@ -677,13 +653,8 @@ end
 	@yields
 ]=]
 function Document.Erase<T>(self: Document<T>)
-	assert(self._open, "Document not open")
-
-	-- Set lockedByUs to false so we don't try to remove the lock
-	self._lockedByUs = false
 	self:Close()
-
-	Util.setAsync(self._dataStore, self._key, nil)
+	Util.removeAsync(self._dataStore, self._key)
 end
 
 --[=[

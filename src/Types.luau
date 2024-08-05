@@ -23,7 +23,7 @@ export type PostHookEvent = "Open" | "Close" | "Update" | "Read"
 	
 	@within DocumentService
 ]=]
-export type FailReason = "RobloxAPIFail" | "InvalidDataNotHandled" | "SessionLocked" | "MigrationFailed"
+export type FailReason = "RobloxAPIFail" | "SessionLocked" | "CheckFailed" | "NotBackwardsCompatible"
 
 --[=[
 	@type Result<T> ({ success: true, data: T } | { success: false, failReason: FailReason, errorMessage: string, data: nil })
@@ -40,18 +40,23 @@ export type Result<T> = {
 	data: nil,
 }
 
--- Data version starts at 0
--- [1] migrates 0 to 1
 --[=[
-	@type Migrations<T> { [number]: (data: unknown) -> unknown }
+	@type Migrations<T> { { fromVersion: number, toVersion: number, backwardsCompatible: boolean, migrate: (data: unknown) -> unknown, } }
+
+	Data version starts at 0
+
+	E.g. the first element should migrate from 0 to 1.
 
 	@within DocumentService
 
-	This should be a sequential array starting at 1
-
-	Data format version start at 0, and the current version is the length of this array.
-	For example, [1] migrates data at format version 0 to format version 1.
 ]=]
-export type Migrations<T> = { [number]: (data: unknown) -> unknown }
+export type Migrations<T> = {
+	{
+		fromVersion: number,
+		toVersion: number,
+		backwardsCompatible: boolean,
+		migrate: (data: unknown) -> unknown,
+	}
+}
 
 return {}
