@@ -78,14 +78,16 @@ function Util.updateAsync<T>(
 	transform: (any, DataStoreKeyInfo) -> (any, { number }?, {}?),
 	dataStore: GlobalDataStore,
 	key: string
-): (boolean, unknown, DataStoreKeyInfo)
-	return Retry(RETRY.ATTEMPTS, RETRY.INITIAL_WAIT, function(): (unknown, DataStoreKeyInfo)
+): (boolean, any, DataStoreKeyInfo)
+	local result = Retry(RETRY.ATTEMPTS, RETRY.INITIAL_WAIT, function(): (any, DataStoreKeyInfo)
 		-- This is necessary to ensure autosaves happen in the correct order and saves have predictable timeouts
 		-- since Retry will give up long before the next autosave and the throttle 'queue' does not respect FIFO
 		assert(Util.getUpdateBudget() > 0, "Ran out of budget")
 
 		return dataStore:UpdateAsync(key, transform)
 	end)
+
+	return result.success, result.returnValues[1], result.returnValues[2]
 end
 
 --[=[
@@ -93,8 +95,8 @@ end
 
 	@yields
 ]=]
-function Util.getAsync<T>(dataStore: GlobalDataStore, key: string): (boolean, unknown, DataStoreKeyInfo)
-	return Retry(RETRY.ATTEMPTS, RETRY.INITIAL_WAIT, function(): (unknown, DataStoreKeyInfo)
+function Util.getAsync<T>(dataStore: GlobalDataStore, key: string): (boolean, any, DataStoreKeyInfo)
+	local result = Retry(RETRY.ATTEMPTS, RETRY.INITIAL_WAIT, function(): (any, DataStoreKeyInfo)
 		local options
 
 		if _G.IS_ROBLOX then
@@ -106,6 +108,8 @@ function Util.getAsync<T>(dataStore: GlobalDataStore, key: string): (boolean, un
 
 		return dataStore:GetAsync(key, options)
 	end)
+
+	return result.success, result.returnValues[1], result.returnValues[2]
 end
 
 --[=[
@@ -113,12 +117,14 @@ end
 
 	@yields
 ]=]
-function Util.removeAsync<T>(dataStore: GlobalDataStore, key: string)
-	return Retry(RETRY.ATTEMPTS, RETRY.INITIAL_WAIT, function()
+function Util.removeAsync<T>(dataStore: GlobalDataStore, key: string): boolean
+	local result = Retry(RETRY.ATTEMPTS, RETRY.INITIAL_WAIT, function()
 		assert(Util.getSetBudget() > 0, "Ran out of budget")
 
-		return dataStore:SetAsync(key)
+		return dataStore:RemoveAsync(key)
 	end)
+
+	return result.success
 end
 
 --[=[
