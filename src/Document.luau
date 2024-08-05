@@ -215,7 +215,7 @@ end
 
 	@yields
 ]=]
-function Document.Open<T>(self: Document<T>, shouldLock: boolean): Result<T>
+function Document.Open<T>(self: Document<T>, shouldLock: boolean?): Result<T>
 	assert(not self._open, "Already open")
 
 	-- Error flags
@@ -303,7 +303,7 @@ function Document.Open<T>(self: Document<T>, shouldLock: boolean): Result<T>
 				documentServiceFormatVersion = FORMAT_VERSION,
 				sessionLockId = self._sessionId,
 				lockTimestamp = os.time(),
-				isLocked = shouldLock,
+				isLocked = if shouldLock then true else false,
 				-- We use migrationResult.version, which could potentially downgrade the version if we are in an old
 				-- server, but this is fine because we confirmed backwards compatibility
 				dataFormatVersion = migrationResult.version,
