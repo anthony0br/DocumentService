@@ -57,8 +57,8 @@ function DocumentStore.new<T>(
 	local self = setmetatable({
 		_dataStore = dataStore,
 		_check = check,
-		_default = default,
-		_migrations = migrations,
+		_default = Util.deepFreeze(default),
+		_migrations = table.freeze(migrations),
 		_documents = {},
 	}, DocumentStore)
 

@@ -151,7 +151,7 @@ function Document.new<T>(
 		_key = key,
 		_dataStore = dataStore,
 		_check = check,
-		_default = default,
+		_default = Util.deepFreeze(default),
 		_open = false,
 		_lockedByUs = false,
 		_sessionId = Util.uuid(),
@@ -167,7 +167,7 @@ function Document.new<T>(
 			Update = {},
 			Read = {},
 		},
-		_migrations = migrations,
+		_migrations = table.freeze(migrations),
 		_isClosing = false,
 	}, Document)
 
