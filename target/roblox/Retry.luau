@@ -1,0 +1,43 @@
+--!strict
+-- An implementation of pcall with automatic retries
+-- Author: Anthony O'Brien
+-- 21 July 2024
+
+--[=[
+	@class Retry
+]=]
+
+--[=[
+	pcalls a function a number of times, returning the first success if any
+	
+	@within Retry
+
+	@yields
+	
+	@param maxAttempts -- maximum attempts
+	@param initialWait -- waits (initialWait)^lastAttempt between attempts
+	@param func -- function to pcall
+
+	@return success
+	@return ... -- if successful, the return values of func, otherwise an error string
+
+	@private
+]=]
+local function Retry<T..., S...>(maxAttempts: number, initialWait: number, func: (T...) -> S..., ...: T...): (boolean, S...)
+	local result
+
+	for i = 1, maxAttempts do
+		result = { pcall(func, ...) }
+		if result[1] == true then
+			break
+		end
+		warn(`[Retry] Attempt {i} failed: {result[2]} {debug.traceback("\nat", 1)}`)
+		if i < maxAttempts then
+			task.wait(initialWait * (2 ^ (i - 1)))
+		end
+	end
+
+	return table.unpack(result) :: any
+end
+
+return Retry

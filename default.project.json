@@ -1,6 +1,6 @@
 {
   "name": "documentservice",
   "tree": {
-    "$path": "roblox-build"
+    "$path": "target/roblox"
   }
 }
