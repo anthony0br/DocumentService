@@ -9,8 +9,8 @@ local Retry = require("./Retry")
 
 	A collection of utility functions for handling datastores.
 
-	If you need to access any datastores directly while using DocumentService, it is recommended you use these
-	functions or similar implementations.
+	If you need to access any datastores directly while using DocumentService,
+	it is recommended you use these functions or similar implementations.
 
 ]=]
 local Util = {}
