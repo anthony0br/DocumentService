@@ -209,18 +209,23 @@ function Document.Peek<T>(self: Document<T>): Result<any>
 end
 
 --[=[
-	Validates the document if one exists, or creates a default document if no document exists.
+	Validates the document if one exists, or creates a default document if no
+	document exists.
 
-	If shouldLock is true, Open will session lock the document. While this does violate the  single responsibility principle,
-	it is far more efficient and safer to do multiple things within one UpdateAsync!
+	If shouldLock is true, Open will session lock the document. While this does
+	violate the single responsibility principle, it is far more efficient and
+	safer to do multiple things within one UpdateAsync!
 
 	You must call this method before reading or writing to a Document.
 
-	Can fail for the following reasons: RobloxAPIFail, NotBackwardsCompatible, FailedCheck.
+	Can fail for the following reasons: RobloxAPIFail, NotBackwardsCompatible,
+	FailedCheck.
 
-	NotBackwardsCompatible indicates the data has been migrated to a version on a newer server that isn't compatible with this server's latest version.
+	NotBackwardsCompatible indicates the data has been migrated to a version on
+	a newer server that isn't compatible with this server's latest version.
 
-	FailedCheck indicates the migrations failed to convert the data to a form that passes the check function and matches the expected type interface.
+	FailedCheck indicates the migrations failed to convert the data to a form
+	that passes the check function and matches the expected type interface.
 	
 	These should usually be handled by kicking the player.
 
@@ -252,12 +257,13 @@ function Document.Open<T>(self: Document<T>, shouldLock: boolean?): Result<T>
 			dataToCheck = self._default
 		else
 			-- If we have a valid document service format, use the data field
-			-- Otherwise, asssume we want to use the whole data stored at that key as the data field
-			-- for migrating from 'no library'
+			-- Otherwise, asssume we want to use the whole data stored at that
+			-- key as the data field for migrating from 'no library'
 			if typeof(getValue) == "table" then
 				local tableValue = getValue :: { [unknown]: unknown }
 
-				-- Structured this way to facilitate migrations within DocumentService itself
+				-- Structured this way to facilitate migrations within
+				-- DocumentService itself
 				if tableValue.documentServiceFormatVersion then
 					if tableValue.documentServiceFormatVersion == "1" then
 						keyData = tableValue :: KeyData<unknown>
@@ -275,10 +281,11 @@ function Document.Open<T>(self: Document<T>, shouldLock: boolean?): Result<T>
 		local migrationResult =
 			runMigrations(self._migrations, dataToCheck, if keyData then keyData.dataFormatVersion else 0)
 
-		-- If keyData exists, the data could be in a future version, or the data could be session locked
+		-- If keyData exists, the data could be in a future version, or the data
+		-- could be session locked
 		if keyData then
-			-- This is for the case where a player joins a new server, their data is migrated, then they rejoin an old server
-			-- We are the old server, so migrationResult.version is the old version, which should be an element of compatibleDataFormatVersions
+			-- This is for the case where a player joins a new server, their
+			-- data is migrated, then they rejoin an old server
 			if migrationResult.version < keyData.lastCompatibleVersion then
 				incompatibleVersion = true
 				return
@@ -302,8 +309,9 @@ function Document.Open<T>(self: Document<T>, shouldLock: boolean?): Result<T>
 			sessionLockId = self._sessionId,
 			lockTimestamp = os.time(),
 			isLocked = if shouldLock then true else false,
-			-- We use migrationResult.version, which could potentially downgrade the version if we are in an old
-			-- server, but this is fine because we confirmed backwards compatibility
+			-- We use migrationResult.version, which could potentially downgrade
+			-- the version if we are in an old server, but this is fine because
+			-- we confirmed backwards compatibility
 			dataFormatVersion = migrationResult.version,
 			lastCompatibleVersion = migrationResult.lastCompatibleVersion,
 			data = checkedData,
@@ -367,6 +375,10 @@ end
 	Destroys the document instance.
 
 	If session locked, will save the document and remove the lock first.
+
+	Note that after closing a Document, you will need to call 
+	DocumentStore:GetDocument() to retrieve a new one if you wish to access the
+	Document again.
 
 	@return result
 
@@ -542,7 +554,6 @@ function Document.Update<T>(self: Document<T>, transform: Transform<T>): Result<
 		end
 
 		if not newDataIsValid then
-			-- We do not call the invalid data handler, since this is for migrating old data and not fixing programmer mistakes.
 			transformInvalid = true
 			return
 		end
@@ -561,7 +572,7 @@ function Document.Update<T>(self: Document<T>, transform: Transform<T>): Result<
 
 	-- This should be a LOUD error! The developer is doing something wrong.
 	if transformInvalid then
-		error("Invalid transform function")
+		error("Invalid transform function - must return a table that passes the check function.")
 	end
 
 	if notStorable then
@@ -584,7 +595,8 @@ function Document.Update<T>(self: Document<T>, transform: Transform<T>): Result<
 		}
 	end
 
-	-- Cast to KeyData<T> since the new data has already passed self._check and the update succeeded
+	-- Cast to KeyData<T> since the new data has already passed self._check and
+	-- the update succeeded.
 	local updatedData: T = (updatedKeyData :: KeyData<T>).data
 
 	if self._lockedByUs then
@@ -602,7 +614,8 @@ function Document.Update<T>(self: Document<T>, transform: Transform<T>): Result<
 end
 
 --[=[
-	Saves a Document's cache to its DataStore. Equivalent to calling Update without transforming the data.
+	Saves a Document's cache to its DataStore. Equivalent to calling Update
+	without transforming the data.
 
 	For session-locked data only.
 
@@ -639,10 +652,11 @@ end
 --[=[
 	Attaches a hook which occurs before the event.
 
-	Note that if a hook yields, it will yield all methods that call it. Hooks are called in the order
-	they are added.
+	Note that if a hook yields, it will yield all methods that call it. Hooks
+	are called in the order they are added.
 
-	Explicitly annotate the transform type with DocumentService.Transform to avoid luau typechecking limitations.
+	Explicitly annotate the transform type with DocumentService.Transform to
+	avoid luau typechecking limitations.
 
 	@param event -- the operation to call the hook before
 	@param hook -- a hook function that receives the arguments passed in to the operation
@@ -658,8 +672,8 @@ end
 --[=[
 	Attaches a hook which occurs after the event, before the method returns.
 
-	Note that if a hook yields, it will yield all methods that call it. Hooks are called in the order
-	they are added.
+	Note that if a hook yields, it will yield all methods that call it. Hooks
+	are called in the order they are added.
 
 	@param event -- the operation to call the hook after
 	@param hook -- a hook function that receives the arguments passed in to the operation
