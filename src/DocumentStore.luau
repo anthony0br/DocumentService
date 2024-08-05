@@ -58,7 +58,7 @@ function DocumentStore.new<T>(
 		_dataStore = dataStore,
 		_check = check,
 		_default = Util.deepFreeze(default),
-		_migrations = table.freeze(migrations),
+		_migrations = Util.deepFreeze(migrations),
 		_documents = {},
 	}, DocumentStore)
 
