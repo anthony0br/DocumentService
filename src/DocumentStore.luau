@@ -61,9 +61,10 @@ function DocumentStore.new<T>(
 	}, DocumentStore)
 
 	-- Save and close all documents as fast as possible on BindToClose
-	if _G.IS_ROBLOX then
+	-- Yielding on BindToClose in studio can cause studio to take a very long time to stop play test sessions, so we don't do that
+	if _G.IS_ROBLOX and not game:GetService("RunService"):IsStudio() then
 		game:BindToClose(function()
-			self:CloseDocuments()
+			self:CloseAllDocuments()
 		end)
 	end
 
@@ -100,7 +101,7 @@ end
 --[=[
 	Closes all documents as fast as possible
 ]=]
-function DocumentStore.CloseDocuments<T>(self: DocumentStore<T>)
+function DocumentStore.CloseAllDocuments<T>(self: DocumentStore<T>)
 	local open = true
 	while open do
 		local budget = Util.getUpdateBudget()
