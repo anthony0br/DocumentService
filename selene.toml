@@ -1,1 +1,6 @@
-std = "roblox"
+std = "selene_definitions"
+
+exclude = ["target"]
+
+[config]
+global_usage = { ignore_pattern = "IS_ROBLOX" }

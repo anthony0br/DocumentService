@@ -1,5 +1,5 @@
 {
-  "name": "documentservice",
+  "name": "documentservice-dev",
   "tree": {
     "$className": "DataModel",
     "ServerScriptService": {
