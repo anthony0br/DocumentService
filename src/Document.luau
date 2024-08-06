@@ -218,13 +218,13 @@ end
 
 	You must call this method before reading or writing to a Document.
 
-	Can fail for the following reasons: RobloxAPIFail, NotBackwardsCompatible,
-	FailedCheck.
+	Can fail for the following reasons: `RobloxAPIFail`, `NotBackwardsCompatible`,
+	`FailedCheck`.
 
-	NotBackwardsCompatible indicates the data has been migrated to a version on
+	`NotBackwardsCompatible` indicates the data has been migrated to a version on
 	a newer server that isn't compatible with this server's latest version.
 
-	FailedCheck indicates the migrations failed to convert the data to a form
+	`FailedCheck` indicates the migrations failed to convert the data to a form
 	that passes the check function and matches the expected type interface.
 	
 	These should usually be handled by kicking the player.
