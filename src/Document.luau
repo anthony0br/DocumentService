@@ -4,8 +4,8 @@
 local Types = require("./Types")
 local Util = require("./Util")
 
-local SESSION_EXPIRE_TIME = 15 * 60
-local AUTOSAVE_PERIOD = 300
+local SESSION_EXPIRE_TIME = 600
+local AUTOSAVE_PERIOD = 150
 
 --[=[
 	@class Document
@@ -628,7 +628,7 @@ function Document.Update<T>(self: Document<T>, transform: Transform<T>): Result<
 			sessionLockId = keyData.sessionLockId,
 			lockTimestamp = os.time(),
 			-- If the Document is closing, it is our last save and we remove the lock
-			isLocked = if self._isClosing then false else keyData.isLocked,
+			isLocked = if self._isClosing then false else self._lockedByUs,
 			data = newData,
 			dataFormatVersion = keyData.dataFormatVersion,
 			lastCompatibleVersion = keyData.lastCompatibleVersion,
