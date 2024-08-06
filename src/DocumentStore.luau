@@ -18,9 +18,10 @@ export type DocumentStore<T> = typeof(setmetatable(
 	{} :: {
 		_dataStore: DataStore,
 		_check: (unknown) -> (boolean, T),
-		_default: Table<T>,
+		_default: T & {},
 		_migrations: Types.Migrations<T>,
 		_documents: { [string]: Document<T> },
+		_sessionLock: boolean,
 	},
 	DocumentStore
 ))
@@ -29,8 +30,14 @@ export type Document<T> = Document.Document<T>
 
 export type Migrations<T> = Types.Migrations<T>
 
-type Table<T> = T & {}
-
+--[=[
+	@interface DocumentStoreProps
+	.dataStore DataStore -- The object returned by DataStoreService:GetDataStore()
+	.check (unknown) -> (boolean, T) -- A type check function for your data, errors if types are invalid
+	.default T & {} -- Default values, which are set if keys are empty
+	.migrations Migrations<T> -- Migrations
+	.sessionLock boolean -- Should the documents be session locked?
+]=]
 --[=[
 	Creates a new DocumentStore
 
@@ -41,25 +48,24 @@ type Table<T> = T & {}
 	unit testing but can lead to weird bugs in production.
 	:::
 
-	@param dataStore -- The object returned by DataStoreService:GetDataStore()
-	@param check -- A type check function for your data, errors if types are invalid
-	@param default -- Default values, which are set if keys are empty
-	@param migrations -- Fixes invalid data e.g. through migrations. Unfixable data should be reset.
+	@param props DocumentStoreProps
 
 	@return DocumentStore
 ]=]
-function DocumentStore.new<T>(
+function DocumentStore.new<T>(props: {
 	dataStore: DataStore,
 	check: (unknown) -> (boolean, T),
-	default: Table<T>,
-	migrations: Migrations<T>
-): DocumentStore<T>
+	default: T & {},
+	migrations: Migrations<T>,
+	sessionLock: boolean,
+}): DocumentStore<T>
 	local self = setmetatable({
-		_dataStore = dataStore,
-		_check = check,
-		_default = Util.deepFreeze(default),
-		_migrations = Util.deepFreeze(migrations),
+		_dataStore = props.dataStore,
+		_check = props.check,
+		_default = Util.deepFreeze(props.default),
+		_migrations = Util.deepFreeze(props.migrations),
 		_documents = {},
+		_sessionLock = props.sessionLock,
 	}, DocumentStore)
 
 	-- Save and close all documents as fast as possible on BindToClose
@@ -86,7 +92,14 @@ function DocumentStore.GetDocument<T>(self: DocumentStore<T>, key: string): Docu
 		return self._documents[key]
 	end
 
-	local document = Document.new(key, self._dataStore, self._check, self._default, self._migrations)
+	local document = Document.new({
+		key = key,
+		dataStore = self._dataStore,
+		check = self._check,
+		default = self._default,
+		migrations = self._migrations,
+		sessionLock = self._sessionLock,
+	})
 
 	document:HookAfter("Close", function(result: Types.Result<T>)
 		if result.success then
@@ -115,7 +128,7 @@ function DocumentStore.CloseAllDocuments<T>(self: DocumentStore<T>)
 			if count >= budget then
 				break
 			end
-			if v:IsLockedByUs() then
+			if self._sessionLock then
 				count += 1
 			end
 			task.spawn(function()

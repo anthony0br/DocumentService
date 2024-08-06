@@ -22,7 +22,6 @@ export type Document<T> = typeof(setmetatable(
 		_check: (unknown) -> (boolean, T),
 		_default: T,
 		_open: boolean,
-		_lockedByUs: boolean,
 		_sessionId: string,
 		_preHooks: {
 			Open: { () -> () },
@@ -39,6 +38,7 @@ export type Document<T> = typeof(setmetatable(
 		_migrations: Migrations<T>,
 		_cache: T,
 		_isClosing: boolean,
+		_isSessionLocked: boolean,
 	},
 	Document
 ))
@@ -122,38 +122,67 @@ local function isLocked(keyData: KeyData<any>): boolean
 	return keyData.isLocked and (os.time() - keyData.lockTimestamp < SESSION_EXPIRE_TIME)
 end
 
+local function getKeyData(getValue)
+	local keyData
+
+	if type(getValue) ~= "table" then
+		return
+	end
+
+	local tableValue = getValue :: { [unknown]: unknown }
+
+	if not tableValue.documentServiceFormatVersion then
+		return
+	end
+
+	-- Migrations should start at == 0 and progress to FORMAT_VERSION
+	if tableValue.documentServiceFormatVersion == FORMAT_VERSION then
+		keyData = tableValue :: KeyData<unknown>
+	end
+
+	return keyData
+end
+
+--[=[
+	@interface DocumentProps
+	@within Document
+	.key string -- The datastore key
+	.dataStore DataStore -- The object returned by DataStoreService:GetDataStore()
+	.check (unknown) -> (boolean, T) -- A type check function for your data, errors if types are invalid
+	.default T -- Default values, which are set if keys are empty
+	.migrations Types.Migrations<T> -- Migrations
+	.sessionLock boolean -- Should the document be session locked?
+
+	@private
+]=]
 --[=[
 	Creates a new Document class
 
 	Don't create more than one Document for the same key, they will be considered different sessions.
 
-	@param key -- The datastore key
-	@param dataStore -- The object returned by DataStoreService:GetDataStore()
-	@param check -- A type check function for your data, errors if types are invalid
-	@param default -- Default values, which are set if keys are empty
-	@param migrations -- Fixes invalid data e.g. through migrations. Unfixable data should be reset.
+	@param props DocumentProps
 
 	@private
 ]=]
-function Document.new<T>(
+function Document.new<T>(props: {
 	key: string,
 	dataStore: DataStore,
 	check: (unknown) -> (boolean, T),
 	default: T,
-	migrations: Types.Migrations<T>
-): Document<T>
-	assert(check(default), "Default must pass type check")
-	assert(typeof(default) == "table", "Non-table values are not supported - group your data.")
+	migrations: Types.Migrations<T>,
+	sessionLock: boolean,
+}): Document<T>
+	assert(props.check(props.default), "Default must pass type check")
+	assert(typeof(props.default) == "table", "Non-table values are not supported - group your data.")
 
-	Util.assertStorable(default)
+	Util.assertStorable(props.default)
 
 	local self = setmetatable({
-		_key = key,
-		_dataStore = dataStore,
-		_check = check,
-		_default = Util.deepFreeze(default),
+		_key = props.key,
+		_dataStore = props.dataStore,
+		_check = props.check,
+		_default = Util.deepFreeze(props.default),
 		_open = false,
-		_lockedByUs = false,
 		_sessionId = Util.uuid(),
 		_preHooks = {
 			Open = {},
@@ -167,9 +196,10 @@ function Document.new<T>(
 			Update = {},
 			Read = {},
 		},
-		_migrations = Util.deepFreeze(migrations),
+		_migrations = Util.deepFreeze(props.migrations),
 		_isClosing = false,
-		_cache = default,
+		_cache = props.default,
+		_isSessionLocked = props.sessionLock,
 	}, Document)
 
 	return self
@@ -230,12 +260,17 @@ end
 	thrown directly.
 	:::
 
-	@param shouldLock -- If true, also session locks the data in the same update.
+	:::warning
+	Once a Document is open, no more validations take place. If data is
+	corrupted externally while a session is open, it may cause unexpected
+	errors. Session-locked sessions may also overwrite any data you change.
+	:::
+
 	@return result
 
 	@yields
 ]=]
-function Document.Open<T>(self: Document<T>, shouldLock: boolean?): Result<T>
+function Document.Open<T>(self: Document<T>): Result<T>
 	assert(not self._open, "Already open")
 	assert(not self._isClosing, "Document is closing")
 
@@ -256,22 +291,11 @@ function Document.Open<T>(self: Document<T>, shouldLock: boolean?): Result<T>
 		local keyData
 
 		if getValue then
+			keyData = getKeyData(getValue)
+
 			-- If we have a valid document service format, use the data field
 			-- Otherwise, asssume we want to use the whole data stored at that
 			-- key as the data field for migrating from 'no library'
-			if typeof(getValue) == "table" then
-				local tableValue = getValue :: { [unknown]: unknown }
-
-				-- Structured this way to facilitate migrations within
-				-- DocumentService itself
-				if tableValue.documentServiceFormatVersion then
-					-- Migrations should start at == 0 and progress to FORMAT_VERSION
-					if tableValue.documentServiceFormatVersion == FORMAT_VERSION then
-						keyData = tableValue :: KeyData<unknown>
-					end
-				end
-			end
-
 			if keyData then
 				dataToMigrate = keyData.data
 			else
@@ -320,7 +344,7 @@ function Document.Open<T>(self: Document<T>, shouldLock: boolean?): Result<T>
 			documentServiceFormatVersion = FORMAT_VERSION,
 			sessionLockId = self._sessionId,
 			lockTimestamp = os.time(),
-			isLocked = if shouldLock then true else false,
+			isLocked = if self._isSessionLocked then true else false,
 			-- We use migrationResult.version, which could potentially downgrade
 			-- the version if we are in an old server, but this is fine because
 			-- we confirmed backwards compatibility
@@ -362,20 +386,15 @@ function Document.Open<T>(self: Document<T>, shouldLock: boolean?): Result<T>
 		}
 	end
 
-	-- At this point we can assume everything happened successfully
-	if shouldLock then
-		self._lockedByUs = true
-	end
+	self._open = true
 
 	-- Autosave
 	task.defer(function()
-		while self._lockedByUs do
+		while self._open do
 			task.wait(AUTOSAVE_PERIOD)
 			self:Save()
 		end
 	end)
-
-	self._open = true
 
 	return runHooks(self._postHooks.Open, {
 		success = true,
@@ -403,7 +422,7 @@ function Document.Close<T>(self: Document<T>): Result<nil>
 
 	self._isClosing = true
 
-	if self._lockedByUs then
+	if self._isSessionLocked then
 		self:Save()
 	end
 
@@ -434,7 +453,7 @@ end
 ]=]
 function Document.SetCache<T>(self: Document<T>, newCache: T): T
 	assert(self._open, "Document not open")
-	assert(self._lockedByUs, "Cache is only supported for session locked data")
+	assert(self._isSessionLocked, "Cache is only supported for session locked data")
 
 	self._cache = Util.deepFreeze(newCache)
 
@@ -457,7 +476,7 @@ end
 ]=]
 function Document.GetCache<T>(self: Document<T>): T
 	assert(self._open, "Document not open")
-	assert(self._lockedByUs, "Cache is only supported for session locked data")
+	assert(self._isSessionLocked, "Cache is only supported for session locked data")
 
 	return self._cache
 end
@@ -479,8 +498,7 @@ end
 ]=]
 function Document.UpdateCache<T>(self: Document<T>, transform: Transform<T>): T
 	assert(self._open, "Document not open")
-	assert(self._lockedByUs, "Cache is only supported for session locked data")
-	assert(self._cache, "No existing cache to update")
+	assert(self._isSessionLocked, "Cache is only supported for session locked data")
 
 	self._cache = Util.deepFreeze(transform(self._cache))
 
@@ -490,7 +508,7 @@ end
 --[=[
 	Reads from the DataStore.
 
-	Can fail due to `RobloxAPIFail`.
+	Can fail due to `RobloxAPIFail`, `SessionLocked`.
 
 	:::warning
 	Overwrites the cache. If you are using session locking, you should only read once.
@@ -511,21 +529,33 @@ function Document.Read<T>(self: Document<T>): Result<T>
 	-- Unless it has been edited outside of the library, in which case error
 	assert(keyData.data, "Key data missing")
 
-	if success then
-		if self._lockedByUs then
-			self:SetCache(keyData.data)
-		end
-
+	if not success then
 		return runHooks(self._postHooks.Read, {
-			success = true,
-			data = keyData.data,
+			success = false,
+			failReason = "RobloxAPIFail",
+			errorMessage = getData :: string,
 		})
 	end
 
+	-- Check if the lock is stolen
+	local locked = isLocked(keyData)
+	local lockedByUs = locked and (keyData.sessionLockId == self._sessionId)
+
+	if locked and not lockedByUs then
+		return runHooks(self._postHooks.Read, {
+			success = false,
+			failReason = "SessionLocked",
+			errorMessage = "Lock stolen.",
+		})
+	end
+
+	if self._isSessionLocked then
+		self:SetCache(keyData.data)
+	end
+
 	return runHooks(self._postHooks.Read, {
-		success = false,
-		failReason = "RobloxAPIFail",
-		errorMessage = getData :: string,
+		success = true,
+		data = keyData.data,
 	})
 end
 
@@ -541,6 +571,11 @@ end
 	:::tip
 	Due to Luau limitations with the old solver, you will get the
 	best experience if you manually annotate the type of the transform parameter.
+	:::
+
+	:::warning
+	The transform function must not yield, and shouldn't rely on any
+	from outside.
 	:::
 
 	@param transform -- Transform function for the transaction.
@@ -573,7 +608,6 @@ function Document.Update<T>(self: Document<T>, transform: Transform<T>): Result<
 		-- Check if lock has been stolen
 		local locked = isLocked(keyData)
 		local lockedByUs = locked and (keyData.sessionLockId == self._sessionId)
-		self._lockedByUs = lockedByUs
 
 		if locked and not lockedByUs then
 			lockedByOther = true
@@ -646,7 +680,7 @@ function Document.Update<T>(self: Document<T>, transform: Transform<T>): Result<
 	-- the update succeeded.
 	local updatedData: T = (updatedKeyData :: KeyData<T>).data
 
-	if self._lockedByUs then
+	if self._isSessionLocked then
 		self:SetCache(updatedData)
 	end
 
@@ -675,7 +709,7 @@ end
 ]=]
 function Document.Save<T>(self: Document<T>): Result<T>
 	assert(self._open, "Document not open")
-	assert(self._lockedByUs, "Must be session locked to access cache")
+	assert(self._isSessionLocked, "Must be session locked to access cache")
 
 	return self:Update(function(cache)
 		return cache
@@ -742,15 +776,6 @@ function Document.Peek<T>(self: Document<T>): Result<any>
 		failReason = "RobloxAPIFail",
 		errorMessage = getData :: string,
 	}
-end
-
---[=[
-	Returns whether we hold a session lock on the document and can access caching methods
-
-	@return isLockedByUs
-]=]
-function Document.IsLockedByUs<T>(self: Document<T>): boolean
-	return self._lockedByUs
 end
 
 --[=[
