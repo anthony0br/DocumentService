@@ -20,8 +20,8 @@ Example
 	local DocumentStore = require(path/to/documentservice).DocumentStore
 	local store = DocumentStore.new(...)
 ```"><link data-rh="true" rel="canonical" href="https://anthony0br.github.io/DocumentService/api/DocumentService"><link data-rh="true" rel="alternate" href="https://anthony0br.github.io/DocumentService/api/DocumentService" hreflang="en"><link data-rh="true" rel="alternate" href="https://anthony0br.github.io/DocumentService/api/DocumentService" hreflang="x-default"><link rel="stylesheet" href="/DocumentService/assets/css/styles.fd8953ce.css">
-<link rel="preload" href="/DocumentService/assets/js/runtime~main.043a9df8.js" as="script">
-<link rel="preload" href="/DocumentService/assets/js/main.0a2ba2a1.js" as="script">
+<link rel="preload" href="/DocumentService/assets/js/runtime~main.c8dee53f.js" as="script">
+<link rel="preload" href="/DocumentService/assets/js/main.631418c7.js" as="script">
 </head>
 <body class="navigation-with-keyboard">
 <script>!function(){function e(e){document.documentElement.setAttribute("data-theme",e)}var t=function(){var e=null;try{e=localStorage.getItem("theme")}catch(e){}return e}();null!==t?e(t):window.matchMedia("(prefers-color-scheme: dark)").matches?e("dark"):(window.matchMedia("(prefers-color-scheme: light)").matches,e("light"))}()</script><div id="__docusaurus">
@@ -32,61 +32,102 @@ Example
 <pre class="language-lua"><code class="language-lua">	<span class="token keyword">local</span> DocumentStore <span class="token operator">=</span> <span class="token function">require</span><span class="token punctuation">(</span>path<span class="token operator">/</span>to<span class="token operator">/</span>documentservice<span class="token punctuation">)</span><span class="token punctuation">.</span>DocumentStore
 	<span class="token keyword">local</span> store <span class="token operator">=</span> DocumentStore<span class="token punctuation">.</span><span class="token function">new</span><span class="token punctuation">(</span><span class="token punctuation">...</span><span class="token punctuation">)</span>
 </code></pre>
-</div></header><h2 class="anchor anchorWithStickyNavbar_LWe7" id="types">Types<a href="#types" class="hash-link" aria-label="Direct link to Types" title="Direct link to Types">​</a></h2><div class="divider_rE5g"></div><h3 class="anchor anchorWithStickyNavbar_LWe7" id="PreHookEvent"><code style="text-decoration:none">PreHookEvent</code><a href="#PreHookEvent" class="hash-link" aria-label="Direct link to PreHookEvent" title="Direct link to PreHookEvent">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/anthony0br/DocumentService/blob/main/src/Types.luau#L10"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code class="purple_ieR2">type</code> <code>PreHookEvent<!-- --> = </code> <code class="blue_P4bS">&quot;Open&quot;</code><code class="op_lSLc"> | </code><code class="blue_P4bS">&quot;Close&quot;</code><code class="op_lSLc"> | </code><code class="blue_P4bS">&quot;Update&quot;</code><code class="op_lSLc"> | </code><code class="blue_P4bS">&quot;Read&quot;</code></div><div>
-<p>Note that Update will run on any operation that saves the datastore e.g. :Save()</p>
-</div><div class="divider_rE5g"></div><h3 class="anchor anchorWithStickyNavbar_LWe7" id="PostHookEvent"><code style="text-decoration:none">PostHookEvent</code><a href="#PostHookEvent" class="hash-link" aria-label="Direct link to PostHookEvent" title="Direct link to PostHookEvent">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/anthony0br/DocumentService/blob/main/src/Types.luau#L19"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code class="purple_ieR2">type</code> <code>PostHookEvent<!-- --> = </code> <code class="blue_P4bS">&quot;Open&quot;</code><code class="op_lSLc"> | </code><code class="blue_P4bS">&quot;Close&quot;</code><code class="op_lSLc"> | </code><code class="blue_P4bS">&quot;Update&quot;</code><code class="op_lSLc"> | </code><code class="blue_P4bS">&quot;Read&quot;</code></div><div>
-<p>Note that Update will run on any operation that saves the datastore e.g. :Save()</p>
-</div><div class="divider_rE5g"></div><h3 class="anchor anchorWithStickyNavbar_LWe7" id="FailReason"><code style="text-decoration:none">FailReason</code><a href="#FailReason" class="hash-link" aria-label="Direct link to FailReason" title="Direct link to FailReason">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/anthony0br/DocumentService/blob/main/src/Types.luau#L26"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code class="purple_ieR2">type</code> <code>FailReason<!-- --> = </code> <code class="blue_P4bS">&quot;RobloxAPIFail&quot;</code><code class="op_lSLc"> | </code><code class="blue_P4bS">&quot;InvalidDataNotHandled&quot;</code><code class="op_lSLc"> | </code><code class="blue_P4bS">&quot;SessionLocked&quot;</code><code class="op_lSLc"> | </code><code class="blue_P4bS">&quot;MigrationFailed&quot;</code></div><div></div><div class="divider_rE5g"></div><h3 class="anchor anchorWithStickyNavbar_LWe7" id="Result&lt;T&gt;"><code style="text-decoration:none">Result&lt;T&gt;</code><a href="#Result&lt;T&gt;" class="hash-link" aria-label="Direct link to Result&lt;T&gt;" title="Direct link to Result&lt;T&gt;">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/anthony0br/DocumentService/blob/main/src/Types.luau#L33"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code class="purple_ieR2">type</code> <code>Result&lt;T&gt;<!-- --> = </code> <code class="purple_ieR2">(</code><code class="green_DgR4">{</code><div class="inset_uKQm"><code>success<!-- -->: </code><code class="blue_P4bS">true</code><code class="green_DgR4">,</code></div><div class="inset_uKQm"><code>data<!-- -->: </code><code class="blue_P4bS">T</code></div><code class="green_DgR4">}</code><code class="op_lSLc"> | </code><code class="green_DgR4">{</code><div class="inset_uKQm"><code>success<!-- -->: </code><code class="blue_P4bS">false</code><code class="green_DgR4">,</code></div><div class="inset_uKQm"><code>failReason<!-- -->: </code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/DocumentService/api/DocumentService#FailReason">FailReason</a></code><code class="green_DgR4">,</code></div><div class="inset_uKQm"><code>errorMessage<!-- -->: </code><code class="blue_P4bS">string</code><code class="green_DgR4">,</code></div><div class="inset_uKQm"><code>data<!-- -->: </code><code class="blue_P4bS">nil</code></div><code class="green_DgR4">}</code><code class="purple_ieR2">)</code></div><div></div><div class="divider_rE5g"></div><h3 class="anchor anchorWithStickyNavbar_LWe7" id="Migrations&lt;T&gt;"><code style="text-decoration:none">Migrations&lt;T&gt;</code><a href="#Migrations&lt;T&gt;" class="hash-link" aria-label="Direct link to Migrations&lt;T&gt;" title="Direct link to Migrations&lt;T&gt;">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/anthony0br/DocumentService/blob/main/src/Types.luau#L57"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code class="purple_ieR2">type</code> <code>Migrations&lt;T&gt;<!-- --> = </code> <code class="purple_ieR2">{</code><code class="green_DgR4">{</code><div class="inset_uKQm"><code>backwardsCompatible<!-- -->: </code><code class="blue_P4bS">boolean</code><code class="green_DgR4">,</code></div><div class="inset_uKQm"><code>migrate<!-- -->: </code><code class="yellow_QJap">(</code><code>data<!-- -->: </code><code class="blue_P4bS">unknown</code><code class="yellow_QJap">)</code><code class="yellow_QJap"> → </code><code class="blue_P4bS">unknown</code><code class="green_DgR4">,</code></div><div class="inset_uKQm"></div><code class="green_DgR4">}</code><code class="purple_ieR2">}</code></div><div>
+</div></header><h2 class="anchor anchorWithStickyNavbar_LWe7" id="types">Types<a href="#types" class="hash-link" aria-label="Direct link to Types" title="Direct link to Types">​</a></h2><div class="divider_rE5g"></div><h3 class="anchor anchorWithStickyNavbar_LWe7" id="PreHookEvent"><code style="text-decoration:none">PreHookEvent</code><a href="#PreHookEvent" class="hash-link" aria-label="Direct link to PreHookEvent" title="Direct link to PreHookEvent">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/anthony0br/DocumentService/blob/main/src/Types.luau#L14"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code class="purple_ieR2">type</code> <code>PreHookEvent<!-- --> = </code> <code class="blue_P4bS">&quot;Open&quot;</code><code class="op_lSLc"> | </code><code class="blue_P4bS">&quot;Close&quot;</code><code class="op_lSLc"> | </code><code class="blue_P4bS">&quot;Update&quot;</code><code class="op_lSLc"> | </code><code class="blue_P4bS">&quot;Read&quot;</code></div><div>
+<p>Runs before the operation, transforming parameters.</p>
+<div class="admonition admonition-info alert alert--info">
+  <div class="admonition-heading">
+    <h5><span class="admonition-icon"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="16" viewBox="0 0 14 16">
+          <path d="M7 2.3c3.14 0 5.7 2.56 5.7 5.7s-2.56 5.7-5.7 5.7A5.71 5.71 0 0 1 1.3 8c0-3.14 2.56-5.7 5.7-5.7zM7 1C3.14 1 0 4.14 0 8s3.14 7 7 7 7-3.14 7-7-3.14-7-7-7zm1 3H6v5h2V4zm0 6H6v2h2v-2z"></path>
+        </svg></span>info</h5>
+  </div>
+  <div class="admonition-content">
+    <p>Update hooks will run on any operation that saves the datastore e.g. :Save()</p>
+  </div>
+</div>
+</div><div class="divider_rE5g"></div><h3 class="anchor anchorWithStickyNavbar_LWe7" id="PostHookEvent"><code style="text-decoration:none">PostHookEvent</code><a href="#PostHookEvent" class="hash-link" aria-label="Direct link to PostHookEvent" title="Direct link to PostHookEvent">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/anthony0br/DocumentService/blob/main/src/Types.luau#L27"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code class="purple_ieR2">type</code> <code>PostHookEvent<!-- --> = </code> <code class="blue_P4bS">&quot;Open&quot;</code><code class="op_lSLc"> | </code><code class="blue_P4bS">&quot;Close&quot;</code><code class="op_lSLc"> | </code><code class="blue_P4bS">&quot;Update&quot;</code><code class="op_lSLc"> | </code><code class="blue_P4bS">&quot;Read&quot;</code></div><div>
+<p>Runs after the operation, transforming the return value.</p>
+<div class="admonition admonition-info alert alert--info">
+  <div class="admonition-heading">
+    <h5><span class="admonition-icon"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="16" viewBox="0 0 14 16">
+          <path d="M7 2.3c3.14 0 5.7 2.56 5.7 5.7s-2.56 5.7-5.7 5.7A5.71 5.71 0 0 1 1.3 8c0-3.14 2.56-5.7 5.7-5.7zM7 1C3.14 1 0 4.14 0 8s3.14 7 7 7 7-3.14 7-7-3.14-7-7-7zm1 3H6v5h2V4zm0 6H6v2h2v-2z"></path>
+        </svg></span>info</h5>
+  </div>
+  <div class="admonition-content">
+    <p>Update hooks will run on any operation that saves the datastore e.g. :Save()</p>
+  </div>
+</div>
+</div><div class="divider_rE5g"></div><h3 class="anchor anchorWithStickyNavbar_LWe7" id="FailReason"><code style="text-decoration:none">FailReason</code><a href="#FailReason" class="hash-link" aria-label="Direct link to FailReason" title="Direct link to FailReason">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/anthony0br/DocumentService/blob/main/src/Types.luau#L37"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code class="purple_ieR2">type</code> <code>FailReason<!-- --> = </code> <code class="blue_P4bS">&quot;RobloxAPIFail&quot;</code><code class="op_lSLc"> | </code><code class="blue_P4bS">&quot;SessionLocked&quot;</code><code class="op_lSLc"> | </code><code class="blue_P4bS">&quot;CheckFailed&quot;</code><code class="op_lSLc"> | </code><code class="blue_P4bS">&quot;NotBackwardsCompatible&quot;</code></div><div>
+<p>
+  A reason an operation failed, but didn't throw an error. These are typically reasons that may
+  not be your fault and you should check for and handle them.
+</p>
+</div><div class="divider_rE5g"></div><h3 class="anchor anchorWithStickyNavbar_LWe7" id="Result&lt;T&gt;"><code style="text-decoration:none">Result&lt;T&gt;</code><a href="#Result&lt;T&gt;" class="hash-link" aria-label="Direct link to Result&lt;T&gt;" title="Direct link to Result&lt;T&gt;">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/anthony0br/DocumentService/blob/main/src/Types.luau#L46"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code class="purple_ieR2">type</code> <code>Result&lt;T&gt;<!-- --> = </code> <code class="purple_ieR2">(</code><code class="green_DgR4">{</code><div class="inset_uKQm"><code>success<!-- -->: </code><code class="blue_P4bS">true</code><code class="green_DgR4">,</code></div><div class="inset_uKQm"><code>data<!-- -->: </code><code class="blue_P4bS">T</code></div><code class="green_DgR4">}</code><code class="op_lSLc"> | </code><code class="green_DgR4">{</code><div class="inset_uKQm"><code>success<!-- -->: </code><code class="blue_P4bS">false</code><code class="green_DgR4">,</code></div><div class="inset_uKQm"><code>failReason<!-- -->: </code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/DocumentService/api/DocumentService#FailReason">FailReason</a></code><code class="green_DgR4">,</code></div><div class="inset_uKQm"><code>errorMessage<!-- -->: </code><code class="blue_P4bS">string</code><code class="green_DgR4">,</code></div><div class="inset_uKQm"><code>data<!-- -->: </code><code class="blue_P4bS">nil</code></div><code class="green_DgR4">}</code><code class="purple_ieR2">)</code></div><div>
+<p>The result of a yielding operation.</p>
+</div><div class="divider_rE5g"></div><h3 class="anchor anchorWithStickyNavbar_LWe7" id="Migrations&lt;T&gt;"><code style="text-decoration:none">Migrations&lt;T&gt;</code><a href="#Migrations&lt;T&gt;" class="hash-link" aria-label="Direct link to Migrations&lt;T&gt;" title="Direct link to Migrations&lt;T&gt;">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/anthony0br/DocumentService/blob/main/src/Types.luau#L70"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code class="purple_ieR2">type</code> <code>Migrations&lt;T&gt;<!-- --> = </code> <code class="purple_ieR2">{</code><code class="green_DgR4">{</code><div class="inset_uKQm"><code>backwardsCompatible<!-- -->: </code><code class="blue_P4bS">boolean</code><code class="green_DgR4">,</code></div><div class="inset_uKQm"><code>migrate<!-- -->: </code><code class="yellow_QJap">(</code><code>data<!-- -->: </code><code class="blue_P4bS">any</code><code class="yellow_QJap">)</code><code class="yellow_QJap"> → </code><code class="blue_P4bS">any</code><code class="green_DgR4">,</code></div><div class="inset_uKQm"></div><code class="green_DgR4">}</code><code class="purple_ieR2">}</code></div><div>
 <p>Data format versions start at 0. The first migration should migrate from 0 to 1.</p>
 <p>If you have data existing in the key before you open a Document, this will be considered version 0 and migrations will run.</p>
 <p>If backwardsCompatible is false, loading this version and later versions in an older server without this migration defined will fail.</p>
 <p>The current version is defined by the length of this array.</p>
+</div><div class="divider_rE5g"></div><h3 class="anchor anchorWithStickyNavbar_LWe7" id="Transform&lt;T&gt;"><code style="text-decoration:none">Transform&lt;T&gt;</code><a href="#Transform&lt;T&gt;" class="hash-link" aria-label="Direct link to Transform&lt;T&gt;" title="Direct link to Transform&lt;T&gt;">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/anthony0br/DocumentService/blob/main/src/Types.luau#L85"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code class="purple_ieR2">type</code> <code>Transform&lt;T&gt;<!-- --> = </code> <code class="purple_ieR2">(</code><code>data<!-- -->: </code><code class="blue_P4bS">T</code><code class="purple_ieR2">)</code><code class="purple_ieR2"> → </code><code class="blue_P4bS">T</code></div><div>
+<p>
+  Takes data and returns an updated version of it.
+  Ideally this should be a pure function.
+</p>
 </div></div></article></div><details><summary>Show raw api</summary><pre style="max-width:100%;white-space:pre-wrap">{
     &quot;functions&quot;: [],
     &quot;properties&quot;: [],
     &quot;types&quot;: [
         {
             &quot;name&quot;: &quot;PreHookEvent&quot;,
-            &quot;desc&quot;: &quot;Note that Update will run on any operation that saves the datastore e.g. :Save()&quot;,
+            &quot;desc&quot;: &quot;Runs before the operation, transforming parameters.\n\n:::info\nUpdate hooks will run on any operation that saves the datastore e.g. :Save()\n:::&quot;,
             &quot;lua_type&quot;: &quot;\&quot;Open\&quot; | \&quot;Close\&quot; | \&quot;Update\&quot; | \&quot;Read\&quot;&quot;,
             &quot;source&quot;: {
-                &quot;line&quot;: 10,
+                &quot;line&quot;: 14,
                 &quot;path&quot;: &quot;src/Types.luau&quot;
             }
         },
         {
             &quot;name&quot;: &quot;PostHookEvent&quot;,
-            &quot;desc&quot;: &quot;Note that Update will run on any operation that saves the datastore e.g. :Save()&quot;,
+            &quot;desc&quot;: &quot;Runs after the operation, transforming the return value.\n\n:::info\nUpdate hooks will run on any operation that saves the datastore e.g. :Save()\n:::&quot;,
             &quot;lua_type&quot;: &quot;\&quot;Open\&quot; | \&quot;Close\&quot; | \&quot;Update\&quot; | \&quot;Read\&quot;&quot;,
             &quot;source&quot;: {
-                &quot;line&quot;: 19,
+                &quot;line&quot;: 27,
                 &quot;path&quot;: &quot;src/Types.luau&quot;
             }
         },
         {
             &quot;name&quot;: &quot;FailReason&quot;,
-            &quot;desc&quot;: &quot;&quot;,
-            &quot;lua_type&quot;: &quot;\&quot;RobloxAPIFail\&quot; | \&quot;InvalidDataNotHandled\&quot; | \&quot;SessionLocked\&quot; | \&quot;MigrationFailed\&quot;&quot;,
+            &quot;desc&quot;: &quot;A reason an operation failed, but didn&#x27;t throw an error. These are typically reasons that may\nnot be your fault and you should check for and handle them.&quot;,
+            &quot;lua_type&quot;: &quot;\&quot;RobloxAPIFail\&quot; | \&quot;SessionLocked\&quot; | \&quot;CheckFailed\&quot; | \&quot;NotBackwardsCompatible\&quot;&quot;,
             &quot;source&quot;: {
-                &quot;line&quot;: 26,
+                &quot;line&quot;: 37,
                 &quot;path&quot;: &quot;src/Types.luau&quot;
             }
         },
         {
             &quot;name&quot;: &quot;Result&lt;T&gt;&quot;,
-            &quot;desc&quot;: &quot;&quot;,
+            &quot;desc&quot;: &quot;The result of a yielding operation.&quot;,
             &quot;lua_type&quot;: &quot;({ success: true, data: T } | { success: false, failReason: FailReason, errorMessage: string, data: nil })&quot;,
             &quot;source&quot;: {
-                &quot;line&quot;: 33,
+                &quot;line&quot;: 46,
                 &quot;path&quot;: &quot;src/Types.luau&quot;
             }
         },
         {
             &quot;name&quot;: &quot;Migrations&lt;T&gt;&quot;,
             &quot;desc&quot;: &quot;Data format versions start at 0. The first migration should migrate from 0 to 1.\n\nIf you have data existing in the key before you open a Document, this will be considered version 0 and migrations will run.\n\nIf backwardsCompatible is false, loading this version and later versions in an older server without this migration defined will fail.\n\nThe current version is defined by the length of this array.&quot;,
-            &quot;lua_type&quot;: &quot;{ { backwardsCompatible: boolean, migrate: (data: unknown) -&gt; unknown, } }&quot;,
+            &quot;lua_type&quot;: &quot;{ { backwardsCompatible: boolean, migrate: (data: any) -&gt; any, } }&quot;,
             &quot;source&quot;: {
-                &quot;line&quot;: 57,
+                &quot;line&quot;: 70,
+                &quot;path&quot;: &quot;src/Types.luau&quot;
+            }
+        },
+        {
+            &quot;name&quot;: &quot;Transform&lt;T&gt;&quot;,
+            &quot;desc&quot;: &quot;Takes data and returns an updated version of it.\nIdeally this should be a pure function.&quot;,
+            &quot;lua_type&quot;: &quot;(data: T) -&gt; T&quot;,
+            &quot;source&quot;: {
+                &quot;line&quot;: 85,
                 &quot;path&quot;: &quot;src/Types.luau&quot;
             }
         }
@@ -97,8 +138,8 @@ Example
         &quot;line&quot;: 32,
         &quot;path&quot;: &quot;src/init.luau&quot;
     }
-}</pre></details></div><div class="col col--3"><div class="tableOfContents_bqdL thin-scrollbar"><ul class="table-of-contents table-of-contents__left-border"><li><a href="#types" class="table-of-contents__link toc-highlight">Types</a><ul><li><a href="#FailReason" class="table-of-contents__link toc-highlight">FailReason</a></li><li><a href="#Migrations&lt;T&gt;" class="table-of-contents__link toc-highlight">Migrations<t></t></a></li><li><a href="#PostHookEvent" class="table-of-contents__link toc-highlight">PostHookEvent</a></li><li><a href="#PreHookEvent" class="table-of-contents__link toc-highlight">PreHookEvent</a></li><li><a href="#Result&lt;T&gt;" class="table-of-contents__link toc-highlight">Result<t></t></a></li></ul></li><li><a href="#properties" class="table-of-contents__link toc-highlight">Properties</a></li><li><a href="#functions" class="table-of-contents__link toc-highlight">Functions</a></li></ul></div></div></div></div></main></div></div><footer class="footer footer--dark"><div class="container container-fluid"><div class="footer__bottom text--center"><div class="footer__copyright">Copyright © 2024 Anthony O'Brien. Built with Moonwave and Docusaurus</div></div></div></footer></div>
-<script src="/DocumentService/assets/js/runtime~main.043a9df8.js"></script>
-<script src="/DocumentService/assets/js/main.0a2ba2a1.js"></script>
+}</pre></details></div><div class="col col--3"><div class="tableOfContents_bqdL thin-scrollbar"><ul class="table-of-contents table-of-contents__left-border"><li><a href="#types" class="table-of-contents__link toc-highlight">Types</a><ul><li><a href="#FailReason" class="table-of-contents__link toc-highlight">FailReason</a></li><li><a href="#Migrations&lt;T&gt;" class="table-of-contents__link toc-highlight">Migrations<t></t></a></li><li><a href="#PostHookEvent" class="table-of-contents__link toc-highlight">PostHookEvent</a></li><li><a href="#PreHookEvent" class="table-of-contents__link toc-highlight">PreHookEvent</a></li><li><a href="#Result&lt;T&gt;" class="table-of-contents__link toc-highlight">Result<t></t></a></li><li><a href="#Transform&lt;T&gt;" class="table-of-contents__link toc-highlight">Transform<t></t></a></li></ul></li><li><a href="#properties" class="table-of-contents__link toc-highlight">Properties</a></li><li><a href="#functions" class="table-of-contents__link toc-highlight">Functions</a></li></ul></div></div></div></div></main></div></div><footer class="footer footer--dark"><div class="container container-fluid"><div class="footer__bottom text--center"><div class="footer__copyright">Copyright © 2024 Anthony O'Brien. Built with Moonwave and Docusaurus</div></div></div></footer></div>
+<script src="/DocumentService/assets/js/runtime~main.c8dee53f.js"></script>
+<script src="/DocumentService/assets/js/main.631418c7.js"></script>
 </body>
 </html>
