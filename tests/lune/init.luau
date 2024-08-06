@@ -241,12 +241,12 @@ Test("Session locking prevents other sessions from opening", function()
 		{}
 	)
 	do
-		local document = session1:GetDocument("test")
-		local result = document:Open()
+		local document = session1:GetDocument("sessionLockTest1")
+		local result = document:Open(true)
 		assert(result.success == true)
 	end
 	do
-		local document = session2:GetDocument("test")
+		local document = session2:GetDocument("sessionLockTest1")
 		local result = document:Open()
 		assert(result.success == false)
 		assert(result.failReason == "SessionLocked")
