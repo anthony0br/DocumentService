@@ -573,17 +573,14 @@ function Document.Update<T>(self: Document<T>, transform: Transform<T>): Result<
 		-- Check if lock has been stolen
 		local locked = isLocked(keyData)
 		local lockedByUs = locked and (keyData.sessionLockId == self._sessionId)
-
-		if not (locked and lockedByUs) then
-			self._lockedByUs = false
-		end
+		self._lockedByUs = lockedByUs
 
 		if locked and not lockedByUs then
 			lockedByOther = true
 			return
 		end
 
-		local newData = keyData.data
+		local newData
 		if lockedByUs and self._cache then
 			newData = transform(self._cache)
 		else
