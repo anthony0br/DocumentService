@@ -490,6 +490,8 @@ end
 --[=[
 	Reads from the DataStore.
 
+	Can fail due to `RobloxAPIFail.`
+
 	:::warning
 	Overwrites the cache. If you are using session locking, you should only read once.
 	:::
@@ -512,10 +514,10 @@ function Document.Read<T>(self: Document<T>): Result<T>
 	if success then
 		self:SetCache(keyData.data)
 
-		return {
+		return runHooks(self._postHooks.Read, {
 			success = true,
 			data = keyData.data,
-		}
+		})
 	end
 
 	return runHooks(self._postHooks.Read, {
@@ -529,6 +531,10 @@ end
 	Performs an atomic transaction on the Document, writing to the DataStore.
 
 	If using session locking, transforms will build on cached data.
+
+	Errors if data is not storable or the transform return value is invalid.
+
+	Can fail due to `RobloxAPIFail` or `SessionLocked`.
 
 	:::tip
 	Due to Luau limitations with the old solver, you will get the
@@ -622,19 +628,19 @@ function Document.Update<T>(self: Document<T>, transform: Transform<T>): Result<
 	end
 
 	if not success then
-		return {
+		return runHooks(self._postHooks.Update, {
 			success = false,
 			failReason = "RobloxAPIFail",
 			errorMessage = updatedKeyData :: any,
-		}
+		})
 	end
 
 	if lockedByOther then
-		return {
+		return runHooks(self._postHooks.Update, {
 			success = false,
 			failReason = "SessionLocked",
 			errorMessage = "Document is locked by another session.",
-		}
+		})
 	end
 
 	-- Cast to KeyData<T> since the new data has already passed self._check and
@@ -659,6 +665,8 @@ end
 	Saves a Document's cache to its DataStore. Equivalent to calling Update
 	without transforming the data.
 
+	Can fail due to `RobloxAPIFail` or `SessionLocked` (in the case the lock is stolen).
+
 	:::warning
 	You can only use cache for session-locked data. See `Open` for how to
 	enable session locking.
@@ -676,7 +684,9 @@ function Document.Save<T>(self: Document<T>): Result<T>
 end
 
 --[=[
-	Wipes all data associated with the key and closes the document
+	Wipes all data associated with the key and closes the document.
+
+	Can fail due to `RobloxAPIFail`.
 
 	Satisfies compliance with GDPR right of erasure.
 
@@ -701,6 +711,8 @@ end
 
 --[=[
 	Reads the data of a potentially locked or unopened Document.
+
+	Can fail due to `RobloxAPIFail`.
 
 	Does not update the cache.
 
