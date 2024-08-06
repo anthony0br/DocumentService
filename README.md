@@ -30,9 +30,9 @@ These are all great projects but didn't meet my needs in some way.
 Contributions are accepted. Your contributions must run in Lune directly from src and, when compiled by darklua to target/roblox, in Roblox. You should use moonwave to update/generate documentation.
 
 To build for Roblox:
-1) Install necessary tools (see aftman.toml)
-2) Run `rojo sourcemap source.project.json -o sourcemap.json`. It is necessary to generate a sourcemap of the src folder so darklua can convert our requires.
-3) Run `darklua process src target/roblox`
+1. Install necessary tools (see aftman.toml).
+2. Run `rojo sourcemap source.project.json -o sourcemap.json`. It is necessary to generate a sourcemap of the src folder so darklua can convert our requires.
+3. Run `darklua process src target/roblox`.
 
 ## Contact
 The best way to get in touch is to ping me in the thread in the Roblox OSS discord, or create an issue.
