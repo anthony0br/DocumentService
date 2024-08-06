@@ -5,7 +5,7 @@ local Types = require("./Types")
 local Util = require("./Util")
 
 local SESSION_EXPIRE_TIME = 15 * 60
-local AUTOSAVE_PERIOD = 180
+local AUTOSAVE_PERIOD = 300
 
 --[=[
 	@class Document
