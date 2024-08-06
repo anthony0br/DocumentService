@@ -32,6 +32,7 @@ export type Migrations<T> = Types.Migrations<T>
 
 --[=[
 	@interface DocumentStoreProps
+	@within DocumentStore
 	.dataStore DataStore -- The object returned by DataStoreService:GetDataStore()
 	.check (unknown) -> (boolean, T) -- A type check function for your data, errors if types are invalid
 	.default T & {} -- Default values, which are set if keys are empty
