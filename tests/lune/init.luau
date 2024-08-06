@@ -36,12 +36,17 @@ local function Test(name, test)
 	end
 end
 
+type TestData = {
+	Document: string,
+	Service: number,
+}
+
 local CheckInterface = {
 	Document = Guard.String,
 	Service = Guard.Number,
 }
 
-local function check(value: unknown)
+local function check(value: unknown): TestData
 	assert(type(value) == "table")
 	local Value: any = value
 
@@ -220,30 +225,25 @@ Test("Fails to open document with no budget", function()
 	_G.NO_BUDGET = false
 end)
 
--- Test: methods should fail if document not open
+Test("Methods should fail if document not open", function()
+	local document = DocumentStore:GetDocument("5")
+	document:Close()
+	document:Update(function(data: TestData)
+		data.Document = "newString"
+		return data
+	end)
+end)
 
--- Test: Data in datastore does not match interface should run invalid data handler
+-- Test: update method
 
--- Test: Data in datastore does not match interface should error if invalid data handler is unsuccessful
+-- Test: read method
+
+-- Test: peek method
+
+-- Test: caching
 
 -- Test: locking
 
--- Test: Data matches interface
-
--- Test: Data reads correctly
-
--- Test: Session lock functions
-
--- Test: Transactions
-
 -- Test: hooks
-
--- Test: If session lock expired, a new session lock should be created
-
--- Test: Transactions should fail if session stolen
-
--- Test: Session locks should stay open
-
--- No budget tests
 
 print(`Tests complete. {Results.passed} passed, {Results.failed} failed`)
