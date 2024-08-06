@@ -490,7 +490,7 @@ end
 --[=[
 	Reads from the DataStore.
 
-	Can fail due to `RobloxAPIFail.`
+	Can fail due to `RobloxAPIFail`.
 
 	:::warning
 	Overwrites the cache. If you are using session locking, you should only read once.
@@ -512,7 +512,9 @@ function Document.Read<T>(self: Document<T>): Result<T>
 	assert(keyData.data, "Key data missing")
 
 	if success then
-		self:SetCache(keyData.data)
+		if self._lockedByUs then
+			self:SetCache(keyData.data)
+		end
 
 		return runHooks(self._postHooks.Read, {
 			success = true,
