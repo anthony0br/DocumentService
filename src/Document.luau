@@ -593,6 +593,10 @@ function Document.Update<T>(self: Document<T>, transform: Transform<T>): Result<
 		local locked = isLocked(keyData)
 		local lockedByUs = locked and (keyData.sessionLockId == self._sessionId)
 
+		if not (locked and lockedByUs) then
+			self._lockedByUs = false
+		end
+
 		if locked and not lockedByUs then
 			lockedByOther = true
 			return
@@ -628,7 +632,7 @@ function Document.Update<T>(self: Document<T>, transform: Transform<T>): Result<
 			sessionLockId = keyData.sessionLockId,
 			lockTimestamp = os.time(),
 			-- If the Document is closing, it is our last save and we remove the lock
-			isLocked = if self._isClosing then false else self._lockedByUs,
+			isLocked = if self._isClosing then false else lockedByUs,
 			data = newData,
 			dataFormatVersion = keyData.dataFormatVersion,
 			lastCompatibleVersion = keyData.lastCompatibleVersion,
