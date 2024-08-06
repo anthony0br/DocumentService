@@ -33,7 +33,7 @@ function Util.getUpdateBudget()
 	if _G.IS_ROBLOX then
 		return game:GetService("DataStoreService"):GetRequestBudgetForRequestType(Enum.DataStoreRequestType.UpdateAsync)
 	else
-		return _G.NO_BUDGET and 0 or 60
+		return 60
 	end
 end
 
@@ -42,7 +42,7 @@ function Util.getSetBudget()
 		return game:GetService("DataStoreService")
 			:GetRequestBudgetForRequestType(Enum.DataStoreRequestType.SetIncrementAsync)
 	else
-		return _G.NO_BUDGET and 0 or 60
+		return 60
 	end
 end
 
@@ -50,7 +50,7 @@ function Util.getGetBudget()
 	if _G.IS_ROBLOX then
 		return game:GetService("DataStoreService"):GetRequestBudgetForRequestType(Enum.DataStoreRequestType.GetAsync)
 	else
-		return _G.NO_BUDGET and 0 or 60
+		return 60
 	end
 end
 

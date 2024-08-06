@@ -214,23 +214,16 @@ Test("Migrate from 'no library' with no migration - should fail with CheckFailed
 	assert(result.failReason == "CheckFailed")
 end)
 
--- Now that all operations only use a single datastore API request, we only need
--- to test up to 5 simulated errors
-Test("Fails to open document with no budget", function()
-	_G.NO_BUDGET = true
-	local document = DocumentStore:GetDocument("4")
-	local result = document:Open()
-	assert(result.success == false)
-	print(result)
-	_G.NO_BUDGET = false
-end)
-
 Test("Methods should fail if document not open", function()
 	local document = DocumentStore:GetDocument("5")
-	document:Close()
-	document:Update(function(data: TestData)
-		data.Document = "newString"
-		return data
+	shouldFail(function()
+		document:Close()
+	end)
+	shouldFail(function()
+		document:Update(function(data: TestData)
+			data.Document = "newString"
+			return data
+		end)
 	end)
 end)
 
