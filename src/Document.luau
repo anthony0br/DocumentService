@@ -557,7 +557,7 @@ end
 
 	If using session locking, transforms will build on cached data.
 
-	:::info
+	:::tip
 	Due to Luau limitations with the old solver, you will get the
 	best experience if you manually annotate the type of the transform parameter.
 	:::
@@ -682,7 +682,10 @@ end
 	Saves a Document's cache to its DataStore. Equivalent to calling Update
 	without transforming the data.
 
-	For session-locked data only.
+	:::warning
+	You can only use cache for session-locked data. See `Open` for how to
+	enable session locking.
+	:::
 
 	@yields
 ]=]
