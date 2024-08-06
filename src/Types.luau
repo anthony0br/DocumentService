@@ -57,7 +57,7 @@ export type Result<T> = {
 export type Migrations<T> = {
 	{
 		backwardsCompatible: boolean,
-		migrate: (data: unknown) -> unknown,
+		migrate: (data: any) -> any,
 	}
 }
 
