@@ -56,7 +56,7 @@ local function check(value: unknown): TestData
 	}
 end
 
-local DocumentStore = DocumentService.DocumentStore.new(
+local documentStore = DocumentService.DocumentStore.new(
 	mockDataStore,
 	Guard.Check(check),
 	{ Document = "", Service = 2 },
@@ -64,7 +64,7 @@ local DocumentStore = DocumentService.DocumentStore.new(
 )
 
 Test("Opens document with no simulated errors", function()
-	local document = DocumentStore:GetDocument("1")
+	local document = documentStore:GetDocument("1")
 	local result = document:Open()
 	assert(result.success == true)
 	assert(result.data)
@@ -73,14 +73,14 @@ Test("Opens document with no simulated errors", function()
 end)
 
 Test("Can close document retrieved by string", function()
-	local document = DocumentStore:GetDocument("1")
+	local document = documentStore:GetDocument("1")
 	print(tostring(document))
 	local result = document:Close()
 	assert(result.success == true)
 end)
 
 Test("Can reopen document after closed, retrieved by string", function()
-	local document = DocumentStore:GetDocument("1")
+	local document = documentStore:GetDocument("1")
 	local result = document:Open()
 	assert(result.success == true)
 	assert(result.data)
@@ -89,7 +89,7 @@ end)
 
 Test("Opens document with simulated error", function()
 	mockDataStore.errors:addSimulatedErrors(1)
-	local document = DocumentStore:GetDocument("2")
+	local document = documentStore:GetDocument("2")
 	local result = document:Open()
 	assert(result.success == true)
 	assert(result.data)
@@ -99,7 +99,7 @@ end)
 
 Test("Opens document with 4 simulated errors", function()
 	mockDataStore.errors:addSimulatedErrors(4)
-	local document = DocumentStore:GetDocument("2")
+	local document = documentStore:GetDocument("2")
 	local result = document:Open()
 	assert(result.success == true)
 	assert(result.data)
@@ -111,7 +111,7 @@ end)
 -- to test up to 5 simulated errors
 Test("Fails to open document with 5 simulated errors", function()
 	mockDataStore.errors:addSimulatedErrors(5)
-	local document = DocumentStore:GetDocument("3")
+	local document = documentStore:GetDocument("3")
 	local result = document:Open()
 	assert(result.success == false)
 	print(result)
@@ -215,7 +215,7 @@ Test("Migrate from 'no library' with no migration - should fail with CheckFailed
 end)
 
 Test("Methods should fail if document not open", function()
-	local document = DocumentStore:GetDocument("5")
+	local document = documentStore:GetDocument("5")
 	shouldFail(function()
 		document:Close()
 	end)
@@ -227,6 +227,32 @@ Test("Methods should fail if document not open", function()
 	end)
 end)
 
+Test("Session locking prevents other sessions from opening", function()
+	local session1 = DocumentService.DocumentStore.new(
+		mockDataStore,
+		Guard.Check(check),
+		{ Document = "", Service = 2 },
+		{}
+	)
+	local session2 = DocumentService.DocumentStore.new(
+		mockDataStore,
+		Guard.Check(check),
+		{ Document = "", Service = 2 },
+		{}
+	)
+	do
+		local document = session1:GetDocument("test")
+		local result = document:Open()
+		assert(result.success == true)
+	end
+	do
+		local document = session2:GetDocument("test")
+		local result = document:Open()
+		assert(result.success == false)
+		assert(result.failReason == "SessionLocked")
+	end
+end)
+
 -- Test: update method
 
 -- Test: read method
@@ -234,8 +260,6 @@ end)
 -- Test: peek method
 
 -- Test: caching
-
--- Test: locking
 
 -- Test: hooks
 
