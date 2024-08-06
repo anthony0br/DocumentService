@@ -209,11 +209,16 @@ Test("Migrate from 'no library' with no migration - should fail with CheckFailed
 	assert(result.failReason == "CheckFailed")
 end)
 
--- Test: DocumentStores are independent
-
--- Test: Corrupt key data
-
--- Test: out of datastore budget with _G.NO_BUDGET
+-- Now that all operations only use a single datastore API request, we only need
+-- to test up to 5 simulated errors
+Test("Fails to open document with no budget", function()
+	_G.NO_BUDGET = true
+	local document = DocumentStore:GetDocument("4")
+	local result = document:Open()
+	assert(result.success == false)
+	print(result)
+	_G.NO_BUDGET = false
+end)
 
 -- Test: methods should fail if document not open
 
