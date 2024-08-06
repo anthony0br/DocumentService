@@ -520,6 +520,9 @@ end
 
 	If using session locking, transforms will build on cached data.
 
+	Note that due to Luau limitations with the old solver, you will have to
+	manually annotate the type of the transform parameter.
+
 	@param transform -- Transform function for the transaction.
 	@return result -- Result containing the new data.
 

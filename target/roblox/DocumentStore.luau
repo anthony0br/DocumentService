@@ -110,7 +110,7 @@ function DocumentStore.CloseAllDocuments<T>(self: DocumentStore<T>)
 		local budget = Util.getUpdateBudget()
 		local count = 0
 		open = false
-		for i, v: Document<T> in pairs(self._documents) do
+		for _, v: Document<T> in pairs(self._documents) do
 			open = true
 			if count >= budget then
 				break
