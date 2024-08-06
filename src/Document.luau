@@ -176,40 +176,6 @@ function Document.new<T>(
 end
 
 --[=[
-	Reads the data of a potentially locked or unopened Document.
-
-	Does not update the cache.
-
-	If the data is not a table or not in the DocumentService format (see KeyData<T>),
-	the data will be nil.
-
-	@yields
-]=]
-function Document.Peek<T>(self: Document<T>): Result<any>
-	assert(not self._open, "Document open - use Read instead")
-
-	local success, getData: any = Util.getAsync(self._dataStore, self._key)
-
-	local data
-	if type(getData) == "table" then
-		data = getData.data
-	end
-
-	if success then
-		return {
-			success = true,
-			data = data,
-		}
-	end
-
-	return {
-		success = false,
-		failReason = "RobloxAPIFail",
-		errorMessage = getData :: string,
-	}
-end
-
---[=[
 	Validates the document if one exists, or creates a default document if no
 	document exists.
 
@@ -255,6 +221,13 @@ end
 	and does not need multi-server editing.
 
 	You can enable session locking with the shouldLock argument.
+	:::
+
+	:::warning
+	Like all methods which return Result<T>, this can fail for reasons outside
+	of the programmer's control. You should check for and handle these possible
+	errors (stated above). Errors that are the fault of the programmer are
+	thrown directly.
 	:::
 
 	@param shouldLock -- If true, also session locks the data in the same update.
@@ -724,6 +697,40 @@ function Document.Erase<T>(self: Document<T>): Result<nil>
 			errorMessage = "RemoveAsync failure",
 		}
 	end
+end
+
+--[=[
+	Reads the data of a potentially locked or unopened Document.
+
+	Does not update the cache.
+
+	If the data is not a table or not in the DocumentService format (see KeyData<T>),
+	the data will be nil.
+
+	@yields
+]=]
+function Document.Peek<T>(self: Document<T>): Result<any>
+	assert(not self._open, "Document open - use Read instead")
+
+	local success, getData: any = Util.getAsync(self._dataStore, self._key)
+
+	local data
+	if type(getData) == "table" then
+		data = getData.data
+	end
+
+	if success then
+		return {
+			success = true,
+			data = data,
+		}
+	end
+
+	return {
+		success = false,
+		failReason = "RobloxAPIFail",
+		errorMessage = getData :: string,
+	}
 end
 
 --[=[

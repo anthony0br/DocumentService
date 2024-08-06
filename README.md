@@ -10,8 +10,8 @@ This project is currently in its early stages and should not be used in producti
 - Fully strictly typed: data is typed (intellisense and typechecking on data you read from DataStores!), and the whole library is written in --!strict.
 - Immutable cache and autosaves.
 - Migrations, inspired by Lapis. (If you're used to :Reconcile, you can do this with migrations).
-- Data validation - use any runtime type checker for your data, and use the static types!
-- Support for both session-locking and multi-server editing (not simultaneously)
+- Validate your data with support for runtime and static typechecking.
+- Documents can be session-locked, or not (to allow multi-server editing).
 - Run hooks before and after operations, e.g. logging.
 - Automatic retry with exponential backoff.
 - Migrate from no library, or another library if you're brave.
