@@ -112,7 +112,102 @@ Test("Fails to open document with 5 simulated errors", function()
 	print(result)
 end)
 
--- Test: Migrate from 'flat data' to DocumentService
+Test("Migrate from 'no library' with a migration, and re-open migrated data", function()
+	local CheckInterface2 = {
+		testString = Guard.String,
+		testNumber = Guard.Number,
+	}
+
+	local function check2(value: unknown)
+		assert(type(value) == "table")
+		local Value: any = value
+
+		return {
+			testString = CheckInterface2.testString(Value.testString),
+			testNumber = CheckInterface2.testNumber(Value.testNumber),
+		}
+	end
+
+	local migrations = {
+		{
+			backwardsCompatible = true,
+			migrate = function(data)
+				if not data.testString and type(data.testNumber) ~= "string" then
+					data.testString = "test"
+				end
+
+				if not data.testNumber and type(data.testNumber) ~= "number" then
+					data.testNumber = 2
+				end
+
+				return data
+			end,
+		},
+	}
+
+	local store = DocumentService.DocumentStore.new(
+		mockDataStore,
+		Guard.Check(check2),
+		{ testString = "test", testNumber = 2 },
+		migrations
+	)
+
+	mockDataStore:UpdateAsync("nolibrary", function()
+		return {
+			testString = "this is from a raw UpdateAsync",
+			rogueData = 3,
+		}
+	end)
+
+	local document = store:GetDocument("nolibrary")
+	local result = document:Open()
+	print(result)
+	check2(result.data)
+
+	document:Close()
+	document = store:GetDocument("nolibrary")
+	local result2 = document:Open()
+	print(result2)
+	check2(result2.data)
+end)
+
+Test("Migrate from 'no library' with no migration - should fail with CheckFailed", function()
+	local CheckInterface2 = {
+		testString = Guard.String,
+		testNumber = Guard.Number,
+	}
+
+	local function check2(value: unknown)
+		assert(type(value) == "table")
+		local Value: any = value
+
+		return {
+			testString = CheckInterface2.testString(Value.testString),
+			testNumber = CheckInterface2.testNumber(Value.testNumber),
+		}
+	end
+
+	local migrations = {}
+
+	local store = DocumentService.DocumentStore.new(
+		mockDataStore,
+		Guard.Check(check2),
+		{ testString = "test", testNumber = 2 },
+		migrations
+	)
+
+	mockDataStore:UpdateAsync("nolibrary2", function()
+		return {
+			testString = "this is from a raw UpdateAsync",
+			rogueData = 3,
+		}
+	end)
+
+	local document = store:GetDocument("nolibrary2")
+	local result = document:Open()
+	assert(result.success == false)
+	assert(result.failReason == "CheckFailed")
+end)
 
 -- Test: DocumentStores are independent
 

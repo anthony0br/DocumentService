@@ -25,7 +25,7 @@ local RETRY = {
 if not _G.IS_ROBLOX then
 	RETRY = {
 		ATTEMPTS = 5,
-		INITIAL_WAIT = 1 / 30,
+		INITIAL_WAIT = 0,
 	}
 end
 
