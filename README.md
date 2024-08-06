@@ -1,15 +1,14 @@
 # DocumentService - A powerful Roblox datastore library
 
-`DocumentService` is a fully strictly typed Luau library for saving data with Roblox Datastores.
+DocumentService is a fully strictly typed Luau library for saving data with Roblox DataStores.
 
-`DocumentService` provides an abstraction called `DocumentStore`. DocumentStores hold data about an entity in `Document`s. Unlike abstractions in most other libraries, Documents are not player-centric by default, and can hold information about players, groups, virtual houses, or anything you could possibly want without hassle.
+DocumentService provides a DataStore abstraction, DocumentStore, which holds data about entities within Documents.
 
-
-This project is currently in early stages and should not be used in production.
+This project is currently in its early stages and should not be used in production.
 
 ## Features
 - Fully strictly typed: data is typed (intellisense and typechecking on data you read from DataStores!), and the whole library is written in --!strict.
-- Caching and autosaves.
+- Immutable cache and autosaves.
 - Migrations, inspired by Lapis. (If you're used to :Reconcile, you can do this with migrations).
 - Data validation - use any runtime type checker for your data, and use the static types!
 - Support for both session-locking and multi-server editing (not simultaneously)

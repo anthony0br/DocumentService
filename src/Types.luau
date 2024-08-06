@@ -3,7 +3,11 @@
 --[=[
 	@type PreHookEvent "Open" | "Close" | "Update" | "Read"
 
-	Note that Update will run on any operation that saves the datastore e.g. :Save()
+	Runs before the operation, transforming parameters.
+
+	:::info
+	Update hooks will run on any operation that saves the datastore e.g. :Save()
+	:::
 
 	@within DocumentService
 ]=]
@@ -12,14 +16,21 @@ export type PreHookEvent = "Open" | "Close" | "Update" | "Read"
 --[=[
 	@type PostHookEvent "Open" | "Close" | "Update" | "Read"
 
-	Note that Update will run on any operation that saves the datastore e.g. :Save()
+	Runs after the operation, transforming the return value.
+
+	:::info
+	Update hooks will run on any operation that saves the datastore e.g. :Save()
+	:::
 
 	@within DocumentService
 ]=]
 export type PostHookEvent = "Open" | "Close" | "Update" | "Read"
 
 --[=[
-	@type FailReason "RobloxAPIFail" | "InvalidDataNotHandled" | "SessionLocked" | "MigrationFailed"
+	@type FailReason "RobloxAPIFail" | "SessionLocked" | "CheckFailed" | "NotBackwardsCompatible"
+
+	A reason an operation failed, but didn't throw an error. These are typically reasons that may
+	not be your fault and you should check for and handle them.
 	
 	@within DocumentService
 ]=]
@@ -27,6 +38,8 @@ export type FailReason = "RobloxAPIFail" | "SessionLocked" | "CheckFailed" | "No
 
 --[=[
 	@type Result<T> ({ success: true, data: T } | { success: false, failReason: FailReason, errorMessage: string, data: nil })
+
+	The result of a yielding operation.
 	
 	@within DocumentService
 ]=]
@@ -41,7 +54,7 @@ export type Result<T> = {
 }
 
 --[=[
-	@type Migrations<T> { { backwardsCompatible: boolean, migrate: (data: unknown) -> unknown, } }
+	@type Migrations<T> { { backwardsCompatible: boolean, migrate: (data: any) -> any, } }
 
 	Data format versions start at 0. The first migration should migrate from 0 to 1.
 
@@ -60,5 +73,15 @@ export type Migrations<T> = {
 		migrate: (data: any) -> any,
 	}
 }
+
+--[=[
+	@type Transform<T> (data: T) -> T
+
+	Takes data and returns an updated version of it.
+	Ideally this should be a pure function.
+	
+	@within DocumentService
+]=]
+export type Transform<T> = (data: T) -> T
 
 return {}

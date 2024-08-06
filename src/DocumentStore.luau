@@ -102,7 +102,7 @@ function DocumentStore.GetDocument<T>(self: DocumentStore<T>, key: string): Docu
 end
 
 --[=[
-	Closes all documents as fast as possible
+	Closes all documents as fast as possible. This runs on BindToClose already.
 ]=]
 function DocumentStore.CloseAllDocuments<T>(self: DocumentStore<T>)
 	local open = true
@@ -127,7 +127,7 @@ function DocumentStore.CloseAllDocuments<T>(self: DocumentStore<T>)
 end
 
 --[=[
-	Checks whether a metatable passed is a DocumentStore
+	Checks if a metatable passed is a DocumentStore.
 
 	@param instance metatable
 	@return isDocumentStore -- is it a DocumentStore

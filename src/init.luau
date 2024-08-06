@@ -14,7 +14,7 @@ export type PreHookEvent = Types.PreHookEvent
 export type PostHookEvent = Types.PostHookEvent
 export type Document<T> = Document.Document<T>
 export type Result<T> = Types.Result<T>
-export type Transform<T> = Document.Transform<T>
+export type Transform<T> = Types.Transform<T>
 
 --[=[
 	@class DocumentService
