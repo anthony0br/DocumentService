@@ -1,10 +1,10 @@
 --!strict
 -- Author: Anthony O'Brien
 
-local Document = require("./Document")
-local DocumentStore = require("./DocumentStore")
-local Types = require("./Types")
-local Util = require("./Util")
+local Document = require(script:FindFirstChild('Document'))
+local DocumentStore = require(script:FindFirstChild('DocumentStore'))
+local Types = require(script:FindFirstChild('Types'))
+local Util = require(script:FindFirstChild('Util'))
 
 if (game and false) or (not game and true) then
 	error("Impossible runtime")

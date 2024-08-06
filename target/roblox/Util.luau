@@ -2,17 +2,17 @@
 -- Contains util functions, such useful hooks, reconciling, migrations
 -- Author: Anthony O'Brien
 
-local Retry = require("./Retry")
-
+local Retry = require(script.Parent:FindFirstChild('Retry'))
 --[=[
 	@class Util
 
 	A collection of utility functions for handling datastores.
 
-	If you need to access any datastores directly while using DocumentService, it is recommended you use these
-	functions or similar implementations.
+	If you need to access any datastores directly while using DocumentService,
+	it is recommended you use these functions or similar implementations.
 
 ]=]
+
 local Util = {}
 
 -- Fails after 15 seconds + request time
@@ -75,18 +75,19 @@ end
 	@yields
 ]=]
 function Util.updateAsync<T>(
+	transform: (any, DataStoreKeyInfo) -> (any, { number }?, {}?),
 	dataStore: GlobalDataStore,
-	key: string,
-	transform: (any, DataStoreKeyInfo) -> (any, { number }?, {}?)
-): (boolean, unknown, DataStoreKeyInfo)
-	return Retry(RETRY.ATTEMPTS, RETRY.INITIAL_WAIT, function(): (unknown, DataStoreKeyInfo)
-		-- This is necessary to ensure UpdateAsyncs happen in the correct order
-		-- since the throttle 'queue' does not respect FILO
-		-- If autosaves happen in the wrong order data could be lost
+	key: string
+): (boolean, any, DataStoreKeyInfo)
+	local result = Retry(RETRY.ATTEMPTS, RETRY.INITIAL_WAIT, function(): (any, DataStoreKeyInfo)
+		-- This is necessary to ensure autosaves happen in the correct order and saves have predictable timeouts
+		-- since Retry will give up long before the next autosave and the throttle 'queue' does not respect FIFO
 		assert(Util.getUpdateBudget() > 0, "Ran out of budget")
 
 		return dataStore:UpdateAsync(key, transform)
 	end)
+
+	return result.success, result.returnValues[1], result.returnValues[2]
 end
 
 --[=[
@@ -94,8 +95,8 @@ end
 
 	@yields
 ]=]
-function Util.getAsync<T>(dataStore: GlobalDataStore, key: string): (boolean, unknown, DataStoreKeyInfo)
-	return Retry(RETRY.ATTEMPTS, RETRY.INITIAL_WAIT, function(): (unknown, DataStoreKeyInfo)
+function Util.getAsync<T>(dataStore: GlobalDataStore, key: string): (boolean, any, DataStoreKeyInfo)
+	local result = Retry(RETRY.ATTEMPTS, RETRY.INITIAL_WAIT, function(): (any, DataStoreKeyInfo)
 		local options
 do			
 
@@ -107,24 +108,23 @@ assert(Util.getGetBudget() > 0, "Ran out of budget")
 
 		return dataStore:GetAsync(key, options)
 	end)
+
+	return result.success, result.returnValues[1], result.returnValues[2]
 end
 
 --[=[
-	A wrapper for SetAsync that retries with exponential backoff and prevents use of the throttle 'queue'.
-
-	I recommend you only use this for edge cases like erasing data.
+	A wrapper for RemoveAsync
 
 	@yields
 ]=]
-function Util.setAsync<T>(dataStore: GlobalDataStore, key: string, value: any)
-	return Retry(RETRY.ATTEMPTS, RETRY.INITIAL_WAIT, function()
-		-- This is necessary to ensure UpdateAsyncs happen in the correct order
-		-- since the throttle 'queue' does not respect FILO
-		-- If autosaves happen in the wrong order data could be lost
+function Util.removeAsync<T>(dataStore: GlobalDataStore, key: string): boolean
+	local result = Retry(RETRY.ATTEMPTS, RETRY.INITIAL_WAIT, function()
 		assert(Util.getSetBudget() > 0, "Ran out of budget")
 
-		return dataStore:SetAsync(key, value)
+		return dataStore:RemoveAsync(key)
 	end)
+
+	return result.success
 end
 
 --[=[

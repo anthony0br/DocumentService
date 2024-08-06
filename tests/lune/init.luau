@@ -1,9 +1,9 @@
 --!strict
 -- Tests for DocumentService
 
-local DocumentService = require("../src/init")
+local DocumentService = require("../../src/init")
 local Guard = require("./Guard")
-local DataStoreService = require("../mock-datastore/init").new()
+local DataStoreService = require("./mock-datastore/init").new()
 
 local mockDataStore = DataStoreService:GetDataStore("name")
 

@@ -1,13 +1,13 @@
 {
-  "name": "DocumentServiceTests",
+  "name": "documentservice",
   "tree": {
     "$className": "DataModel",
     "ServerScriptService": {
       "DocumentService": {
-        "$path": "../roblox-build"
+        "$path": "default.project.json"
       },
-      "Tests": {
-        "$path": "Mock.luau"
+      "tests": {
+        "$path": "tests/roblox"
       }
     }
   }

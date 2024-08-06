@@ -1,16 +1,16 @@
 --!strict
 -- Author: Anthony O'Brien
 
-local Document = require("./Document")
-local Types = require("./Types")
-local Util = require("./Util")
-
+local Document = require(script.Parent:FindFirstChild('Document'))
+local Types = require(script.Parent:FindFirstChild('Types'))
+local Util = require(script.Parent:FindFirstChild('Util'))
 --[=[
 	@class DocumentStore
 
 	A struct that holds information about all Documents within a DataStore and provides a less
 	repetitive way of instantiating documents. This can be seen as an abstraction over a DataStore.
 ]=]
+
 local DocumentStore = {}
 DocumentStore.__index = DocumentStore
 
@@ -34,6 +34,13 @@ type Table<T> = T & {}
 --[=[
 	Creates a new DocumentStore
 
+	:::warning
+	This should only be called once per server for each DataStore in a live game.
+	If there are multiple instances of a DocumentStore for one key, any Documents
+	will be treated as if they are from different sessions. This is useful for
+	unit testing but can lead to weird bugs in production.
+	:::
+
 	@param dataStore -- The object returned by DataStoreService:GetDataStore()
 	@param check -- A type check function for your data, errors if types are invalid
 	@param default -- Default values, which are set if keys are empty
@@ -50,19 +57,21 @@ function DocumentStore.new<T>(
 	local self = setmetatable({
 		_dataStore = dataStore,
 		_check = check,
-		_default = default,
-		_migrations = migrations,
+		_default = Util.deepFreeze(default),
+		_migrations = Util.deepFreeze(migrations),
 		_documents = {},
 	}, DocumentStore)
-do		
 
-
-game:BindToClose(function()
-			self:CloseDocuments()
+	-- Save and close all documents as fast as possible on BindToClose
+	-- Yielding on BindToClose in studio can cause studio to take a very long
+	-- time to stop play test sessions, so we check :IsStudio()
+	if not game:GetService("RunService"):IsStudio() then
+		game:BindToClose(function()
+			self:CloseAllDocuments()
 		end)
-end
-	
-return self
+	end
+
+	return self
 end
 
 --[=[
@@ -77,7 +86,7 @@ function DocumentStore.GetDocument<T>(self: DocumentStore<T>, key: string): Docu
 		return self._documents[key]
 	end
 
-	local document: Document<T> = Document.new(key, self._dataStore, self._check, self._default, self._migrations)
+	local document = Document.new(key, self._dataStore, self._check, self._default, self._migrations)
 
 	document:HookAfter("Close", function(result: Types.Result<T>)
 		if result.success then
@@ -95,7 +104,7 @@ end
 --[=[
 	Closes all documents as fast as possible
 ]=]
-function DocumentStore.CloseDocuments<T>(self: DocumentStore<T>)
+function DocumentStore.CloseAllDocuments<T>(self: DocumentStore<T>)
 	local open = true
 	while open do
 		local budget = Util.getUpdateBudget()

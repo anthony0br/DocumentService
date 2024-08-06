@@ -18,13 +18,17 @@
 	@param initialWait -- waits (initialWait)^lastAttempt between attempts
 	@param func -- function to pcall
 
-	@return success
-	@return ... -- if successful, the return values of func, otherwise an error string
+	@return { success, returnValues } -- if successful, the return values of func, otherwise an error string
 
 	@private
 ]=]
-local function Retry<T..., S...>(maxAttempts: number, initialWait: number, func: (T...) -> S..., ...: T...): (boolean, S...)
-	local result
+local function Retry<T...>(
+	maxAttempts: number,
+	initialWait: number,
+	func: (T...) -> any,
+	...: T...
+): { success: boolean, returnValues: { any } }
+	local result: { any }
 
 	for i = 1, maxAttempts do
 		result = { pcall(func, ...) }
@@ -37,7 +41,13 @@ local function Retry<T..., S...>(maxAttempts: number, initialWait: number, func:
 		end
 	end
 
-	return table.unpack(result) :: any
+	local success = result[1]
+	table.remove(result, 1)
+
+	return {
+		success = success,
+		returnValues = result,
+	}
 end
 
 return Retry
