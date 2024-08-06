@@ -28,7 +28,7 @@ local function Test(name, test)
 	local success, result = pcall(test)
 
 	if success then
-		print(`Test {Results.total} "{name}" passed with {result}\n`)
+		print(`Test {Results.total} "{name}" passed.\n`)
 		Results.passed += 1
 	else
 		warn(`Test {Results.total} "{name}" failed with {result}\n`)
@@ -58,43 +58,58 @@ local DocumentStore = DocumentService.DocumentStore.new(
 	{}
 )
 
-Test("Opens document no simulated errors", function()
-	local document = DocumentStore:GetDocument("Sublivion")
+Test("Opens document with no simulated errors", function()
+	local document = DocumentStore:GetDocument("1")
+	local result = document:Open()
+	assert(result.success == true)
+	assert(result.data)
+	check(result.data)
+	print(result.data)
+end)
+
+Test("Can close document retrieved by string", function()
+	local document = DocumentStore:GetDocument("1")
+	print(tostring(document))
+	local result = document:Close()
+	assert(result.success == true)
+end)
+
+Test("Can reopen document after closed, retrieved by string", function()
+	local document = DocumentStore:GetDocument("1")
 	local result = document:Open()
 	assert(result.success == true)
 	assert(result.data)
 	check(result.data)
 end)
 
-Test("Can close document", function()
-	local document = DocumentStore:GetDocument("Sublivion")
-	print(tostring(document))
-	document:Close()
-end)
-
-Test("Can reopen document after closed, retrieved by string", function()
-	local Document = DocumentStore:GetDocument("Sublivion")
-	Document:Open()
-end)
-
 Test("Opens document with simulated error", function()
 	mockDataStore.errors:addSimulatedErrors(1)
-	local Document = DocumentStore:GetDocument("Sublivion1")
-	local result = Document:Open()
+	local document = DocumentStore:GetDocument("2")
+	local result = document:Open()
 	assert(result.success == true)
 	assert(result.data)
 	check(result.data)
+	document:Close()
 end)
 
-Test("Opens document with 5 simulated errors", function()
+Test("Opens document with 4 simulated errors", function()
+	mockDataStore.errors:addSimulatedErrors(4)
+	local document = DocumentStore:GetDocument("2")
+	local result = document:Open()
+	assert(result.success == true)
+	assert(result.data)
+	check(result.data)
+	document:Close()
+end)
+
+-- Now that all operations only use a single datastore API request, we only need
+-- to test up to 5 simulated errors
+Test("Fails to open document with 5 simulated errors", function()
 	mockDataStore.errors:addSimulatedErrors(5)
-	local Document = DocumentStore:GetDocument("Sublivion2")
-	local result = Document:Open()
+	local document = DocumentStore:GetDocument("3")
+	local result = document:Open()
 	assert(result.success == false)
-end)
-
-Test("Non-table data fails", function()
-	local DocumentStore = DocumentService.DocumentStore.new(mockDataStore, Guard.Check(Guard.Number), 3, {})
+	print(result)
 end)
 
 -- Test: Migrate from 'flat data' to DocumentService
