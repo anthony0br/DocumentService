@@ -49,6 +49,8 @@ export type Result<T> = {
 
 	If backwardsCompatible is false, loading this version and later versions in an older server without this migration defined will fail.
 
+	The current version is defined by the length of this array.
+
 	@within DocumentService
 
 ]=]

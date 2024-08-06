@@ -251,12 +251,10 @@ function Document.Open<T>(self: Document<T>, shouldLock: boolean?): Result<T>
 		incompatibleVersion = false
 		failedCheck = false
 
-		local dataToCheck: unknown
+		local dataToMigrate: unknown
 		local keyData
 
-		if not getValue then
-			dataToCheck = self._default
-		else
+		if getValue then
 			-- If we have a valid document service format, use the data field
 			-- Otherwise, asssume we want to use the whole data stored at that
 			-- key as the data field for migrating from 'no library'
@@ -273,14 +271,23 @@ function Document.Open<T>(self: Document<T>, shouldLock: boolean?): Result<T>
 			end
 
 			if keyData then
-				dataToCheck = keyData.data
+				dataToMigrate = keyData.data
 			else
-				dataToCheck = if typeof(getValue) == "table" then getValue else { getValue }
+				dataToMigrate = if typeof(getValue) == "table" then getValue else { getValue }
 			end
+		else
+			dataToMigrate = self._default
 		end
 
-		local migrationResult =
-			runMigrations(self._migrations, dataToCheck, if keyData then keyData.dataFormatVersion else 0)
+		local initialVersion = 0
+		if dataToMigrate == self._default then
+			initialVersion = #self._migrations
+		end
+		if keyData then
+			initialVersion = keyData.dataFormatVersion
+		end
+
+		local migrationResult = runMigrations(self._migrations, dataToMigrate, initialVersion)
 
 		-- If keyData exists, the data could be in a future version, or the data
 		-- could be session locked
