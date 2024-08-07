@@ -1,9 +1,15 @@
 --!strict
 -- Author: Anthony O'Brien
 
+local RunService
+if _G.IS_ROBLOX then
+	RunService = game:GetService("RunService")
+end
+
 local Document = require("./Document")
 local Types = require("./Types")
-local Util = require("./Util")
+local Util = require("./SaveUtil")
+local deepFreeze = require("./DeepFreeze")
 
 --[=[
 	@class DocumentStore
@@ -63,8 +69,8 @@ function DocumentStore.new<T>(props: {
 	local self = setmetatable({
 		_dataStore = props.dataStore,
 		_check = props.check,
-		_default = Util.deepFreeze(props.default),
-		_migrations = Util.deepFreeze(props.migrations),
+		_default = deepFreeze(props.default),
+		_migrations = deepFreeze(props.migrations),
 		_documents = {},
 		_sessionLock = props.sessionLock,
 	}, DocumentStore)
@@ -72,7 +78,7 @@ function DocumentStore.new<T>(props: {
 	-- Save and close all documents as fast as possible on BindToClose
 	-- Yielding on BindToClose in studio can cause studio to take a very long
 	-- time to stop play test sessions, so we check :IsStudio()
-	if _G.IS_ROBLOX and not game:GetService("RunService"):IsStudio() then
+	if _G.IS_ROBLOX and not RunService:IsStudio() then
 		game:BindToClose(function()
 			self:CloseAllDocuments()
 		end)

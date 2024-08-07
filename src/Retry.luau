@@ -4,10 +4,6 @@
 -- 21 July 2024
 
 --[=[
-	@class Retry
-]=]
-
---[=[
 	pcalls a function a number of times, returning the first success if any
 	
 	@within Retry

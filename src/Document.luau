@@ -2,7 +2,8 @@
 -- Author: Anthony O'Brien
 
 local Types = require("./Types")
-local Util = require("./Util")
+local Util = require("./SaveUtil")
+local deepFreeze = require("./DeepFreeze")
 
 local SESSION_EXPIRE_TIME = 600
 local AUTOSAVE_PERIOD = 150
@@ -181,7 +182,7 @@ function Document.new<T>(props: {
 		_key = props.key,
 		_dataStore = props.dataStore,
 		_check = props.check,
-		_default = Util.deepFreeze(props.default),
+		_default = deepFreeze(props.default),
 		_open = false,
 		_sessionId = Util.uuid(),
 		_preHooks = {
@@ -196,7 +197,7 @@ function Document.new<T>(props: {
 			Update = {},
 			Read = {},
 		},
-		_migrations = Util.deepFreeze(props.migrations),
+		_migrations = deepFreeze(props.migrations),
 		_isClosing = false,
 		_cache = props.default,
 		_isSessionLocked = props.sessionLock,
@@ -288,7 +289,7 @@ function Document.Open<T>(self: Document<T>): Result<T>
 		failedCheck = false
 
 		local dataToMigrate: unknown
-		local keyData
+		local keyData: KeyData<T>?
 
 		if getValue then
 			keyData = getKeyData(getValue)
@@ -305,15 +306,15 @@ function Document.Open<T>(self: Document<T>): Result<T>
 			dataToMigrate = self._default
 		end
 
-		local initialVersion = 0
+		local savedVersion = 0
 		if dataToMigrate == self._default then
-			initialVersion = #self._migrations
+			savedVersion = #self._migrations
 		end
 		if keyData then
-			initialVersion = keyData.dataFormatVersion
+			savedVersion = keyData.dataFormatVersion
 		end
 
-		local migrationResult = runMigrations(self._migrations, dataToMigrate, initialVersion)
+		local migrationResult = runMigrations(self._migrations, dataToMigrate, savedVersion)
 
 		-- If keyData exists, the data could be in a future version, or the data
 		-- could be session locked
@@ -345,10 +346,10 @@ function Document.Open<T>(self: Document<T>): Result<T>
 			sessionLockId = self._sessionId,
 			lockTimestamp = os.time(),
 			isLocked = if self._isSessionLocked then true else false,
-			-- We use migrationResult.version, which could potentially downgrade
-			-- the version if we are in an old server, but this is fine because
-			-- we confirmed backwards compatibility
-			dataFormatVersion = migrationResult.version,
+			-- If we are in an old server and the data is of a future version
+			-- that is backwards compatible, keep the version number so that
+			-- migrations do not run more than once
+			dataFormatVersion = math.max(migrationResult.version, savedVersion),
 			lastCompatibleVersion = migrationResult.lastCompatibleVersion,
 			data = checkedData,
 		}
@@ -455,7 +456,7 @@ function Document.SetCache<T>(self: Document<T>, newCache: T): T
 	assert(self._open, "Document not open")
 	assert(self._isSessionLocked, "Cache is only supported for session locked data")
 
-	self._cache = Util.deepFreeze(newCache)
+	self._cache = deepFreeze(newCache)
 
 	return self._cache
 end
@@ -500,7 +501,7 @@ function Document.UpdateCache<T>(self: Document<T>, transform: Transform<T>): T
 	assert(self._open, "Document not open")
 	assert(self._isSessionLocked, "Cache is only supported for session locked data")
 
-	self._cache = Util.deepFreeze(transform(self._cache))
+	self._cache = deepFreeze(transform(self._cache))
 
 	return self._cache
 end

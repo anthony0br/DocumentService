@@ -253,6 +253,18 @@ Test("Session locking prevents other sessions from opening", function()
 	end
 end)
 
+-- Tests to write:
+
+-- Test: migrating from 'no library' starts at version 0, runs all migrations
+
+-- Test: filling in default data (when key is empty) starts at latest version
+
+-- Test: all migrations run in correct order
+
+-- Test: data version never decreases
+
+-- Test: unstorable data
+
 -- Test: update method
 
 -- Test: read method
