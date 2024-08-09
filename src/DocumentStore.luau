@@ -34,7 +34,7 @@ export type DocumentStore<T> = typeof(setmetatable(
 		_default: T & {},
 		_migrations: Types.Migrations<T>,
 		_documents: { [string]: Document<T> },
-		_sessionLock: boolean,
+		_lockSessions: boolean,
 	},
 	DocumentStore
 ))
@@ -71,7 +71,7 @@ function DocumentStore.new<T>(props: {
 	check: (unknown) -> (boolean, T),
 	default: T & {},
 	migrations: Migrations<T>,
-	sessionLock: boolean,
+	lockSessions: boolean,
 }): DocumentStore<T>
 	local self = setmetatable({
 		_dataStore = props.dataStore,
@@ -79,7 +79,7 @@ function DocumentStore.new<T>(props: {
 		_default = deepFreeze(props.default),
 		_migrations = deepFreeze(props.migrations),
 		_documents = {},
-		_sessionLock = props.sessionLock,
+		_lockSessions = props.lockSessions,
 	}, DocumentStore)
 
 	-- Save and close all documents as fast as possible on BindToClose
@@ -112,7 +112,7 @@ function DocumentStore.GetDocument<T>(self: DocumentStore<T>, key: string): Docu
 		check = self._check,
 		default = self._default,
 		migrations = self._migrations,
-		sessionLock = self._sessionLock,
+		lockSessions = self._lockSessions,
 	})
 
 	document:HookAfter("Close", function()
@@ -138,7 +138,7 @@ function DocumentStore.CloseAllDocuments<T>(self: DocumentStore<T>)
 			if count >= budget then
 				break
 			end
-			if self._sessionLock then
+			if self._lockSessions then
 				count += 1
 			end
 			task.spawn(function()

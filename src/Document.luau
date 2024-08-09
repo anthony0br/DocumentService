@@ -62,7 +62,7 @@ export type Document<T> = typeof(setmetatable(
 		_migrations: Migrations<T>,
 		_cache: T,
 		_isClosing: boolean,
-		_isSessionLocked: boolean,
+		_lockSessions: boolean,
 	},
 	Document
 ))
@@ -226,7 +226,7 @@ function Document.new<T>(props: {
 	check: (unknown) -> (boolean, T),
 	default: T,
 	migrations: Types.Migrations<T>,
-	sessionLock: boolean,
+	lockSessions: boolean,
 }): Document<T>
 	assert(props.check(props.default), "Default must pass type check")
 	assert(typeof(props.default) == "table", "Non-table values are not supported - group your data.")
@@ -255,7 +255,7 @@ function Document.new<T>(props: {
 		_migrations = deepFreeze(props.migrations),
 		_isClosing = false,
 		_cache = props.default,
-		_isSessionLocked = props.sessionLock,
+		_lockSessions = props.lockSessions,
 	}, Document)
 
 	return self
@@ -361,7 +361,7 @@ function Document.Open<T>(self: Document<T>): OpenResult<T>
 			documentServiceSchemaVersion = INTERNAL_SCHEMA_VERSION,
 			sessionLockId = self._sessionId,
 			lockTimestamp = os.time(),
-			isLocked = if self._isSessionLocked then true else false,
+			isLocked = if self._lockSessions then true else false,
 			-- If we are in an old server and the data is of a future version
 			-- that is backwards compatible, keep the version number so that
 			-- migrations do not run more than once
@@ -403,7 +403,7 @@ function Document.Open<T>(self: Document<T>): OpenResult<T>
 
 	-- Autosave
 	task.defer(function()
-		while self._isSessionLocked and self._open do
+		while self._lockSessions and self._open do
 			task.wait(AUTOSAVE_PERIOD)
 			self:Save()
 		end
@@ -433,7 +433,7 @@ end
 ]=]
 function Document.Steal<T>(self: Document<T>): Result<T, RobloxAPIError | SchemaError>
 	assert(not self._isClosing, "Document is closing")
-	assert(self._isSessionLocked, "Stealing locks is only applicable to session-locked Documents")
+	assert(self._lockSessions, "Stealing locks is only applicable to session-locked Documents")
 
 	-- Error flags
 	local schemaError = false
@@ -495,7 +495,7 @@ end
 function Document.IsWriteAvailable<T>(self: Document<T>): Result<boolean, RobloxAPIError | SchemaError>
 	assert(not self._isClosing, "Document is closing")
 
-	if not self._isSessionLocked then
+	if not self._lockSessions then
 		return {
 			success = true,
 			data = true,
@@ -559,7 +559,7 @@ function Document.Close<T>(self: Document<T>): ReadWriteResult<T?>
 	self._isClosing = true
 
 	local result
-	if self._isSessionLocked then
+	if self._lockSessions then
 		result = self:Save()
 	end
 
@@ -592,7 +592,7 @@ end
 ]=]
 function Document.SetCache<T>(self: Document<T>, newCache: T): T
 	assert(self._open, "Document not open")
-	assert(self._isSessionLocked, "Cache is only supported for session locked data")
+	assert(self._lockSessions, "Cache is only supported for session locked data")
 
 	self._cache = deepFreeze(newCache)
 
@@ -615,7 +615,7 @@ end
 ]=]
 function Document.GetCache<T>(self: Document<T>): T
 	assert(self._open, "Document not open")
-	assert(self._isSessionLocked, "Cache is only supported for session locked data")
+	assert(self._lockSessions, "Cache is only supported for session locked data")
 
 	return self._cache
 end
@@ -637,7 +637,7 @@ end
 ]=]
 function Document.UpdateCache<T>(self: Document<T>, transform: Transform<T>): T
 	assert(self._open, "Document not open")
-	assert(self._isSessionLocked, "Cache is only supported for session locked data")
+	assert(self._lockSessions, "Cache is only supported for session locked data")
 
 	self._cache = deepFreeze(transform(self._cache))
 
@@ -684,7 +684,7 @@ function Document.Read<T>(self: Document<T>): ReadWriteResult<T>
 		}
 	end
 
-	if self._isSessionLocked then
+	if self._lockSessions then
 		self:SetCache(keyData.data)
 	end
 
@@ -813,7 +813,7 @@ function Document.Update<T>(self: Document<T>, transform: Transform<T>): ReadWri
 	-- the update succeeded.
 	local updatedData: T = (updatedKeyData :: KeyData<T>).data
 
-	if self._isSessionLocked then
+	if self._lockSessions then
 		self:SetCache(updatedData)
 	end
 
@@ -844,7 +844,7 @@ end
 ]=]
 function Document.Save<T>(self: Document<T>): ReadWriteResult<T>
 	assert(self._open, "Document not open")
-	assert(self._isSessionLocked, "Must be session locked to access cache")
+	assert(self._lockSessions, "Must be session locked to access cache")
 
 	return self:Update(function(cache)
 		return cache
