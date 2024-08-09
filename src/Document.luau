@@ -54,8 +54,16 @@ export type Transform<T> = Types.Transform<T>
 
 type Result<T, E> = Types.Result<T, E>
 
+--[=[
+	@type OpenResult<T> Result<T, RobloxAPIError | BackwardsCompatibileError | CheckError | SessionLockedError>
+	@within Document
+]=]
 type OpenResult<T> = Result<T, RobloxAPIError | BackwardsCompatibileError | CheckError | SessionLockedError>
 
+--[=[
+	@type ReadWriteResult<T> Result<T, RobloxAPIError | SessionLockedError>
+	@within Document
+]=]
 type ReadWriteResult<T> = Result<T, RobloxAPIError | SessionLockedError>
 
 type KeyData<T> = {
@@ -268,7 +276,7 @@ end
 	You can enable session locking with the shouldLock argument.
 	:::
 
-	@return result
+	@return OpenResult<T>
 
 	@yields
 ]=]
@@ -277,7 +285,7 @@ function Document.Open<T>(self: Document<T>): OpenResult<T>
 	assert(not self._isClosing, "Document is closing")
 
 	-- Error flags
-	local locked: boolean
+	local lockedByOther: boolean
 	local incompatibleVersion: boolean
 	local failedCheck: boolean
 
@@ -285,7 +293,7 @@ function Document.Open<T>(self: Document<T>): OpenResult<T>
 
 	local updateOk, updatedKeyData = SaveUtil.updateAsync(function(getValue: unknown): KeyData<T>?
 		-- Reset error flags in case function re-runs
-		locked = false
+		lockedByOther = false
 		incompatibleVersion = false
 		failedCheck = false
 
@@ -327,8 +335,10 @@ function Document.Open<T>(self: Document<T>): OpenResult<T>
 				return
 			end
 
-			locked = isLocked(keyData)
-			if locked then
+			local locked = isLocked(keyData)
+			local lockedByUs = locked and (keyData.sessionLockId == self._sessionId)
+			if locked and not lockedByUs then
+				lockedByOther = true
 				return
 			end
 		end
@@ -370,7 +380,7 @@ function Document.Open<T>(self: Document<T>): OpenResult<T>
 		}
 	end
 
-	if locked then
+	if lockedByOther then
 		return {
 			success = false,
 			reason = "SessionLockedError",
@@ -402,6 +412,20 @@ function Document.Open<T>(self: Document<T>): OpenResult<T>
 	}
 end
 
+--[=[
+	Steals a session lock. This removes any existing lock held by any other
+	session, and locks the document for ourselves.
+
+	:::warning
+	Do not use this unless you are certain the previous session is dead, or you
+	will likely cause data loss.
+	Only usable on session-locked Documents.
+	:::
+	
+	@return Result<T, RobloxAPIError | SchemaError>
+
+	@yields
+]=]
 function Document.Steal<T>(self: Document<T>): Result<T, RobloxAPIError | SchemaError>
 	assert(not self._isClosing, "Document is closing")
 	assert(self._isSessionLocked, "Stealing locks is only applicable to session-locked Documents")
@@ -452,6 +476,64 @@ function Document.Steal<T>(self: Document<T>): Result<T, RobloxAPIError | Schema
 end
 
 --[=[
+	Returns false if the Document is locked by another session.
+
+	If props.sessionLock is false, it will always return true.
+
+	:::tip
+	You can use this to check if a player is active to avoid data loss while
+	editing data from another server.
+	:::
+
+	@return Result<boolean, RobloxAPIError | SchemaError>
+]=]
+function Document.IsWriteAvailable<T>(self: Document<T>): Result<boolean, RobloxAPIError | SchemaError>
+	assert(not self._isClosing, "Document is closing")
+
+	if not self._isSessionLocked then
+		return {
+			success = true,
+			data = true,
+		}
+	end
+
+	local success, getValue: any = SaveUtil.getAsync(self._dataStore, self._key)
+
+	if not success then
+		return {
+			success = false,
+			reason = "RobloxAPIError",
+		}
+	end
+
+	local keyData = getKeyData(getValue)
+
+	if not keyData then
+		return {
+			success = false,
+			reason = "SchemaError",
+		}
+	end
+
+	local locked = isLocked(keyData)
+	local lockedByUs = locked and (keyData.sessionLockId == self._sessionId)
+
+	return {
+		success = true,
+		data = (not locked) or lockedByUs,
+	}
+end
+
+--[=[
+	Returns whether the document is open or not
+
+	@return boolean
+]=]
+function Document.IsOpen<T>(self: Document<T>): boolean
+	return self._open
+end
+
+--[=[
 	Destroys the document instance.
 
 	If session locked, will save the document and remove the lock first.
@@ -460,7 +542,7 @@ end
 	DocumentStore:GetDocument() to retrieve a new one if you wish to access the
 	Document again.
 
-	@return result
+	@return ReadWriteResult<T?>
 
 	@yields
 ]=]
@@ -501,7 +583,7 @@ end
 	:::
 
 	@param newCache
-	@return newCache
+	@return T
 ]=]
 function Document.SetCache<T>(self: Document<T>, newCache: T): T
 	assert(self._open, "Document not open")
@@ -524,7 +606,7 @@ end
 	You must use immutable operations on cache, i.e. clone any table you intend to edit.
 	:::
 
-	@return cache
+	@return T
 ]=]
 function Document.GetCache<T>(self: Document<T>): T
 	assert(self._open, "Document not open")
@@ -546,7 +628,7 @@ end
 	:::
 
 	@param transform
-	@return cache
+	@return T
 ]=]
 function Document.UpdateCache<T>(self: Document<T>, transform: Transform<T>): T
 	assert(self._open, "Document not open")
@@ -564,7 +646,7 @@ end
 	Overwrites the cache. If you are using session locking, you should only read once.
 	:::
 	
-	@return result -- result containing the data read
+	@return ReadWriteResult<T>
 
 	@yields
 ]=]
@@ -627,7 +709,7 @@ end
 	:::
 
 	@param transform -- Transform function for the transaction.
-	@return result -- Result containing the new data.
+	@return ReadWriteResult<T>
 
 	@yields
 ]=]
@@ -751,6 +833,8 @@ end
 	enable session locking.
 	:::
 
+	@return ReadWriteResult<T>
+
 	@yields
 ]=]
 function Document.Save<T>(self: Document<T>): ReadWriteResult<T>
@@ -766,6 +850,8 @@ end
 	Wipes all data associated with the key and closes the document.
 
 	Satisfies compliance with GDPR right of erasure.
+
+	@return Result<nil, RobloxAPIError>
 
 	@yields
 ]=]
@@ -789,6 +875,8 @@ end
 	Reads the data of a potentially locked or unopened Document.
 
 	Does not update the cache.
+
+	@return Result<any, RobloxAPIError | SchemaError>
 
 	@yields
 ]=]
@@ -861,7 +949,7 @@ end
 	Checks if a metatable passed is a Document.
 
 	@param instance metatable
-	@return isDocument -- is it a Document
+	@return boolean
 ]=]
 function Document.isDocument(instance): boolean
 	return getmetatable(instance).__index == Document

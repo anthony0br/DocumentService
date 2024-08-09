@@ -57,7 +57,7 @@ export type Migrations<T> = Types.Migrations<T>
 
 	@param props DocumentStoreProps
 
-	@return DocumentStore
+	@return DocumentStore<T>
 ]=]
 function DocumentStore.new<T>(props: {
 	dataStore: DataStore,
@@ -92,7 +92,7 @@ end
 
 	@param key 
 
-	@return Document
+	@return Document<T>
 ]=]
 function DocumentStore.GetDocument<T>(self: DocumentStore<T>, key: string): Document<T>
 	if self._documents[key] then
@@ -146,7 +146,7 @@ end
 	Checks if a metatable passed is a DocumentStore.
 
 	@param instance metatable
-	@return isDocumentStore -- is it a DocumentStore
+	@return boolean
 ]=]
 function DocumentStore.isDocumentStore(instance): boolean
 	return getmetatable(instance).__index == DocumentStore
