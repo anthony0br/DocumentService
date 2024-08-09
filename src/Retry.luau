@@ -3,10 +3,8 @@
 -- Author: Anthony O'Brien
 -- 21 July 2024
 
---[=[
+--[[
 	pcalls a function a number of times, returning the first success if any
-	
-	@within Retry
 
 	@yields
 	
@@ -15,9 +13,7 @@
 	@param func -- function to pcall
 
 	@return { success, returnValues } -- if successful, the return values of func, otherwise an error string
-
-	@private
-]=]
+]]
 local function Retry<T...>(
 	maxAttempts: number,
 	initialWait: number,

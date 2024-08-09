@@ -18,7 +18,7 @@ local Retry = require("./Retry")
 	it is recommended you use these functions or similar implementations.
 
 ]=]
-local Util = {}
+local SaveUtil = {}
 
 -- Fails after 15 seconds + request time
 local RETRY = {
@@ -51,7 +51,7 @@ end
 
 	@param data
 ]=]
-function Util.assertStorable(data: unknown)
+function SaveUtil.assertStorable(data: unknown)
 	local indexDataType = nil
 
 	-- Check for NaN, inf, -inf
@@ -94,12 +94,12 @@ function Util.assertStorable(data: unknown)
 				error("Tables cannot be cyclic")
 			end
 
-			Util.assertStorable(v)
+			SaveUtil.assertStorable(v)
 		end
 	end
 end
 
-function Util.getUpdateBudget()
+function SaveUtil.getUpdateBudget()
 	if _G.IS_ROBLOX then
 		return DataStoreService:GetRequestBudgetForRequestType(Enum.DataStoreRequestType.UpdateAsync)
 	else
@@ -107,7 +107,7 @@ function Util.getUpdateBudget()
 	end
 end
 
-function Util.getSetBudget()
+function SaveUtil.getSetBudget()
 	if _G.IS_ROBLOX then
 		return game:GetService("DataStoreService")
 			:GetRequestBudgetForRequestType(Enum.DataStoreRequestType.SetIncrementAsync)
@@ -116,7 +116,7 @@ function Util.getSetBudget()
 	end
 end
 
-function Util.getGetBudget()
+function SaveUtil.getGetBudget()
 	if _G.IS_ROBLOX then
 		return game:GetService("DataStoreService"):GetRequestBudgetForRequestType(Enum.DataStoreRequestType.GetAsync)
 	else
@@ -129,7 +129,7 @@ end
 
 	Based off of https://gist.github.com/jrus/3197011
 ]=]
-function Util.uuid(): (string, number)
+function SaveUtil.uuid(): (string, number)
 	local template = "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx"
 
 	return string.gsub(template, "[xy]", function(match)
@@ -144,7 +144,7 @@ end
 
 	@yields
 ]=]
-function Util.updateAsync<T>(
+function SaveUtil.updateAsync<T>(
 	transform: (any, DataStoreKeyInfo) -> (any, { number }?, {}?),
 	dataStore: GlobalDataStore,
 	key: string
@@ -152,7 +152,7 @@ function Util.updateAsync<T>(
 	local result = Retry(RETRY.ATTEMPTS, RETRY.INITIAL_WAIT, function(): (any, DataStoreKeyInfo)
 		-- This is necessary to ensure autosaves happen in the correct order and saves have predictable timeouts
 		-- since Retry will give up long before the next autosave and the throttle 'queue' does not respect FIFO
-		assert(Util.getUpdateBudget() > 0, "Ran out of budget")
+		assert(SaveUtil.getUpdateBudget() > 0, "Ran out of budget")
 
 		return dataStore:UpdateAsync(key, transform)
 	end)
@@ -165,7 +165,7 @@ end
 
 	@yields
 ]=]
-function Util.getAsync<T>(dataStore: GlobalDataStore, key: string): (boolean, any, DataStoreKeyInfo)
+function SaveUtil.getAsync<T>(dataStore: GlobalDataStore, key: string): (boolean, any, DataStoreKeyInfo)
 	local result = Retry(RETRY.ATTEMPTS, RETRY.INITIAL_WAIT, function(): (any, DataStoreKeyInfo)
 		local options
 
@@ -174,7 +174,7 @@ function Util.getAsync<T>(dataStore: GlobalDataStore, key: string): (boolean, an
 			options.UseCache = false
 		end
 
-		assert(Util.getGetBudget() > 0, "Ran out of budget")
+		assert(SaveUtil.getGetBudget() > 0, "Ran out of budget")
 
 		return dataStore:GetAsync(key, options)
 	end)
@@ -187,9 +187,9 @@ end
 
 	@yields
 ]=]
-function Util.removeAsync<T>(dataStore: GlobalDataStore, key: string): boolean
+function SaveUtil.removeAsync<T>(dataStore: GlobalDataStore, key: string): boolean
 	local result = Retry(RETRY.ATTEMPTS, RETRY.INITIAL_WAIT, function()
-		assert(Util.getSetBudget() > 0, "Ran out of budget")
+		assert(SaveUtil.getSetBudget() > 0, "Ran out of budget")
 
 		return dataStore:RemoveAsync(key)
 	end)
@@ -197,4 +197,4 @@ function Util.removeAsync<T>(dataStore: GlobalDataStore, key: string): boolean
 	return result.success
 end
 
-return Util
+return SaveUtil

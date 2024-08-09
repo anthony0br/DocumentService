@@ -1,11 +1,11 @@
 --!strict
 
---[=[
+--[[
 	Deeply freezes a table (not entering metatables)
 
 	@param object -- table to freeze
 	@return frozenTable
-]=]
+]]
 function deepFreeze<T>(object: T): T
 	if typeof(object) ~= "table" then
 		return object

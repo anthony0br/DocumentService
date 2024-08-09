@@ -7,8 +7,7 @@ classOrder = [
     "DocumentService",
     "DocumentStore",
     "Document",
-    "Util",
-    "Retry"
+    "SaveUtil",
 ]
 
 [docusaurus]

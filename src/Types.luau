@@ -27,7 +27,7 @@ export type PreHookEvent = "Open" | "Close" | "Update" | "Read"
 export type PostHookEvent = "Open" | "Close" | "Update" | "Read"
 
 --[=[
-	@type Ok
+	@type Ok { success: true, data: T }
 
 	Subtype of Result. A success.
 	
@@ -39,7 +39,7 @@ export type Ok<T> = {
 }
 
 --[=[
-	@type Err
+	@type Err { success: false, reason: E }
 
 	Subtype of Result. An error.
 	
@@ -51,7 +51,7 @@ export type Err<E> = {
 }
 
 --[=[
-	@type Result<T, E>
+	@type Result<T, E> Ok<T> | Err<E>
 
 	The result of a yielding operation that could error. You should always write
 	error handling for all types of errors that can be returned.
@@ -61,7 +61,7 @@ export type Err<E> = {
 export type Result<T, E> = Ok<T> | Err<E>
 
 --[=[
-	@type RobloxAPIError
+	@type RobloxAPIError "RobloxAPIError"
 
 	Indicates the Roblox API failed, e.g. too many requests
 	
@@ -70,7 +70,7 @@ export type Result<T, E> = Ok<T> | Err<E>
 export type RobloxAPIError = "RobloxAPIError"
 
 --[=[
-	@type SessionLockedError
+	@type SessionLockedError "SessionLockedError"
 
 	Indicates the document was locked by some other session.
 	
@@ -79,7 +79,7 @@ export type RobloxAPIError = "RobloxAPIError"
 export type SessionLockedError = "SessionLockedError"
 
 --[=[
-	@type CheckError
+	@type CheckError "CheckError"
 
 	Indicates the document's check function failed.
 	
@@ -88,7 +88,7 @@ export type SessionLockedError = "SessionLockedError"
 export type CheckError = "CheckError"
 
 --[=[
-	@type BackwardsCompatibileError
+	@type BackwardsCompatibileError "BackwardsCompatibleError"
 
 	Attempted to load data that has been migrated ahead to a version that isn't
 	backwards compatible with the latest version our session has.
