@@ -355,7 +355,7 @@ function Document.Open<T>(self: Document<T>): OpenResult<T>
 			return
 		end
 
-		self._cache = checkedData
+		self._cache = deepFreeze(checkedData)
 
 		return {
 			documentServiceSchemaVersion = INTERNAL_SCHEMA_VERSION,
