@@ -3,11 +3,9 @@
 --[=[
 	@type PreHookEvent "Open" | "Close" | "Update" | "Read"
 
-	Runs before the operation, transforming parameters.
+	Runs before the operation.
 
-	:::info
-	Update hooks will run on any operation that saves the datastore e.g. :Save()
-	:::
+	Update hooks will run on any operation that saves the datastore e.g. :Save().
 
 	@within DocumentService
 ]=]
@@ -16,11 +14,9 @@ export type PreHookEvent = "Open" | "Close" | "Update" | "Read"
 --[=[
 	@type PostHookEvent "Open" | "Close" | "Update" | "Read"
 
-	Runs after the operation, transforming the return value.
+	Runs after the operation.
 
-	:::info
-	Update hooks will run on any operation that saves the datastore e.g. :Save()
-	:::
+	Update hooks will run on any operation that saves the datastore e.g. :Save().
 
 	@within DocumentService
 ]=]
