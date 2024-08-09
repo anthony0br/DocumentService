@@ -94,6 +94,20 @@ export type CheckError = "CheckError"
 export type BackwardsCompatibileError = "BackwardsCompatibleError"
 
 --[=[
+	@type SchemaError "SchemaError"
+
+	This indicates the key provided is not managed by DocumentService, or has
+	been corrupted.
+
+	This is for DataStore-requesting methods that can be called before the
+	Document is opened. In the case of a SchemaError during opening, a new
+	Document will be created, enclosing the existing value at the key.
+	
+	@within DocumentService
+]=]
+export type SchemaError = "SchemaError"
+
+--[=[
 	@type Migrations<T> { { backwardsCompatible: boolean, migrate: (data: any) -> any, } }
 
 	Data format versions start at 0. The first migration should migrate from 0 to 1.
