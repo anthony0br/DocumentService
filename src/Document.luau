@@ -174,25 +174,32 @@ local function getKeyData(value: any): KeyData<unknown>?
 	-- Migrations should start at == 0 and progress to FORMAT_VERSION
 
 	if value.documentServiceSchemaVersion ~= INTERNAL_SCHEMA_VERSION then
+		warn("documentServiceSchemaVersion mutated")
 		return
 	end
 
-	if not (value.sessionLockId and type(value.sessionLockId) == "string") then
+	if type(value.sessionLockId) ~= "string" then
+		warn(".isSessionLocked invalid")
 		return
 	end
-	if not (value.isLocked and type(value.isLocked) == "boolean") then
+	if type(value.isLocked) ~= "boolean" then
+		warn(".isLocked invalid")
 		return
 	end
-	if not (value.lockTimestamp and type(value.lockTimestamp) == "number") then
+	if type(value.lockTimestamp) ~= "number" then
+		warn(".lockTimestamp invalid")
 		return
 	end
-	if not (value.data and type(value.data) == "table") then
+	if type(value.data) ~= "table" then
+		warn(".data invalid")
 		return
 	end
-	if not (value.lastCompatibleVersion and type(value.lastCompatibleVersion) == "number") then
+	if type(value.lastCompatibleVersion) ~= "number" then
+		warn(".lastCompatibleVersion invalid")
 		return
 	end
-	if not (value.dataSchemaVersion and type(value.dataSchemaVersion) == "number") then
+	if type(value.dataSchemaVersion) ~= "number" then
+		warn(".dataSchemaVersion invalid")
 		return
 	end
 
@@ -314,6 +321,7 @@ function Document.Open<T>(self: Document<T>): OpenResult<T>
 			if keyData then
 				dataToMigrate = keyData.data
 			else
+				print("Key non-empty but does not contain valid keyData, using value as data field")
 				dataToMigrate = if typeof(getValue) == "table" then getValue else { getValue }
 			end
 		else

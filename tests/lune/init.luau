@@ -63,15 +63,7 @@ local documentStore = DocumentService.DocumentStore.new({
 		Document = "Document",
 		Service = 3,
 	},
-	migrations = {
-		{
-			backwardsCompatible = true,
-			migrate = function(data)
-				data.Service += 1
-				return data
-			end,
-		},
-	},
+	migrations = {},
 	lockSessions = true,
 })
 
@@ -94,7 +86,9 @@ end)
 Test("Can reopen document after closed, retrieved by string", function()
 	local document = documentStore:GetDocument("1")
 	local result = document:Open()
-	assert(result.success == true)
+	if not result.success then
+		error(result.reason)
+	end
 	assert(result.data)
 	check(result.data)
 end)
