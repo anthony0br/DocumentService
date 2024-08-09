@@ -84,14 +84,14 @@ export type SessionLockedError = "SessionLockedError"
 export type CheckError = "CheckError"
 
 --[=[
-	@type BackwardsCompatibileError "BackwardsCompatibleError"
+	@type BackwardsCompatibilityError "BackwardsCompatibleError"
 
 	Attempted to load data that has been migrated ahead to a version that isn't
 	backwards compatible with the latest version our session has.
 	
 	@within DocumentService
 ]=]
-export type BackwardsCompatibileError = "BackwardsCompatibleError"
+export type BackwardsCompatibilityError = "BackwardsCompatibleError"
 
 --[=[
 	@type SchemaError "SchemaError"

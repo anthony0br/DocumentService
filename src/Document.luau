@@ -78,11 +78,11 @@ export type Transform<T> = Types.Transform<T>
 type Result<T, E> = Types.Result<T, E>
 
 --[=[
-	@type OpenResult<T> Result<T, RobloxAPIError | BackwardsCompatibileError | CheckError | SessionLockedError>
+	@type OpenResult<T> Result<T, RobloxAPIError | BackwardsCompatibilityError | CheckError | SessionLockedError>
 
 	@within Document
 ]=]
-type OpenResult<T> = Result<T, RobloxAPIError | BackwardsCompatibileError | CheckError | SessionLockedError>
+type OpenResult<T> = Result<T, RobloxAPIError | BackwardsCompatibilityError | CheckError | SessionLockedError>
 
 --[=[
 	@type ReadWriteResult<T> Result<T, RobloxAPIError | SessionLockedError>
@@ -104,7 +104,7 @@ type KeyData<T> = {
 type RobloxAPIError = Types.RobloxAPIError
 type SessionLockedError = Types.SessionLockedError
 type CheckError = Types.CheckError
-type BackwardsCompatibileError = Types.BackwardsCompatibileError
+type BackwardsCompatibilityError = Types.BackwardsCompatibilityError
 type SchemaError = Types.SchemaError
 
 local INTERNAL_SCHEMA_VERSION = 0
