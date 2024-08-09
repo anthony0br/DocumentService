@@ -91,7 +91,7 @@ export type CheckError = "CheckError"
 	
 	@within DocumentService
 ]=]
-export type BackwardsCompatibilityError = "BackwardsCompatibleError"
+export type BackwardsCompatibilityError = "BackwardsCompatibilityError"
 
 --[=[
 	@type SchemaError "SchemaError"

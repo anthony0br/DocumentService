@@ -34,6 +34,8 @@ export type DocumentStore<T> = typeof(setmetatable(
 		_default: T & {},
 		_migrations: Types.Migrations<T>,
 		_documents: { [string]: Document<T> },
+		-- Ideally, we could avoid this boolean option, but this is better
+		-- than trying to do inheritance in Luau
 		_lockSessions: boolean,
 	},
 	DocumentStore

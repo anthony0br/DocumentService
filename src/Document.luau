@@ -381,7 +381,7 @@ function Document.Open<T>(self: Document<T>): OpenResult<T>
 	if incompatibleVersion then
 		return {
 			success = false,
-			reason = "BackwardsCompatibleError",
+			reason = "BackwardsCompatibilityError",
 		}
 	end
 
