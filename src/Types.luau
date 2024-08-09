@@ -23,7 +23,7 @@ export type PreHookEvent = "Open" | "Close" | "Update" | "Read"
 export type PostHookEvent = "Open" | "Close" | "Update" | "Read"
 
 --[=[
-	@type Ok { success: true, data: T }
+	@type Ok<T> { success: true, data: T }
 
 	Subtype of Result. A success.
 	
@@ -35,7 +35,7 @@ export type Ok<T> = {
 }
 
 --[=[
-	@type Err { success: false, reason: E }
+	@type Err<E> { success: false, reason: E }
 
 	Subtype of Result. An error.
 	
@@ -47,7 +47,7 @@ export type Err<E> = {
 }
 
 --[=[
-	@type Result Ok<T> | Err<E>
+	@type Result<T,E> Ok<T> | Err<E>
 
 	The result of a yielding operation that could error. You should always write
 	error handling for all types of errors that can be returned.
