@@ -2,7 +2,7 @@
 -- Author: Anthony O'Brien
 
 local Types = require("./Types")
-local Util = require("./SaveUtil")
+local SaveUtil = require("./SaveUtil")
 local deepFreeze = require("./DeepFreeze")
 
 local SESSION_EXPIRE_TIME = 600
@@ -179,7 +179,7 @@ function Document.new<T>(props: {
 	assert(props.check(props.default), "Default must pass type check")
 	assert(typeof(props.default) == "table", "Non-table values are not supported - group your data.")
 
-	Util.assertStorable(props.default)
+	SaveUtil.assertStorable(props.default)
 
 	local self = setmetatable({
 		_key = props.key,
@@ -187,7 +187,7 @@ function Document.new<T>(props: {
 		_check = props.check,
 		_default = deepFreeze(props.default),
 		_open = false,
-		_sessionId = Util.uuid(),
+		_sessionId = SaveUtil.uuid(),
 		_preHooks = {
 			Open = {},
 			Close = {},
@@ -270,7 +270,7 @@ function Document.Open<T>(self: Document<T>): OpenResult<T>
 
 	runHooks(self._preHooks.Open)
 
-	local updateOk, updatedKeyData = Util.updateAsync(function(getValue: unknown): KeyData<T>?
+	local updateOk, updatedKeyData = SaveUtil.updateAsync(function(getValue: unknown): KeyData<T>?
 		-- Reset error flags in case function re-runs
 		locked = false
 		incompatibleVersion = false
@@ -513,7 +513,7 @@ function Document.Read<T>(self: Document<T>): ReadWriteResult<T>
 
 	runHooks(self._preHooks.Read)
 
-	local success, getData = Util.getAsync(self._dataStore, self._key)
+	local success, getData = SaveUtil.getAsync(self._dataStore, self._key)
 	-- As the Document is open we know the data is valid
 	local keyData: KeyData<T> = getData :: KeyData<T>
 	-- Unless it has been edited outside of the library, in which case error
@@ -588,7 +588,7 @@ function Document.Update<T>(self: Document<T>, transform: Transform<T>): ReadWri
 	local notStorable: boolean
 	local notStorableErr: string
 
-	local success, updatedKeyData = Util.updateAsync(function(keyData: KeyData<T>): KeyData<T>?
+	local success, updatedKeyData = SaveUtil.updateAsync(function(keyData: KeyData<T>): KeyData<T>?
 		-- Reset error flags in case callback runs multiple times
 		lockedByOther = false
 		transformInvalid = false
@@ -615,7 +615,7 @@ function Document.Update<T>(self: Document<T>, transform: Transform<T>): ReadWri
 		newDataIsValid = newDataIsValid and typeof(newData) == "table"
 
 		local isStorable, err = pcall(function()
-			Util.assertStorable(newData)
+			SaveUtil.assertStorable(newData)
 		end)
 
 		if not isStorable then
@@ -715,7 +715,7 @@ end
 ]=]
 function Document.Erase<T>(self: Document<T>): Result<nil, RobloxAPIError>
 	self:Close()
-	local success = Util.removeAsync(self._dataStore, self._key)
+	local success = SaveUtil.removeAsync(self._dataStore, self._key)
 
 	if success then
 		return {
@@ -744,7 +744,7 @@ end
 function Document.Peek<T>(self: Document<T>): Result<any, RobloxAPIError>
 	assert(not self._open, "Document open - use Read instead")
 
-	local success, getData: any = Util.getAsync(self._dataStore, self._key)
+	local success, getData: any = SaveUtil.getAsync(self._dataStore, self._key)
 
 	local data
 	if type(getData) == "table" then
