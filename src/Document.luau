@@ -344,7 +344,7 @@ function Document.Open<T>(self: Document<T>): OpenResult<T>
 			local lockedByUs = locked and (keyData.sessionLockId == self._sessionId)
 			if locked and not lockedByUs then
 				lockedByOther = true
-				return
+				error("Session lock held by another session.")
 			end
 		end
 
