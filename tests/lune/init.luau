@@ -120,7 +120,6 @@ Test("Fails to open document with 5 simulated errors", function()
 	local document = documentStore:GetDocument("3")
 	local result = document:Open()
 	assert(result.success == false)
-	print(result)
 end)
 
 Test("Migrate from 'no library' with a migration, and re-open migrated data", function()
@@ -157,7 +156,7 @@ Test("Migrate from 'no library' with a migration, and re-open migrated data", fu
 	}
 
 	local store = DocumentService.DocumentStore.new({
-		dataStore = DataStoreService:GetDataStore("nolibrary1"),
+		dataStore = mockDataStore,
 		check = Guard.Check(check2),
 		default = {
 			testString = "string",
@@ -188,7 +187,7 @@ end)
 
 Test("Migrate from 'no library' with no migration - should fail with CheckFailed", function()
 	local store = DocumentService.DocumentStore.new({
-		dataStore = DataStoreService:GetDataStore("nolibrary2"),
+		dataStore = mockDataStore,
 		check = Guard.Check(check),
 		default = {
 			Document = "Document",
