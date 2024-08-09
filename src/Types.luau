@@ -27,31 +27,75 @@ export type PreHookEvent = "Open" | "Close" | "Update" | "Read"
 export type PostHookEvent = "Open" | "Close" | "Update" | "Read"
 
 --[=[
-	@type FailReason "RobloxAPIFail" | "SessionLocked" | "CheckFailed" | "NotBackwardsCompatible"
+	@type Ok
 
-	A reason an operation failed, but didn't throw an error. These are typically reasons that may
-	not be your fault and you should check for and handle them.
+	Subtype of Result. A success.
 	
 	@within DocumentService
 ]=]
-export type FailReason = "RobloxAPIFail" | "SessionLocked" | "CheckFailed" | "NotBackwardsCompatible"
-
---[=[
-	@type Result<T> ({ success: true, data: T } | { success: false, failReason: FailReason, errorMessage: string, data: nil })
-
-	The result of a yielding operation.
-	
-	@within DocumentService
-]=]
-export type Result<T> = {
+export type Ok<T> = {
 	success: true,
 	data: T,
-} | {
-	success: false,
-	failReason: FailReason,
-	errorMessage: string,
-	data: nil,
 }
+
+--[=[
+	@type Err
+
+	Subtype of Result. An error.
+	
+	@within DocumentService
+]=]
+export type Err<E> = {
+	success: false,
+	reason: E,
+}
+
+--[=[
+	@type Result<T, E>
+
+	The result of a yielding operation that could error. You should always write
+	error handling for all types of errors that can be returned.
+	
+	@within DocumentService
+]=]
+export type Result<T, E> = Ok<T> | Err<E>
+
+--[=[
+	@type RobloxAPIError
+
+	Indicates the Roblox API failed, e.g. too many requests
+	
+	@within DocumentService
+]=]
+export type RobloxAPIError = "RobloxAPIError"
+
+--[=[
+	@type SessionLockedError
+
+	Indicates the document was locked by some other session.
+	
+	@within DocumentService
+]=]
+export type SessionLockedError = "SessionLockedError"
+
+--[=[
+	@type CheckError
+
+	Indicates the document's check function failed.
+	
+	@within DocumentService
+]=]
+export type CheckError = "CheckError"
+
+--[=[
+	@type BackwardsCompatibileError
+
+	Attempted to load data that has been migrated ahead to a version that isn't
+	backwards compatible with the latest version our session has.
+	
+	@within DocumentService
+]=]
+export type BackwardsCompatibileError = "BackwardsCompatibleError"
 
 --[=[
 	@type Migrations<T> { { backwardsCompatible: boolean, migrate: (data: any) -> any, } }

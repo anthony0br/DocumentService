@@ -28,13 +28,13 @@ export type Document<T> = typeof(setmetatable(
 			Open: { () -> () },
 			Close: { () -> () },
 			Read: { () -> () },
-			Update: { (transform: (data: T) -> T) -> (data: T) -> T },
+			Update: { () -> () },
 		},
 		_postHooks: {
-			Open: { (Result<T>) -> Result<T> },
-			Close: { (Result<T>) -> Result<T> },
-			Read: { (Result<T>) -> Result<T> },
-			Update: { (Result<T>) -> Result<T> },
+			Open: { () -> () },
+			Close: { () -> () },
+			Read: { () -> () },
+			Update: { () -> () },
 		},
 		_migrations: Migrations<T>,
 		_cache: T,
@@ -52,7 +52,11 @@ export type PostHookEvent = Types.PostHookEvent
 
 export type Transform<T> = Types.Transform<T>
 
-type Result<T> = Types.Result<T>
+type Result<T, E> = Types.Result<T, E>
+
+type OpenResult<T> = Result<T, RobloxAPIError | BackwardsCompatibileError | CheckError | SessionLockedError>
+
+type ReadWriteResult<T> = Result<T, RobloxAPIError | SessionLockedError>
 
 type KeyData<T> = {
 	documentServiceFormatVersion: number,
@@ -64,18 +68,17 @@ type KeyData<T> = {
 	data: T,
 }
 
+type RobloxAPIError = Types.RobloxAPIError
+type SessionLockedError = Types.SessionLockedError
+type CheckError = Types.CheckError
+type BackwardsCompatibileError = Types.BackwardsCompatibileError
+
 local FORMAT_VERSION = 0
 
-local function runHooks<T...>(hooks: { (T...) -> T... }, ...)
-	local result = { ... }
-
+local function runHooks(hooks: { () -> () })
 	for _, hook in ipairs(hooks) do
-		local len = #result
-		result = { hook(table.unpack(result)) }
-		assert(#result == len, "Hooks must return all arguments")
+		hook()
 	end
-
-	return table.unpack(result)
 end
 
 -- Based off of Lapis by nezuo's backwards compatibility checking
@@ -210,22 +213,7 @@ end
 	Validates the document if one exists, or creates a default document if no
 	document exists.
 
-	If shouldLock is true, Open will session lock the document. While this does
-	violate the single responsibility principle, it is far more efficient and
-	safer to do multiple things within one UpdateAsync!
-
 	You must call this method before reading or writing to a Document.
-
-	Can fail for the following reasons: `RobloxAPIFail`, `NotBackwardsCompatible`,
-	`FailedCheck`.
-
-	`NotBackwardsCompatible` indicates the data has been migrated to a version on
-	a newer server that isn't compatible with this server's latest version.
-
-	`FailedCheck` indicates the migrations failed to convert the data to a form
-	that passes the check function and matches the expected type interface.
-	
-	These should usually be handled by kicking the player.
 
 	:::info
 	This method looks at documentServiceFormatVersion to assume the
@@ -271,7 +259,7 @@ end
 
 	@yields
 ]=]
-function Document.Open<T>(self: Document<T>): Result<T>
+function Document.Open<T>(self: Document<T>): OpenResult<T>
 	assert(not self._open, "Already open")
 	assert(not self._isClosing, "Document is closing")
 
@@ -358,32 +346,28 @@ function Document.Open<T>(self: Document<T>): Result<T>
 	if not updateOk then
 		return {
 			success = false,
-			failReason = "RobloxAPIFail",
-			errorMessage = updatedKeyData :: any,
+			reason = "RobloxAPIError",
 		}
 	end
 
 	if incompatibleVersion then
 		return {
 			success = false,
-			failReason = "NotBackwardsCompatible",
-			errorMessage = "Data format is not backwards compatible with the latest version on this server.",
+			reason = "BackwardsCompatibleError",
 		}
 	end
 
 	if locked then
 		return {
 			success = false,
-			failReason = "SessionLocked",
-			errorMessage = "Data is reserved by another session. Try again later.",
+			reason = "SessionLockedError",
 		}
 	end
 
 	if failedCheck then
 		return {
 			success = false,
-			failReason = "CheckFailed",
-			errorMessage = "Check function failed after migrations ran.",
+			reason = "CheckError",
 		}
 	end
 
@@ -391,16 +375,18 @@ function Document.Open<T>(self: Document<T>): Result<T>
 
 	-- Autosave
 	task.defer(function()
-		while self._open do
+		while self._isSessionLocked and self._open do
 			task.wait(AUTOSAVE_PERIOD)
 			self:Save()
 		end
 	end)
 
-	return runHooks(self._postHooks.Open, {
+	runHooks(self._postHooks.Open)
+
+	return {
 		success = true,
 		data = (updatedKeyData :: KeyData<T>).data,
-	}) :: Result<T>
+	}
 end
 
 --[=[
@@ -416,25 +402,28 @@ end
 
 	@yields
 ]=]
-function Document.Close<T>(self: Document<T>): Result<nil>
+function Document.Close<T>(self: Document<T>): ReadWriteResult<T?>
 	assert(self._open, "Document not open")
 
 	runHooks(self._preHooks.Close)
 
 	self._isClosing = true
 
+	local result
 	if self._isSessionLocked then
-		self:Save()
+		result = self:Save()
 	end
 
-	local result = runHooks(self._postHooks.Close, {
-		success = true,
-	})
+	runHooks(self._postHooks.Close)
 
 	setmetatable(self :: any, nil)
 	table.clear(self :: any)
 
-	return result
+	return if result
+		then result
+		else {
+			success = true,
+		}
 end
 
 --[=[
@@ -519,7 +508,7 @@ end
 
 	@yields
 ]=]
-function Document.Read<T>(self: Document<T>): Result<T>
+function Document.Read<T>(self: Document<T>): ReadWriteResult<T>
 	assert(self._open, "Document not open - open it or use Peek instead")
 
 	runHooks(self._preHooks.Read)
@@ -531,11 +520,10 @@ function Document.Read<T>(self: Document<T>): Result<T>
 	assert(keyData.data, "Key data missing")
 
 	if not success then
-		return runHooks(self._postHooks.Read, {
+		return {
 			success = false,
-			failReason = "RobloxAPIFail",
-			errorMessage = getData :: string,
-		})
+			reason = "RobloxAPIError",
+		} :: ReadWriteResult<T>
 	end
 
 	-- Check if the lock is stolen
@@ -543,21 +531,22 @@ function Document.Read<T>(self: Document<T>): Result<T>
 	local lockedByUs = locked and (keyData.sessionLockId == self._sessionId)
 
 	if locked and not lockedByUs then
-		return runHooks(self._postHooks.Read, {
+		return {
 			success = false,
-			failReason = "SessionLocked",
-			errorMessage = "Lock stolen.",
-		})
+			reason = "SessionLockedError",
+		}
 	end
 
 	if self._isSessionLocked then
 		self:SetCache(keyData.data)
 	end
 
-	return runHooks(self._postHooks.Read, {
+	runHooks(self._postHooks)
+
+	return {
 		success = true,
 		data = keyData.data,
-	})
+	}
 end
 
 --[=[
@@ -584,7 +573,7 @@ end
 
 	@yields
 ]=]
-function Document.Update<T>(self: Document<T>, transform: Transform<T>): Result<T>
+function Document.Update<T>(self: Document<T>, transform: Transform<T>): ReadWriteResult<T>
 	assert(self._open, "Document not open")
 
 	-- If we are closing, reject any future operations
@@ -592,7 +581,7 @@ function Document.Update<T>(self: Document<T>, transform: Transform<T>): Result<
 		self._open = false
 	end
 
-	runHooks(self._preHooks.Update, transform)
+	runHooks(self._preHooks.Update)
 
 	local lockedByOther: boolean
 	local transformInvalid: boolean
@@ -662,19 +651,17 @@ function Document.Update<T>(self: Document<T>, transform: Transform<T>): Result<
 	end
 
 	if not success then
-		return runHooks(self._postHooks.Update, {
+		return {
 			success = false,
-			failReason = "RobloxAPIFail",
-			errorMessage = updatedKeyData :: any,
-		})
+			reason = "RobloxAPIError",
+		}
 	end
 
 	if lockedByOther then
-		return runHooks(self._postHooks.Update, {
+		return {
 			success = false,
-			failReason = "SessionLocked",
-			errorMessage = "Document is locked by another session.",
-		})
+			reason = "SessionLockedError",
+		}
 	end
 
 	-- Cast to KeyData<T> since the new data has already passed self._check and
@@ -685,12 +672,12 @@ function Document.Update<T>(self: Document<T>, transform: Transform<T>): Result<
 		self:SetCache(updatedData)
 	end
 
-	local result: Result<T> = {
+	local result: ReadWriteResult<T> = {
 		success = true,
 		data = updatedData,
 	}
 
-	runHooks(self._postHooks.Update, result)
+	runHooks(self._postHooks.Update)
 
 	return result
 end
@@ -708,7 +695,7 @@ end
 
 	@yields
 ]=]
-function Document.Save<T>(self: Document<T>): Result<T>
+function Document.Save<T>(self: Document<T>): ReadWriteResult<T>
 	assert(self._open, "Document not open")
 	assert(self._isSessionLocked, "Must be session locked to access cache")
 
@@ -726,7 +713,7 @@ end
 
 	@yields
 ]=]
-function Document.Erase<T>(self: Document<T>): Result<nil>
+function Document.Erase<T>(self: Document<T>): Result<nil, RobloxAPIError>
 	self:Close()
 	local success = Util.removeAsync(self._dataStore, self._key)
 
@@ -737,8 +724,7 @@ function Document.Erase<T>(self: Document<T>): Result<nil>
 	else
 		return {
 			success = false,
-			failReason = "RobloxAPIFail",
-			errorMessage = "RemoveAsync failure",
+			reason = "RobloxAPIError",
 		}
 	end
 end
@@ -755,7 +741,7 @@ end
 
 	@yields
 ]=]
-function Document.Peek<T>(self: Document<T>): Result<any>
+function Document.Peek<T>(self: Document<T>): Result<any, RobloxAPIError>
 	assert(not self._open, "Document open - use Read instead")
 
 	local success, getData: any = Util.getAsync(self._dataStore, self._key)
@@ -774,8 +760,7 @@ function Document.Peek<T>(self: Document<T>): Result<any>
 
 	return {
 		success = false,
-		failReason = "RobloxAPIFail",
-		errorMessage = getData :: string,
+		reason = "RobloxAPIError",
 	}
 end
 
@@ -785,17 +770,12 @@ end
 	Note that if a hook yields, it will yield all methods that call it. Hooks
 	are called in the order they are added.
 
-	Explicitly annotate the transform type with DocumentService.Transform to
-	avoid luau typechecking limitations.
+	Hooks cannot currently mutate arguments.
 
 	@param event -- the operation to call the hook before
 	@param hook -- a hook function that receives the arguments passed in to the operation
 ]=]
-function Document.HookBefore<T, S...>(
-	self: Document<T>,
-	event: PreHookEvent,
-	hook: ((Transform<T>) -> Transform<T>) | (() -> ())
-)
+function Document.HookBefore<T, S...>(self: Document<T>, event: PreHookEvent, hook: () -> ())
 	table.insert(self._preHooks[event], hook)
 end
 
@@ -805,10 +785,13 @@ end
 	Note that if a hook yields, it will yield all methods that call it. Hooks
 	are called in the order they are added.
 
+	Hooks added with HookAfter only run if the operation is successful, and
+	cannot mutate the result.
+
 	@param event -- the operation to call the hook after
 	@param hook -- a hook function that receives the arguments passed in to the operation
 ]=]
-function Document.HookAfter<T>(self: Document<T>, event: PostHookEvent, hook: (Result<T>) -> Result<T>)
+function Document.HookAfter<T>(self: Document<T>, event: PostHookEvent, hook: () -> ())
 	table.insert(self._postHooks[event], hook)
 end
 

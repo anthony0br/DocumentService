@@ -108,12 +108,8 @@ function DocumentStore.GetDocument<T>(self: DocumentStore<T>, key: string): Docu
 		sessionLock = self._sessionLock,
 	})
 
-	document:HookAfter("Close", function(result: Types.Result<T>)
-		if result.success then
-			self._documents[key] = nil
-		end
-
-		return result
+	document:HookAfter("Close", function()
+		self._documents[key] = nil
 	end)
 
 	self._documents[key] = document
