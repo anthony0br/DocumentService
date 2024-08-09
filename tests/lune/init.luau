@@ -255,6 +255,8 @@ end)
 
 -- Tests to write:
 
+-- Test: data mutations persist, and persist between migrations
+
 -- Test: migrating from 'no library' starts at version 0, runs all migrations
 
 -- Test: filling in default data (when key is empty) starts at latest version
