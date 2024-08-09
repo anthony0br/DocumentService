@@ -14,8 +14,15 @@ local deepFreeze = require("./DeepFreeze")
 --[=[
 	@class DocumentStore
 
-	A struct that holds information about all Documents within a DataStore and provides a less
-	repetitive way of instantiating documents. This can be seen as an abstraction over a DataStore.
+	Represents a collection of Documents, analagous to a DataStore.
+
+	:::warning
+	Multiple DocumentStores can be created for the same DataStore. You should
+	avoid this, as they will return different Document objects in different
+	sessions. If you need to access the same DocumentStore in multiple scripts,
+	create a module and require that module. Do not use DocumentService
+	with Actors or Parallel Luau.
+	:::
 ]=]
 local DocumentStore = {}
 DocumentStore.__index = DocumentStore

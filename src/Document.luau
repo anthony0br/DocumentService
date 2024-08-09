@@ -11,7 +11,30 @@ local AUTOSAVE_PERIOD = 150
 --[=[
 	@class Document
 
-	An abstraction over key, value pairs in a DataStore.
+	An abstraction over keys in a DataStore.
+
+	Documents are designed to contain information about an entity in a schema.
+	This schema is enforced by your check function, and should be changed
+	through migrations. You may, of course, decide to not use a schema by
+	defining an empty check function, but this generally isn't recommended.
+
+	:::tip
+	Session locking prevents your data from being edited by mutliple servers,
+	and ensures one server is finished with it before it is opened by another.
+
+	In DocumentService, session locking enables the use of the caching methods
+	`SetCache`, `GetCache`, and `UpdateCache`.
+
+	This is ideal for player data, or any data that needs frequent updates
+	and does not need multi-server editing.
+	:::
+
+	:::warning
+	You are free to edit the contents of the table in the .data field with
+	a tool like DataStore Editor, but manually changing other fields could cause
+	data loss and errors. You should also take care not to edit any data while
+	a Document is open and session locked.
+	:::
 ]=]
 local Document = {}
 Document.__index = Document
@@ -56,12 +79,14 @@ type Result<T, E> = Types.Result<T, E>
 
 --[=[
 	@type OpenResult<T> Result<T, RobloxAPIError | BackwardsCompatibileError | CheckError | SessionLockedError>
+
 	@within Document
 ]=]
 type OpenResult<T> = Result<T, RobloxAPIError | BackwardsCompatibileError | CheckError | SessionLockedError>
 
 --[=[
 	@type ReadWriteResult<T> Result<T, RobloxAPIError | SessionLockedError>
+
 	@within Document
 ]=]
 type ReadWriteResult<T> = Result<T, RobloxAPIError | SessionLockedError>
@@ -243,7 +268,7 @@ end
 
 	You must call this method before reading or writing to a Document.
 
-	::info
+	:::info
 	If the document is locked by another session, this method will wait and
 	retry up to 5 times, and yields until the retries are exhausted or the lock
 	is removed. Therefore, you should not use this method to check if the
@@ -251,29 +276,9 @@ end
 	:::
 
 	:::warning
-	You are free to edit the contents of the table in the .data field with
-	a tool like DataStore Editor, but manually changing other fields could cause
-	data loss and errors. You should also take care not to edit any data while
-	a Document is open and session locked.
-	:::
-
-	:::warning
 	You should check the value of `success`, and handle failures by checking
 	the value of `reason`. The possible `reason`s for each method are defined in
 	the return type.
-	:::
-
-	:::tip
-	Session locking prevents your data from being edited by mutliple servers,
-	and ensures one server is finished with it before it is opened by another.
-
-	In DocumentService, session locking enables the use of the caching methods
-	`SetCache`, `GetCache`, and `UpdateCache`.
-
-	This is ideal for player data, or any data that needs frequent updates
-	and does not need multi-server editing.
-
-	You can enable session locking with the shouldLock argument.
 	:::
 
 	@return OpenResult<T>

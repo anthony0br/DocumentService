@@ -1,4 +1,4 @@
-# DocumentService - A powerful Roblox datastore library
+# DocumentService - A powerful, schematised Roblox datastore library
 
 DocumentService is a fully strictly typed Luau library for saving data with Roblox DataStores.
 
