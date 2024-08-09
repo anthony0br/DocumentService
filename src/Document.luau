@@ -556,6 +556,7 @@ function Document.Close<T>(self: Document<T>): ReadWriteResult<T?>
 
 	runHooks(self._preHooks.Close)
 
+	-- This causes :Save to also remove the session lock
 	self._isClosing = true
 
 	local result
@@ -720,11 +721,6 @@ end
 ]=]
 function Document.Update<T>(self: Document<T>, transform: Transform<T>): ReadWriteResult<T>
 	assert(self._open, "Document not open")
-
-	-- If we are closing, reject any future operations
-	if self._isClosing then
-		self._open = false
-	end
 
 	runHooks(self._preHooks.Update)
 

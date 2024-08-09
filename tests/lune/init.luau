@@ -56,12 +56,24 @@ local function check(value: unknown): TestData
 	}
 end
 
-local documentStore = DocumentService.DocumentStore.new(
-	mockDataStore,
-	Guard.Check(check),
-	{ Document = "", Service = 2 },
-	{}
-)
+local documentStore = DocumentService.DocumentStore.new({
+	dataStore = DataStoreService:GetDataStore("TestStore"),
+	check = Guard.Check(check),
+	default = {
+		Document = "Document",
+		Service = 3,
+	},
+	migrations = {
+		{
+			backwardsCompatible = true,
+			migrate = function(data)
+				data.Service += 1
+				return data
+			end,
+		},
+	},
+	lockSessions = true,
+})
 
 Test("Opens document with no simulated errors", function()
 	local document = documentStore:GetDocument("1")
@@ -150,56 +162,47 @@ Test("Migrate from 'no library' with a migration, and re-open migrated data", fu
 		},
 	}
 
-	local store = DocumentService.DocumentStore.new(
-		mockDataStore,
-		Guard.Check(check2),
-		{ testString = "test", testNumber = 2 },
-		migrations
-	)
+	local store = DocumentService.DocumentStore.new({
+		dataStore = DataStoreService:GetDataStore("nolibrary1"),
+		check = Guard.Check(check2),
+		default = {
+			testString = "string",
+			testNumber = 0,
+		},
+		migrations = migrations,
+		lockSessions = true,
+	})
 
 	mockDataStore:UpdateAsync("nolibrary", function()
 		return {
 			testString = "this is from a raw UpdateAsync",
-			rogueData = 3,
+			rogueData = "ROGUE!!!",
 		}
 	end)
 
 	local document = store:GetDocument("nolibrary")
 	local result = document:Open()
-	print(result)
+	assert(result.success)
 	check2(result.data)
 
 	document:Close()
 	document = store:GetDocument("nolibrary")
 	local result2 = document:Open()
-	print(result2)
+	assert(result2.success)
 	check2(result2.data)
 end)
 
 Test("Migrate from 'no library' with no migration - should fail with CheckFailed", function()
-	local CheckInterface2 = {
-		testString = Guard.String,
-		testNumber = Guard.Number,
-	}
-
-	local function check2(value: unknown)
-		assert(type(value) == "table")
-		local Value: any = value
-
-		return {
-			testString = CheckInterface2.testString(Value.testString),
-			testNumber = CheckInterface2.testNumber(Value.testNumber),
-		}
-	end
-
-	local migrations = {}
-
-	local store = DocumentService.DocumentStore.new(
-		mockDataStore,
-		Guard.Check(check2),
-		{ testString = "test", testNumber = 2 },
-		migrations
-	)
+	local store = DocumentService.DocumentStore.new({
+		dataStore = DataStoreService:GetDataStore("nolibrary2"),
+		check = Guard.Check(check),
+		default = {
+			Document = "Document",
+			Service = 3,
+		},
+		migrations = {},
+		lockSessions = true,
+	})
 
 	mockDataStore:UpdateAsync("nolibrary2", function()
 		return {
@@ -211,7 +214,7 @@ Test("Migrate from 'no library' with no migration - should fail with CheckFailed
 	local document = store:GetDocument("nolibrary2")
 	local result = document:Open()
 	assert(result.success == false)
-	assert(result.failReason == "CheckFailed")
+	assert(result.reason == "CheckError")
 end)
 
 Test("Methods should fail if document not open", function()
@@ -228,28 +231,36 @@ Test("Methods should fail if document not open", function()
 end)
 
 Test("Session locking prevents other sessions from opening", function()
-	local session1 = DocumentService.DocumentStore.new(
-		mockDataStore,
-		Guard.Check(check),
-		{ Document = "", Service = 2 },
-		{}
-	)
-	local session2 = DocumentService.DocumentStore.new(
-		mockDataStore,
-		Guard.Check(check),
-		{ Document = "", Service = 2 },
-		{}
-	)
+	local session1 = DocumentService.DocumentStore.new({
+		dataStore = DataStoreService:GetDataStore("TestStore"),
+		check = Guard.Check(check),
+		default = {
+			Document = "Document",
+			Service = 3,
+		},
+		migrations = {},
+		lockSessions = true,
+	})
+	local session2 = DocumentService.DocumentStore.new({
+		dataStore = DataStoreService:GetDataStore("TestStore"),
+		check = Guard.Check(check),
+		default = {
+			Document = "Document",
+			Service = 3,
+		},
+		migrations = {},
+		lockSessions = true,
+	})
 	do
 		local document = session1:GetDocument("sessionLockTest1")
-		local result = document:Open(true)
+		local result = document:Open()
 		assert(result.success == true)
 	end
 	do
 		local document = session2:GetDocument("sessionLockTest1")
 		local result = document:Open()
 		assert(result.success == false)
-		assert(result.failReason == "SessionLocked")
+		assert(result.reason == "SessionLockedError")
 	end
 end)
 
