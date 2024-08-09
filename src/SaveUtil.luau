@@ -66,7 +66,7 @@ function SaveUtil.assertStorable(data: unknown)
 	assert(dataType ~= "function", "functions are not storable")
 
 	if dataType == "table" then
-		assert(getmetatable(data :: any) ~= nil)
+		assert(getmetatable(data :: any) == nil)
 
 		local last
 		for i, v in data :: {} do
