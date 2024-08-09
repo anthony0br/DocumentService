@@ -21,7 +21,7 @@ export type Transform<T> = Types.Transform<T>
 
 	Namespace containing public classes and types for DocumentService.
 
-	Contains the classes `DocumentService.DocumentStore` and `DocumentService.Util`.
+	Contains the classes `DocumentService.DocumentStore` and `DocumentService.SaveUtil`.
 
 	Example
 	```lua
