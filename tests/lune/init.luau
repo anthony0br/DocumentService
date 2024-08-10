@@ -13,6 +13,8 @@ local Results = {
 	total = 0,
 }
 
+local uuid = DocumentService.SaveUtil.uuid
+
 local function shouldFail(func: (...any) -> ())
 	local success = pcall(func)
 	if success then
@@ -41,81 +43,150 @@ type TestData = {
 	Service: number,
 }
 
-local CheckInterface = {
+local TestDataInterface = {
 	Document = Guard.String,
 	Service = Guard.Number,
 }
 
-local function check(value: unknown): TestData
+local function testDataCheck(value: unknown): TestData
 	assert(type(value) == "table")
 	local Value: any = value
 
 	return {
-		Document = CheckInterface.Document(Value.Document),
-		Service = CheckInterface.Service(Value.Service),
+		Document = TestDataInterface.Document(Value.Document),
+		Service = TestDataInterface.Service(Value.Service),
 	}
 end
 
-local documentStore = DocumentService.DocumentStore.new({
-	dataStore = DataStoreService:GetDataStore("TestStore"),
-	check = Guard.Check(check),
-	default = {
-		Document = "Document",
-		Service = 3,
-	},
-	migrations = {},
-	lockSessions = true,
-})
+--[=[
+	Creates a unique DocumentStore on a unique DataStore in a standard format for testing
+]=]
+local function createTestDocumentStore()
+	return DocumentService.DocumentStore.new({
+		dataStore = DataStoreService:GetDataStore(uuid()),
+		check = Guard.Check(testDataCheck),
+		default = {
+			Document = "Document",
+			Service = 3,
+		},
+		migrations = {},
+		lockSessions = true,
+	})
+end
 
-Test("Opens document with no simulated errors", function()
-	local document = documentStore:GetDocument("1")
+local function createTestDocumentStoreNotLocked()
+	return DocumentService.DocumentStore.new({
+		dataStore = DataStoreService:GetDataStore(uuid()),
+		check = Guard.Check(testDataCheck),
+		default = {
+			Document = "Document",
+			Service = 3,
+		},
+		migrations = {},
+		lockSessions = false,
+	})
+end
+
+Test("Opens document with no simulated errors and valid is valid", function()
+	local document = createTestDocumentStore():GetDocument("1")
 	local result = document:Open()
 	assert(result.success == true)
 	assert(result.data)
-	check(result.data)
-	print(result.data)
+	testDataCheck(result.data)
 end)
 
-Test("Can close document retrieved by string", function()
-	local document = documentStore:GetDocument("1")
-	print(tostring(document))
-	local result = document:Close()
-	assert(result.success == true)
-end)
-
-Test("Can reopen document after closed, retrieved by string", function()
+Test("Can close document", function()
+	local documentStore = createTestDocumentStore()
 	local document = documentStore:GetDocument("1")
 	local result = document:Open()
-	if not result.success then
-		error(result.reason)
+	assert(result.success == true)
+	local result2 = document:Close()
+	assert(result2.success == true)
+end)
+
+Test("Can reopen document after closed", function()
+	local documentStore = createTestDocumentStore()
+	local document = documentStore:GetDocument("1")
+	local result = document:Open()
+	assert(result.success == true)
+	local result2 = document:Close()
+	assert(result2.success == true)
+
+	local result3 = document:Open()
+	if not result3.success then
+		error(result3.reason)
 	end
-	assert(result.data)
-	check(result.data)
+	assert(result3.data)
+	testDataCheck(result3.data)
+end)
+
+Test("isDocumentStore works", function()
+	local documentStore = createTestDocumentStore()
+	assert(documentStore.isDocumentStore(documentStore))
+	assert(not documentStore.isDocumentStore(mockDataStore))
+end)
+
+Test("isDocument works", function()
+	local documentStore = createTestDocumentStore()
+	local document = documentStore:GetDocument("1")
+	assert(document.isDocument(document))
+	assert(not document.isDocument(documentStore))
+end)
+
+Test("Can retrieve the same document by string", function()
+	local documentStore = createTestDocumentStore()
+	local document1 = documentStore:GetDocument("1")
+	local document1_2 = documentStore:GetDocument("1")
+	assert(document1 == document1_2, "Documents not equal")
+end)
+
+Test("GetDocument returns a new document after an old document is closed", function()
+	local documentStore = createTestDocumentStore()
+	do
+		local document = documentStore:GetDocument("1")
+		local result = document:Open()
+		assert(result.success)
+		testDataCheck(result.data)
+		document:Close()
+		assert(result.success)
+	end
+	do
+		local document = documentStore:GetDocument("1")
+
+		local result = document:Open()
+		assert(result.success)
+		testDataCheck(result.data)
+		document:Close()
+		assert(result.success)
+	end
 end)
 
 Test("Opens document with simulated error", function()
+	local documentStore = createTestDocumentStore()
 	mockDataStore.errors:addSimulatedErrors(1)
 	local document = documentStore:GetDocument("2")
 	local result = document:Open()
 	assert(result.success == true)
 	assert(result.data)
-	check(result.data)
+	testDataCheck(result.data)
 	document:Close()
 end)
 
 Test("Opens document with 4 simulated errors", function()
+	local documentStore = createTestDocumentStore()
 	mockDataStore.errors:addSimulatedErrors(4)
 	local document = documentStore:GetDocument("2")
 	local result = document:Open()
 	assert(result.success == true)
 	assert(result.data)
-	check(result.data)
+	testDataCheck(result.data)
 	document:Close()
 end)
 
 -- Now that all operations only use a single datastore API request, we only need
 -- to test up to 5 simulated errors
 Test("Fails to open document with 5 simulated errors", function()
+	local documentStore = createTestDocumentStore()
 	mockDataStore.errors:addSimulatedErrors(5)
 	local document = documentStore:GetDocument("3")
 	local result = document:Open()
@@ -188,7 +259,7 @@ end)
 Test("Migrate from 'no library' with no migration - should fail with CheckFailed", function()
 	local store = DocumentService.DocumentStore.new({
 		dataStore = mockDataStore,
-		check = Guard.Check(check),
+		check = Guard.Check(testDataCheck),
 		default = {
 			Document = "Document",
 			Service = 3,
@@ -210,11 +281,17 @@ Test("Migrate from 'no library' with no migration - should fail with CheckFailed
 	assert(result.reason == "CheckError")
 end)
 
-Test("Methods should fail if document not open", function()
-	local document = documentStore:GetDocument("5")
+Test("Close fails if not open", function()
+	local documentStore = createTestDocumentStore()
+	local document = documentStore:GetDocument("1")
 	shouldFail(function()
 		document:Close()
 	end)
+end)
+
+Test("Update fails if not open", function()
+	local documentStore = createTestDocumentStore()
+	local document = documentStore:GetDocument("1")
 	shouldFail(function()
 		document:Update(function(data: TestData)
 			data.Document = "newString"
@@ -223,10 +300,98 @@ Test("Methods should fail if document not open", function()
 	end)
 end)
 
+Test("Read fails if not open", function()
+	local documentStore = createTestDocumentStore()
+	local document = documentStore:GetDocument("1")
+	shouldFail(function()
+		document:Read()
+	end)
+end)
+
+Test("GetCache fails if not open", function()
+	local documentStore = createTestDocumentStore()
+	local document = documentStore:GetDocument("1")
+	shouldFail(function()
+		document:GetCache()
+	end)
+end)
+
+Test("SetCache fails if not open", function()
+	local documentStore = createTestDocumentStore()
+	local document = documentStore:GetDocument("1")
+	shouldFail(function()
+		document:SetCache({
+			Document = "test",
+			Service = 2,
+		})
+	end)
+end)
+
+Test("UpdateCache fails if not open", function()
+	local documentStore = createTestDocumentStore()
+	local document = documentStore:GetDocument("1")
+	shouldFail(function()
+		document:UpdateCache(function(data: TestData)
+			data.Document = "newString"
+			return data
+		end)
+	end)
+end)
+
+Test("Save fails if not open", function()
+	local documentStore = createTestDocumentStore()
+	local document = documentStore:GetDocument("1")
+	shouldFail(function()
+		document:Save()
+	end)
+end)
+
+Test("GetCache fails if not session locked", function()
+	local documentStore = createTestDocumentStoreNotLocked()
+	local document = documentStore:GetDocument("1")
+	shouldFail(function()
+		document:SetCache({
+			Document = "test",
+			Service = 2,
+		})
+	end)
+end)
+
+Test("SetCache fails if not session locked", function()
+	local documentStore = createTestDocumentStoreNotLocked()
+	local document = documentStore:GetDocument("1")
+	shouldFail(function()
+		document:GetCache()
+	end)
+end)
+
+Test("UpdateCache fails if not session locked", function()
+	local documentStore = createTestDocumentStoreNotLocked()
+	local document = documentStore:GetDocument("1")
+	shouldFail(function()
+		document:UpdateCache(function(data: TestData)
+			data.Document = "newString"
+			return data
+		end)
+	end)
+end)
+
+Test("Save fails if not session locked", function()
+	local documentStore = createTestDocumentStoreNotLocked()
+	local document = documentStore:GetDocument("1")
+	shouldFail(function()
+		document:Save()
+	end)
+end)
+
+Test("IsOpen returns correctly", function() end)
+
+Test("Session locking affects IsWriteAvailable correctly", function() end)
+
 Test("Session locking prevents other sessions from opening", function()
 	local session1 = DocumentService.DocumentStore.new({
 		dataStore = DataStoreService:GetDataStore("TestStore"),
-		check = Guard.Check(check),
+		check = Guard.Check(testDataCheck),
 		default = {
 			Document = "Document",
 			Service = 3,
@@ -236,7 +401,7 @@ Test("Session locking prevents other sessions from opening", function()
 	})
 	local session2 = DocumentService.DocumentStore.new({
 		dataStore = DataStoreService:GetDataStore("TestStore"),
-		check = Guard.Check(check),
+		check = Guard.Check(testDataCheck),
 		default = {
 			Document = "Document",
 			Service = 3,
@@ -257,19 +422,59 @@ Test("Session locking prevents other sessions from opening", function()
 	end
 end)
 
--- Tests to write:
+Test("Data mutations persist with no migrations", function()
+	local documentStore = createTestDocumentStore()
+	local document = documentStore:GetDocument("6")
+	local result = document:Open()
+	if not result.success then
+		error(result.reason)
+	end
 
--- Test: data mutations persist, and persist between migrations
+	document:Update(function(data: TestData)
+		data.Service = 10000
+		data.Document = "hi!"
 
--- Test: migrating from 'no library' starts at version 0, runs all migrations
+		return data
+	end)
 
--- Test: filling in default data (when key is empty) starts at latest version
+	document:Close()
+	document = documentStore:GetDocument("6")
+	local result2 = document:Open()
+	if not result2.success then
+		error(result2.reason)
+	end
 
--- Test: all migrations run in correct order
+	assert(result2.data.Service == 1000)
+	assert(result2.data.Document == "hi!")
 
--- Test: data version never decreases
+	document:Update(function(data: TestData)
+		data.Service = data.Service + 10000
+		data.Document = data.Document .. "... hi!"
 
--- Test: unstorable data
+		return data
+	end)
+
+	document:Close()
+	document = documentStore:GetDocument("6")
+	local result3 = document:Open()
+	if not result3.success then
+		error(result3.reason)
+	end
+	assert(result3.data.Service == 2000)
+	assert(result3.data.Document == "hi!... hi!")
+end)
+
+--Test("Migrating from 'no library' runs all migrations")
+
+--Test("Migrating from version 0 runs all migrations exactly once")
+
+--Test("Migrating from a non-zero version does not run old migrations")
+
+--Test("Using default data never runs migrations")
+
+--Test("Migrations do not re-run after going from latest -> outdated -> latest session")
+
+--Test("Backwards incompatible schemas fail with BackwardsCompatibilityError")
 
 -- Test: update method
 
@@ -278,6 +483,8 @@ end)
 -- Test: peek method
 
 -- Test: caching
+
+-- Test: Cache is set correctly opening a document
 
 -- Test: hooks
 
