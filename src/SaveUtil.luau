@@ -135,14 +135,14 @@ end
 function SaveUtil.uuid(): string
 	local template = "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx"
 
-	return string.gsub(template, "[xy]", function(match)
+	-- Store in uuid string.format returns two values and we only want the first
+	local uuid = string.gsub(template, "[xy]", function(match)
 		local v = if match == "x" then math.random(0, 0xf) else math.random(8, 0xb)
 
-		-- Since string.format can return two values
-		local uuid = string.format("%x", v)
-
-		return uuid
+		return string.format("%x", v)
 	end)
+
+	return uuid
 end
 
 --[=[
