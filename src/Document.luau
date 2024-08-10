@@ -500,6 +500,8 @@ end
 	editing data from another server.
 	:::
 
+	@yields
+
 	@return Result<boolean, RobloxAPIError | SchemaError>
 ]=]
 function Document.IsWriteAvailable<T>(self: Document<T>): Result<boolean, RobloxAPIError | SchemaError>
