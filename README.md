@@ -7,16 +7,24 @@ DocumentService provides a DataStore abstraction, DocumentStore, which holds dat
 This project is currently in its early stages and should not be used in production.
 
 ## Features
-- Fully strictly typed: data is typed (intellisense and typechecking on data you read from DataStores!), and the whole library is written in --!strict.
-- Immutable cache and autosaves.
-- Migrations, inspired by Lapis. (If you're used to :Reconcile, you can do this with migrations).
+- Fully strictly typed. This means you get full intellisense and typechecking on your data,
+and on every API method, including possible errors for each method.
+- Superior Rust-inspired error handling, with each Result for each method
+providing unique intellisense on which errors you need to handle.
+- Immutable cache and autosaves - preventing bugs caused by updates interfering with eachother.
+- Migrations, inspired by nezuo's Lapis.
 - Validate your data with support for runtime and static typechecking.
 - Documents can be session-locked, or not (to allow multi-server editing).
 - Run hooks before and after operations, e.g. logging.
 - Automatic retry with exponential backoff.
 - Migrate from no library, or another library if you're brave.
 - Checks your data can be stored in JSON to avoid silent errors.
-- No dependencies or complicated APIs like Promises. Methods yield, and you can wrap them in any coroutine abstraction you like.
+- Simple API that follows SOLID principles: session-locking a document simply extends the API.
+For example, in ProfileService you need to provide a lockedHandler function, which changes the
+behaviour of the method to open a Profile, but in DocumentService you can just use the
+with `:IsWriteAvailable` and `:Steal` methods if you need them.
+- Maintainable, strictly typed source code, that is actively maintained.
+- No dependencies (like Promise). Use whatever abstractions you like, and install easily.
 
 ## Long-term goals
 - ACID transactions involving multiple Documents. Please get in touch if you can help with this!
