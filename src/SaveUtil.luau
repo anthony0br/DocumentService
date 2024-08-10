@@ -8,6 +8,9 @@ if _G.IS_ROBLOX then
 end
 
 local Retry = require("./Retry")
+local Types = require("./Types")
+
+type DataStoreInterface = Types.DataStoreInterface
 
 --[=[
 	@class SaveUtil
@@ -146,7 +149,7 @@ end
 ]=]
 function SaveUtil.updateAsync<T>(
 	transform: (any, DataStoreKeyInfo) -> (any, { number }?, {}?),
-	dataStore: GlobalDataStore,
+	dataStore: DataStoreInterface,
 	key: string
 ): (boolean, any, DataStoreKeyInfo)
 	local result = Retry(RETRY.ATTEMPTS, RETRY.INITIAL_WAIT, function(): (any, DataStoreKeyInfo)
@@ -165,7 +168,7 @@ end
 
 	@yields
 ]=]
-function SaveUtil.getAsync<T>(dataStore: GlobalDataStore, key: string): (boolean, any, DataStoreKeyInfo)
+function SaveUtil.getAsync<T>(dataStore: DataStoreInterface, key: string): (boolean, any, DataStoreKeyInfo)
 	local result = Retry(RETRY.ATTEMPTS, RETRY.INITIAL_WAIT, function(): (any, DataStoreKeyInfo)
 		local options
 
@@ -187,7 +190,7 @@ end
 
 	@yields
 ]=]
-function SaveUtil.removeAsync<T>(dataStore: GlobalDataStore, key: string): boolean
+function SaveUtil.removeAsync<T>(dataStore: DataStoreInterface, key: string): boolean
 	local result = Retry(RETRY.ATTEMPTS, RETRY.INITIAL_WAIT, function()
 		assert(SaveUtil.getSetBudget() > 0, "Ran out of budget")
 

@@ -29,7 +29,7 @@ DocumentStore.__index = DocumentStore
 
 export type DocumentStore<T> = typeof(setmetatable(
 	{} :: {
-		_dataStore: DataStore,
+		_dataStore: DataStoreInterface,
 		_check: (unknown) -> (boolean, T),
 		_default: T & {},
 		_migrations: Types.Migrations<T>,
@@ -41,9 +41,11 @@ export type DocumentStore<T> = typeof(setmetatable(
 	DocumentStore
 ))
 
-export type Document<T> = Document.Document<T>
+type Document<T> = Document.Document<T>
 
-export type Migrations<T> = Types.Migrations<T>
+type Migrations<T> = Types.Migrations<T>
+
+type DataStoreInterface = Types.DataStoreInterface
 
 --[=[
 	@interface DocumentStoreProps
@@ -69,7 +71,7 @@ export type Migrations<T> = Types.Migrations<T>
 	@return DocumentStore<T>
 ]=]
 function DocumentStore.new<T>(props: {
-	dataStore: DataStore,
+	dataStore: DataStoreInterface,
 	check: (unknown) -> (boolean, T),
 	default: T & {},
 	migrations: Migrations<T>,

@@ -138,4 +138,22 @@ export type Migrations<T> = {
 ]=]
 export type Transform<T> = (data: T) -> T
 
+--[=[
+	@type DataStoreInterface { UpdateAsync: (DataStoreInterface, key: string, (any, DataStoreKeyInfo) -> (any, { number }?, any?)) -> (any, DataStoreKeyInfo), GetAsync: (DataStoreInterface, key: string, options: DataStoreGetOptions) -> (any, DataStoreKeyInfo), RemoveAsync: (DataStoreInterface, key: string) -> (any, DataStoreKeyInfo)}
+
+	An interface, implemented by DataStore in Roblox, to allow dependency injection
+	(e.g. MockDataStores).
+
+	@within DocumentService
+]=]
+export type DataStoreInterface = {
+	UpdateAsync: (
+		DataStoreInterface,
+		key: string,
+		(any, DataStoreKeyInfo) -> (any, { number }?, any?)
+	) -> (any, DataStoreKeyInfo),
+	GetAsync: (DataStoreInterface, key: string, options: DataStoreGetOptions) -> (any, DataStoreKeyInfo),
+	RemoveAsync: (DataStoreInterface, key: string) -> (any, DataStoreKeyInfo),
+}
+
 return {}

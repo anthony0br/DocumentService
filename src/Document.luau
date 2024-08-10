@@ -39,10 +39,12 @@ local AUTOSAVE_PERIOD = 150
 local Document = {}
 Document.__index = Document
 
+type DataStoreInterface = Types.DataStoreInterface
+
 export type Document<T> = typeof(setmetatable(
 	{} :: {
 		_key: string,
-		_dataStore: DataStore,
+		_dataStore: DataStoreInterface,
 		_check: (unknown) -> (boolean, T),
 		_default: T,
 		_open: boolean,
@@ -229,7 +231,7 @@ end
 ]=]
 function Document.new<T>(props: {
 	key: string,
-	dataStore: DataStore,
+	dataStore: DataStoreInterface,
 	check: (unknown) -> (boolean, T),
 	default: T,
 	migrations: Types.Migrations<T>,
