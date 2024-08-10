@@ -132,13 +132,16 @@ end
 
 	Based off of https://gist.github.com/jrus/3197011
 ]=]
-function SaveUtil.uuid(): (string, number)
+function SaveUtil.uuid(): string
 	local template = "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx"
 
 	return string.gsub(template, "[xy]", function(match)
 		local v = if match == "x" then math.random(0, 0xf) else math.random(8, 0xb)
 
-		return string.format("%x", v)
+		-- Since string.format can return two values
+		local uuid = string.format("%x", v)
+
+		return uuid
 	end)
 end
 
