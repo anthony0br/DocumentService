@@ -112,6 +112,7 @@ Test("Can reopen document after closed", function()
 	local result2 = document:Close()
 	assert(result2.success == true)
 
+	document = documentStore:GetDocument("1")
 	local result3 = document:Open()
 	if not result3.success then
 		error(result3.reason)
@@ -431,6 +432,7 @@ Test("Data mutations persist with no migrations", function()
 	end
 
 	document:Update(function(data: TestData)
+		data = table.clone(data)
 		data.Service = 10000
 		data.Document = "hi!"
 
@@ -444,10 +446,11 @@ Test("Data mutations persist with no migrations", function()
 		error(result2.reason)
 	end
 
-	assert(result2.data.Service == 1000)
+	assert(result2.data.Service == 10000)
 	assert(result2.data.Document == "hi!")
 
 	document:Update(function(data: TestData)
+		data = table.clone(data)
 		data.Service = data.Service + 10000
 		data.Document = data.Document .. "... hi!"
 
@@ -460,7 +463,7 @@ Test("Data mutations persist with no migrations", function()
 	if not result3.success then
 		error(result3.reason)
 	end
-	assert(result3.data.Service == 2000)
+	assert(result3.data.Service == 20000)
 	assert(result3.data.Document == "hi!... hi!")
 end)
 
