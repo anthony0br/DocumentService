@@ -962,7 +962,7 @@ end
 	@param instance metatable
 	@return boolean
 ]=]
-function Document.isDocument(instance): boolean
+function Document.isDocument(instance: any): boolean
 	return getmetatable(instance).__index == Document
 end
 

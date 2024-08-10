@@ -159,7 +159,7 @@ end
 	@param instance metatable
 	@return boolean
 ]=]
-function DocumentStore.isDocumentStore(instance): boolean
+function DocumentStore.isDocumentStore(instance: any): boolean
 	return getmetatable(instance).__index == DocumentStore
 end
 
