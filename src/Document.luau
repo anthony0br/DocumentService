@@ -578,9 +578,13 @@ function Document.Close<T>(self: Document<T>): ReadWriteResult<T?>
 	self._isClosing = true
 
 	local result: ReadWriteResult<T>
+
 	if self._lockSessions then
 		result = self:Save()
+
 		if not result.success then
+			self._isClosing = false
+
 			return result
 		end
 	end
