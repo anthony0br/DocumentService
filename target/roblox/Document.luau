@@ -64,7 +64,8 @@ export type Document<T> = typeof(setmetatable(
 		_migrations: Migrations<T>,
 		_cache: T,
 		_isClosing: boolean,
-		_lockSessions: boolean	
+		_lockSessions: boolean,
+		_autoSaveThread: thread?	
 },
 	Document
 ))
@@ -266,8 +267,14 @@ function Document.new<T>(props: {
 		_cache = props.default,
 		_lockSessions = props.lockSessions,
 	}, Document)
+do		
 
-	return self
+game:BindToClose(function()
+			self._isClosing = true
+		end)
+end
+	
+return self
 end
 
 --[=[
@@ -411,8 +418,7 @@ function Document.Open<T>(self: Document<T>): OpenResult<T>
 
 	self._open = true
 
-	-- Autosave
-	task.defer(function()
+	self._autoSaveThread = task.defer(function()
 		while self._lockSessions and self._open do
 			task.wait(AUTOSAVE_PERIOD)
 			self:Save()
@@ -500,6 +506,8 @@ end
 	editing data from another server.
 	:::
 
+	@yields
+
 	@return Result<boolean, RobloxAPIError | SchemaError>
 ]=]
 function Document.IsWriteAvailable<T>(self: Document<T>): Result<boolean, RobloxAPIError | SchemaError>
@@ -569,10 +577,23 @@ function Document.Close<T>(self: Document<T>): ReadWriteResult<T?>
 	-- This causes :Save to also remove the session lock
 	self._isClosing = true
 
-	local result
+	local result: ReadWriteResult<T>
+
 	if self._lockSessions then
 		result = self:Save()
+
+		if not result.success then
+			self._isClosing = false
+
+			return result
+		end
 	end
+
+	if self._autoSaveThread then
+		task.cancel(self._autoSaveThread)
+	end
+
+	self._open = false
 
 	runHooks(self._postHooks.Close)
 

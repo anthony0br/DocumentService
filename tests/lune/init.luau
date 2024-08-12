@@ -194,102 +194,6 @@ Test("Fails to open document with 5 simulated errors", function()
 	assert(result.success == false)
 end)
 
-Test("Migrate from 'no library' with a migration, and re-open migrated data", function()
-	local CheckInterface2 = {
-		testString = Guard.String,
-		testNumber = Guard.Number,
-	}
-
-	local function check2(value: unknown)
-		assert(type(value) == "table")
-		local Value: any = value
-
-		return {
-			testString = CheckInterface2.testString(Value.testString),
-			testNumber = CheckInterface2.testNumber(Value.testNumber),
-		}
-	end
-
-	local migrations = {
-		{
-			backwardsCompatible = true,
-			migrate = function(data)
-				if not data.testString and type(data.testNumber) ~= "string" then
-					data.testString = "test"
-				end
-
-				if not data.testNumber and type(data.testNumber) ~= "number" then
-					data.testNumber = 2
-				end
-
-				return data
-			end,
-		},
-	}
-
-	local store = DocumentService.DocumentStore.new({
-		dataStore = mockDataStore,
-		check = Guard.Check(check2),
-		default = {
-			testString = "string",
-			testNumber = 0,
-		},
-		migrations = migrations,
-		lockSessions = true,
-	})
-
-	mockDataStore:UpdateAsync("nolibrary", function()
-		return {
-			testString = "this is from a raw UpdateAsync",
-			rogueData = "ROGUE!!!",
-		}
-	end)
-
-	local document = store:GetDocument("nolibrary")
-	local result = document:Open()
-	assert(result.success)
-	check2(result.data)
-
-	document:Close()
-	document = store:GetDocument("nolibrary")
-	local result2 = document:Open()
-	assert(result2.success)
-	check2(result2.data)
-end)
-
-Test("Migrate from 'no library' with no migration - should fail with CheckFailed", function()
-	local store = DocumentService.DocumentStore.new({
-		dataStore = mockDataStore,
-		check = Guard.Check(testDataCheck),
-		default = {
-			Document = "Document",
-			Service = 3,
-		},
-		migrations = {},
-		lockSessions = true,
-	})
-
-	mockDataStore:UpdateAsync("nolibrary2", function()
-		return {
-			testString = "this is from a raw UpdateAsync",
-			rogueData = 3,
-		}
-	end)
-
-	local document = store:GetDocument("nolibrary2")
-	local result = document:Open()
-	assert(result.success == false)
-	assert(result.reason == "CheckError")
-end)
-
-Test("Close fails if not open", function()
-	local documentStore = createTestDocumentStore()
-	local document = documentStore:GetDocument("1")
-	shouldFail(function()
-		document:Close()
-	end)
-end)
-
 Test("Update fails if not open", function()
 	local documentStore = createTestDocumentStore()
 	local document = documentStore:GetDocument("1")
@@ -467,9 +371,195 @@ Test("Data mutations persist with no migrations", function()
 	assert(result3.data.Document == "hi!... hi!")
 end)
 
---Test("Migrating from 'no library' runs all migrations")
+Test("Migrate from an invalid data with no migration should fail with CheckFailed", function()
+	local store = DocumentService.DocumentStore.new({
+		dataStore = mockDataStore,
+		check = Guard.Check(testDataCheck),
+		default = {
+			Document = "Document",
+			Service = 3,
+		},
+		migrations = {},
+		lockSessions = true,
+	})
 
---Test("Migrating from version 0 runs all migrations exactly once")
+	mockDataStore:UpdateAsync("nolibrary2", function()
+		return {
+			testString = "this is from a raw UpdateAsync",
+			rogueData = 3,
+		}
+	end)
+
+	local document = store:GetDocument("nolibrary2")
+	local result = document:Open()
+	assert(result.success == false)
+	assert(result.reason == "CheckError")
+end)
+
+Test("Close fails if not open", function()
+	local documentStore = createTestDocumentStore()
+	local document = documentStore:GetDocument("1")
+	shouldFail(function()
+		document:Close()
+	end)
+end)
+
+Test("When migrating from from no library with a migration, the migration runs exactly once", function()
+	local CheckInterface2 = {
+		testString = Guard.String,
+		testNumber = Guard.Number,
+	}
+
+	local function check2(value: unknown)
+		assert(type(value) == "table")
+		local Value: any = value
+
+		return {
+			testString = CheckInterface2.testString(Value.testString),
+			testNumber = CheckInterface2.testNumber(Value.testNumber),
+		}
+	end
+
+	local migrationRunCount = 0
+
+	local migrations = {
+		{
+			backwardsCompatible = true,
+			migrate = function(data)
+				if not data.testString and type(data.testNumber) ~= "string" then
+					data.testString = "test"
+				end
+
+				if not data.testNumber and type(data.testNumber) ~= "number" then
+					data.testNumber = 2
+				end
+
+				migrationRunCount += 1
+
+				return data
+			end,
+		},
+	}
+
+	local store = DocumentService.DocumentStore.new({
+		dataStore = mockDataStore,
+		check = Guard.Check(check2),
+		default = {
+			testString = "string",
+			testNumber = 0,
+		},
+		migrations = migrations,
+		lockSessions = true,
+	})
+
+	mockDataStore:UpdateAsync("1", function()
+		return {
+			testString = "this is from a raw UpdateAsync",
+			rogueData = "ROGUE!!!",
+		}
+	end)
+
+	local document = store:GetDocument("1")
+	local result = document:Open()
+	assert(result.success)
+	check2(result.data)
+
+	document:Close()
+	document = store:GetDocument("1")
+	local result2 = document:Open()
+	assert(result2.success)
+	check2(result2.data)
+
+	assert(migrationRunCount == 1, "Migration ran more than once")
+end)
+
+Test("Migrating from version 0 runs all migrations exactly once", function()
+	local migrationRunCount = 0
+
+	do
+		local CheckInterface2 = {
+			testString = Guard.String,
+			testNumber = Guard.Number,
+		}
+
+		local function check(value: unknown)
+			assert(type(value) == "table")
+			local Value: any = value
+
+			return {
+				testString = CheckInterface2.testString(Value.testString),
+				testNumber = CheckInterface2.testNumber(Value.testNumber),
+			}
+		end
+
+		local migrations = {}
+
+		local store = DocumentService.DocumentStore.new({
+			dataStore = mockDataStore,
+			check = Guard.Check(check),
+			default = {
+				testString = "string",
+				testNumber = 0,
+			},
+			migrations = migrations,
+			lockSessions = true,
+		})
+
+		local document = store:GetDocument("1")
+		local result = document:Open()
+		assert(result.success)
+		check(result.data)
+		document:Close()
+	end
+
+	-- Imagine now we update the game and add a migration
+
+	do
+		local CheckInterface = {
+			testString = Guard.String,
+			testNumber = Guard.Number,
+			newField = Guard.String,
+		}
+
+		local function check(value: unknown)
+			assert(type(value) == "table")
+			local Value: any = value
+
+			return {
+				testString = CheckInterface.testString(Value.testString),
+				testNumber = CheckInterface.testNumber(Value.testNumber),
+				newField = CheckInterface.newField(Value.newField),
+			}
+		end
+
+		local migrations = {}
+
+		local store = DocumentService.DocumentStore.new({
+			dataStore = mockDataStore,
+			check = Guard.Check(check),
+			default = {
+				testString = "bad string",
+				testNumber = -10000,
+				newField = "new field",
+			},
+			migrations = migrations,
+			lockSessions = true,
+		})
+
+		local document = store:GetDocument("1")
+		local result = document:Open()
+		assert(result.success)
+		check(result.data)
+		document:Close()
+	end
+
+	document = store:GetDocument("1")
+	local result2 = document:Open()
+	assert(result2.success)
+	check2(result2.data)
+
+	assert(migrationRunCount == 1, "Migration ran more than once")
+end)
 
 --Test("Migrating from a non-zero version does not run old migrations")
 

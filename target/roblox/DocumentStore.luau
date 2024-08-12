@@ -41,6 +41,8 @@ export type DocumentStore<T> = typeof(setmetatable(
 	DocumentStore
 ))
 
+local gameClosing = false
+
 type Document<T> = Document.Document<T>
 
 type Migrations<T> = Types.Migrations<T>
@@ -91,7 +93,13 @@ function DocumentStore.new<T>(props: {
 	-- time to stop play test sessions, so we check :IsStudio()
 	if not RunService:IsStudio() then
 		game:BindToClose(function()
-			self:CloseAllDocuments()
+			gameClosing = true
+			-- BindToClose callbacks run for 30 seconds. This loop tries to make
+			-- sure any documents that are opened after BindToClose callbacks
+			-- begin are also closed.
+			while true do
+				self:CloseAllDocuments()
+			end
 		end)
 	end
 
@@ -106,6 +114,8 @@ end
 	@return Document<T>
 ]=]
 function DocumentStore.GetDocument<T>(self: DocumentStore<T>, key: string): Document<T>
+	assert(not gameClosing, "Cannot retrieve document, game closing")
+
 	if self._documents[key] then
 		return self._documents[key]
 	end
@@ -129,27 +139,48 @@ function DocumentStore.GetDocument<T>(self: DocumentStore<T>, key: string): Docu
 end
 
 --[=[
-	Closes all documents as fast as possible. This runs on BindToClose already.
+	Closes all open documents as fast as possible. This runs on BindToClose already.
+
+	@yields
 ]=]
 function DocumentStore.CloseAllDocuments<T>(self: DocumentStore<T>)
-	local open = true
-	while open do
+	local openDocumentsExist = true
+
+	while openDocumentsExist do
 		local budget = Util.getUpdateBudget()
 		local count = 0
-		open = false
+		openDocumentsExist = false
+
+		local thread = coroutine.running()
+		local documentsClosing = 0
+
 		for _, v: Document<T> in pairs(self._documents) do
-			open = true
+			if not v:IsOpen() then
+				continue
+			end
+
+			openDocumentsExist = true
+
 			if count >= budget then
 				break
 			end
+
 			if self._lockSessions then
 				count += 1
 			end
+
 			task.spawn(function()
+				documentsClosing += 1
 				v:Close()
+				documentsClosing -= 1
+
+				if documentsClosing == 0 then
+					task.spawn(thread)
+				end
 			end)
 		end
-		task.wait()
+
+		coroutine.yield()
 	end
 end
 
