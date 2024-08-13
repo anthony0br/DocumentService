@@ -36,9 +36,9 @@ local AUTOSAVE_PERIOD = 150
 	:::
 
 	:::warning
-	Types for your data are provided under the assumption that the data
-	stored in Data Stores will not change schema/interface while a Document
-	is open.
+	Types for your data are provided under the assumption that once a document
+	is opened, the underlying data held in Data Stores is not updated
+	externally in a way that changes its type.
 	:::
 ]=]
 local Document = {}
