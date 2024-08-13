@@ -156,6 +156,10 @@ local function runMigrations<T>(
 			data = migration.migrate(data)
 			dataVersion = targetVersion
 		end
+
+		if not data then
+			warn("Migration did not return a value - did you forget to return one?")
+		end
 	end
 
 	return {
