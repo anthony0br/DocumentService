@@ -6,7 +6,7 @@ local SaveUtil = require(script.Parent:FindFirstChild('SaveUtil'))
 local deepFreeze = require(script.Parent:FindFirstChild('DeepFreeze'))
 
 local SESSION_EXPIRE_TIME = 600
-local AUTOSAVE_PERIOD = 150
+local AUTOSAVE_INTERVAL = 150
 
 --[=[
 	@class Document
@@ -32,8 +32,13 @@ local AUTOSAVE_PERIOD = 150
 	:::warning
 	You are free to edit the contents of the table in the .data field with
 	a tool like DataStore Editor, but manually changing other fields could cause
-	data loss and errors. You should also take care not to edit any data while
-	a Document is open and session locked.
+	data loss and errors.
+	:::
+
+	:::warning
+	Types for your data are provided under the assumption that once a document
+	is opened, the underlying data held in Data Stores is not updated
+	externally in a way that changes its type.
 	:::
 ]=]
 local Document = {}
@@ -88,11 +93,11 @@ type Result<T, E> = Types.Result<T, E>
 type OpenResult<T> = Result<T, RobloxAPIError | BackwardsCompatibilityError | CheckError | SessionLockedError>
 
 --[=[
-	@type ReadWriteResult<T> Result<T, RobloxAPIError | SessionLockedError>
+	@type WriteResult<T> Result<T, RobloxAPIError | SessionLockedError>
 
 	@within Document
 ]=]
-type ReadWriteResult<T> = Result<T, RobloxAPIError | SessionLockedError>
+type WriteResult<T> = Result<T, RobloxAPIError | SessionLockedError | SchemaError>
 
 type KeyData<T> = {
 	documentServiceSchemaVersion: number,
@@ -146,9 +151,14 @@ local function runMigrations<T>(
 	for i, migration in ipairs(migrations) do
 		local fromVersion = i - 1
 		local targetVersion = i
+
 		if fromVersion == dataVersion then
 			data = migration.migrate(data)
 			dataVersion = targetVersion
+		end
+
+		if not data then
+			warn("Migration did not return a value - did you forget to return one?")
 		end
 	end
 
@@ -163,7 +173,7 @@ local function isLocked(keyData: KeyData<any>): boolean
 	return keyData.isLocked and (os.time() - keyData.lockTimestamp < SESSION_EXPIRE_TIME)
 end
 
-local function getKeyData(value: any): KeyData<unknown>?
+local function checkKeyData(value: any): KeyData<any>?
 	if type(value) ~= "table" then
 		return
 	end
@@ -322,7 +332,7 @@ function Document.Open<T>(self: Document<T>): OpenResult<T>
 		local keyData: KeyData<unknown>?
 
 		if getValue then
-			keyData = getKeyData(getValue)
+			keyData = checkKeyData(getValue)
 
 			-- If we have a valid document service format, use the data field
 			-- Otherwise, asssume we want to use the whole data stored at that
@@ -361,6 +371,7 @@ function Document.Open<T>(self: Document<T>): OpenResult<T>
 			local lockedByUs = locked and (keyData.sessionLockId == self._sessionId)
 			if locked and not lockedByUs then
 				lockedByOther = true
+				-- Throw a Luau error so the pcall fails and we retry
 				error("Session lock held by another session.")
 			end
 		end
@@ -420,7 +431,7 @@ function Document.Open<T>(self: Document<T>): OpenResult<T>
 
 	self._autoSaveThread = task.defer(function()
 		while self._lockSessions and self._open do
-			task.wait(AUTOSAVE_PERIOD)
+			task.wait(AUTOSAVE_INTERVAL)
 			self:Save()
 		end
 	end)
@@ -458,7 +469,7 @@ function Document.Steal<T>(self: Document<T>): Result<T, RobloxAPIError | Schema
 		-- Reset error flags in case function re-runs
 		schemaError = false
 
-		local keyData = getKeyData(getValue)
+		local keyData = checkKeyData(getValue)
 
 		if not keyData then
 			schemaError = true
@@ -497,9 +508,10 @@ function Document.Steal<T>(self: Document<T>): Result<T, RobloxAPIError | Schema
 end
 
 --[=[
-	Returns false if the Document is locked by another session.
+	Returns a false Result if Document is currently open, locked by another 
+	session, otherwise returns a true Result.
 
-	If props.sessionLock is false, it will always return true.
+	If props.lockSessions is false, this will always return a true Result.
 
 	:::tip
 	You can use this to check if a player is active to avoid data loss while
@@ -508,10 +520,17 @@ end
 
 	@yields
 
-	@return Result<boolean, RobloxAPIError | SchemaError>
+	@return Result<boolean, RobloxAPIError>
 ]=]
-function Document.IsWriteAvailable<T>(self: Document<T>): Result<boolean, RobloxAPIError | SchemaError>
+function Document.IsOpenAvailable<T>(self: Document<T>): Result<boolean, RobloxAPIError>
 	assert(not self._isClosing, "Document is closing")
+
+	if self._open then
+		return {
+			success = true,
+			data = false,
+		}
+	end
 
 	if not self._lockSessions then
 		return {
@@ -529,12 +548,14 @@ function Document.IsWriteAvailable<T>(self: Document<T>): Result<boolean, Roblox
 		}
 	end
 
-	local keyData = getKeyData(getValue)
+	local keyData = checkKeyData(getValue)
 
+	-- Since the behaviour of Open in this case is to put the existing value
+	-- in the key into keyData.data, return a true Result.
 	if not keyData then
 		return {
-			success = false,
-			reason = "SchemaError",
+			success = true,
+			data = true,
 		}
 	end
 
@@ -559,17 +580,20 @@ end
 --[=[
 	Destroys the document instance.
 
+	The document must be open before using this method.
+
 	If session locked, will save the document and remove the lock first.
+	If this fails, the document will not be destroyed.
 
 	After closing a Document, you will need to call 
 	DocumentStore:GetDocument() to retrieve a new one if you wish to access the
 	Document again.
 
-	@return ReadWriteResult<T?>
+	@return WriteResult<T?>
 
 	@yields
 ]=]
-function Document.Close<T>(self: Document<T>): ReadWriteResult<T?>
+function Document.Close<T>(self: Document<T>): WriteResult<T?>
 	assert(self._open, "Document not open")
 
 	runHooks(self._preHooks.Close)
@@ -577,7 +601,7 @@ function Document.Close<T>(self: Document<T>): ReadWriteResult<T?>
 	-- This causes :Save to also remove the session lock
 	self._isClosing = true
 
-	local result: ReadWriteResult<T>
+	local result: WriteResult<T>
 
 	if self._lockSessions then
 		result = self:Save()
@@ -610,6 +634,8 @@ end
 --[=[
 	Sets the cache.
 
+	The document must be open before using this method.
+
 	:::warning
 	You can only use cache for session-locked data. See `Open` for how to
 	enable session locking.
@@ -634,6 +660,8 @@ end
 --[=[
 	Retrieves the cache.
 
+	The document must be open before using this method.
+
 	:::warning
 	You can only use cache for session-locked data. See `Open` for how to
 	enable session locking.
@@ -654,6 +682,8 @@ end
 
 --[=[
 	Transforms the cache.
+
+	A document must be open before using this method.
 
 	:::warning
 	You can only use cache for session-locked data. See `Open` for how to
@@ -677,59 +707,9 @@ function Document.UpdateCache<T>(self: Document<T>, transform: Transform<T>): T
 end
 
 --[=[
-	Reads from the DataStore.
-
-	:::warning
-	Overwrites the cache. If you are using session locking, you should only read once.
-	:::
-	
-	@return ReadWriteResult<T>
-
-	@yields
-]=]
-function Document.Read<T>(self: Document<T>): ReadWriteResult<T>
-	assert(self._open, "Document not open - open it or use Peek instead")
-
-	runHooks(self._preHooks.Read)
-
-	local success, getData = SaveUtil.getAsync(self._dataStore, self._key)
-	-- As the Document is open we know the data is valid
-	local keyData: KeyData<T> = getData :: KeyData<T>
-	-- Unless it has been edited outside of the library, in which case error
-	assert(keyData.data, "Key data missing")
-
-	if not success then
-		return {
-			success = false,
-			reason = "RobloxAPIError",
-		} :: ReadWriteResult<T>
-	end
-
-	-- Check if the lock is stolen
-	local locked = isLocked(keyData)
-	local lockedByUs = locked and (keyData.sessionLockId == self._sessionId)
-
-	if locked and not lockedByUs then
-		return {
-			success = false,
-			reason = "SessionLockedError",
-		}
-	end
-
-	if self._lockSessions then
-		self:SetCache(keyData.data)
-	end
-
-	runHooks(self._postHooks)
-
-	return {
-		success = true,
-		data = keyData.data,
-	}
-end
-
---[=[
 	Performs an atomic transaction on the Document, writing to the DataStore.
+
+	The document must be open before using this method.
 
 	If using session locking, transforms will build on cached data.
 
@@ -746,11 +726,11 @@ end
 	:::
 
 	@param transform -- Transform function for the transaction.
-	@return ReadWriteResult<T>
+	@return WriteResult<T>
 
 	@yields
 ]=]
-function Document.Update<T>(self: Document<T>, transform: Transform<T>): ReadWriteResult<T>
+function Document.Update<T>(self: Document<T>, transform: Transform<T>): WriteResult<T>
 	assert(self._open, "Document not open")
 
 	runHooks(self._preHooks.Update)
@@ -758,14 +738,22 @@ function Document.Update<T>(self: Document<T>, transform: Transform<T>): ReadWri
 	local lockedByOther: boolean
 	local transformInvalid: boolean
 	local notStorable: boolean
+	local schemaError: boolean
 	local notStorableErr: string
 
-	local success, updatedKeyData = SaveUtil.updateAsync(function(keyData: KeyData<T>): KeyData<T>?
+	local success, updatedKeyData = SaveUtil.updateAsync(function(value: unknown): KeyData<T>?
 		-- Reset error flags in case callback runs multiple times
 		lockedByOther = false
 		transformInvalid = false
 		notStorable = false
 		notStorableErr = ""
+
+		local keyData = checkKeyData(value)
+
+		if not keyData then
+			schemaError = true
+			return
+		end
 
 		-- Check if lock has been stolen
 		local locked = isLocked(keyData)
@@ -836,6 +824,13 @@ function Document.Update<T>(self: Document<T>, transform: Transform<T>): ReadWri
 		}
 	end
 
+	if schemaError then
+		return {
+			success = false,
+			reason = "SchemaError",
+		}
+	end
+
 	-- Cast to KeyData<T> since the new data has already passed self._check and
 	-- the update succeeded.
 	local updatedData: T = (updatedKeyData :: KeyData<T>).data
@@ -844,32 +839,30 @@ function Document.Update<T>(self: Document<T>, transform: Transform<T>): ReadWri
 		self:SetCache(updatedData)
 	end
 
-	local result: ReadWriteResult<T> = {
+	runHooks(self._postHooks.Update)
+
+	return {
 		success = true,
 		data = updatedData,
 	}
-
-	runHooks(self._postHooks.Update)
-
-	return result
 end
 
 --[=[
 	Saves a Document's cache to its DataStore. Equivalent to calling Update
 	without transforming the data.
 
-	Can fail due to `RobloxAPIFail` or `SessionLocked` (in the case the lock is stolen).
+	The document must be open before using this method.
 
 	:::warning
 	You can only use cache for session-locked data. See `Open` for how to
 	enable session locking.
 	:::
 
-	@return ReadWriteResult<T>
+	@return WriteResult<T>
 
 	@yields
 ]=]
-function Document.Save<T>(self: Document<T>): ReadWriteResult<T>
+function Document.Save<T>(self: Document<T>): WriteResult<T>
 	assert(self._open, "Document not open")
 	assert(self._lockSessions, "Must be session locked to access cache")
 
@@ -879,7 +872,10 @@ function Document.Save<T>(self: Document<T>): ReadWriteResult<T>
 end
 
 --[=[
-	Wipes all data associated with the key and closes the document.
+	Erases all data associated with the key.
+
+	The document cannot be open. It is up to you to check if the document
+	is open elsewhere, e.g. via `IsOpenAvailable`.
 
 	Satisfies compliance with GDPR right of erasure.
 
@@ -888,32 +884,35 @@ end
 	@yields
 ]=]
 function Document.Erase<T>(self: Document<T>): Result<nil, RobloxAPIError>
-	self:Close()
+	assert(not self._open, "Cannot erase an open document")
+
 	local success = SaveUtil.removeAsync(self._dataStore, self._key)
 
-	if success then
-		return {
-			success = true,
-		}
-	else
+	if not success then
 		return {
 			success = false,
 			reason = "RobloxAPIError",
 		}
 	end
+
+	return {
+		success = true,
+	}
 end
 
 --[=[
-	Reads the data of a potentially locked or unopened Document.
+	Reads the latest data stored in Data Stores.
 
-	Does not update the cache.
+	This may be called while the document is not open, so the return type is
+
+	Runs Read hooks.
 
 	@return Result<any, RobloxAPIError | SchemaError>
 
 	@yields
 ]=]
 function Document.Peek<T>(self: Document<T>): Result<any, RobloxAPIError | SchemaError>
-	assert(not self._open, "Document open - use Read instead")
+	runHooks(self._preHooks.Read)
 
 	local success, getValue: any = SaveUtil.getAsync(self._dataStore, self._key)
 
@@ -924,7 +923,7 @@ function Document.Peek<T>(self: Document<T>): Result<any, RobloxAPIError | Schem
 		}
 	end
 
-	local keyData = getKeyData(getValue)
+	local keyData = checkKeyData(getValue)
 
 	if not keyData then
 		return {
@@ -933,9 +932,38 @@ function Document.Peek<T>(self: Document<T>): Result<any, RobloxAPIError | Schem
 		}
 	end
 
+	runHooks(self._postHooks.Read)
+
 	return {
 		success = true,
 		data = keyData.data,
+	}
+end
+
+--[=[
+	Reads the latest data stored in Data Stores.
+
+	Peeks, but can only be called once the Document is open, so
+	the returned Result.data is typed.
+
+	Since this calls Peek, Read hooks are run.
+	
+	@return Result<T, RobloxAPIError | SchemaError>
+
+	@yields
+]=]
+function Document.Read<T>(self: Document<T>): Result<T, RobloxAPIError | SchemaError>
+	assert(self._open, "Document not open - open it or use Peek instead")
+
+	local result = self:Peek()
+
+	if not result.success then
+		return result
+	end
+
+	return {
+		success = true,
+		data = result.data :: T,
 	}
 end
 
