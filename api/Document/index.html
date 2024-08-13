@@ -24,8 +24,13 @@ and does not need multi-server editing.
 :::warning
 You are free to edit the contents of the table in the .data field with
 a tool like DataStore Editor, but manually changing other fields could cause
-data loss and errors. You should also take care not to edit any data while
-a Document is open and session locked.
+data loss and errors.
+:::
+
+:::warning
+Types for your data are provided under the assumption that the data
+stored in Data Stores will not change schema/interface while a Document
+is open.
 :::"><meta data-rh="true" property="og:description" content="An abstraction over keys in a DataStore.
 
 Documents are designed to contain information about an entity in a schema.
@@ -47,11 +52,16 @@ and does not need multi-server editing.
 :::warning
 You are free to edit the contents of the table in the .data field with
 a tool like DataStore Editor, but manually changing other fields could cause
-data loss and errors. You should also take care not to edit any data while
-a Document is open and session locked.
+data loss and errors.
+:::
+
+:::warning
+Types for your data are provided under the assumption that the data
+stored in Data Stores will not change schema/interface while a Document
+is open.
 :::"><link data-rh="true" rel="canonical" href="https://anthony0br.github.io/DocumentService/api/Document"><link data-rh="true" rel="alternate" href="https://anthony0br.github.io/DocumentService/api/Document" hreflang="en"><link data-rh="true" rel="alternate" href="https://anthony0br.github.io/DocumentService/api/Document" hreflang="x-default"><link rel="stylesheet" href="/DocumentService/assets/css/styles.fd8953ce.css">
-<link rel="preload" href="/DocumentService/assets/js/runtime~main.4e063bf3.js" as="script">
-<link rel="preload" href="/DocumentService/assets/js/main.ce8166e9.js" as="script">
+<link rel="preload" href="/DocumentService/assets/js/runtime~main.77aab6ca.js" as="script">
+<link rel="preload" href="/DocumentService/assets/js/main.905ccee7.js" as="script">
 </head>
 <body class="navigation-with-keyboard">
 <script>!function(){function e(e){document.documentElement.setAttribute("data-theme",e)}var t=function(){var e=null;try{e=localStorage.getItem("theme")}catch(e){}return e}();null!==t?e(t):window.matchMedia("(prefers-color-scheme: dark)").matches?e("dark"):(window.matchMedia("(prefers-color-scheme: light)").matches,e("light"))}()</script><div id="__docusaurus">
@@ -94,12 +104,25 @@ a Document is open and session locked.
     <p>
       You are free to edit the contents of the table in the .data field with
       a tool like DataStore Editor, but manually changing other fields could cause
-      data loss and errors. You should also take care not to edit any data while
-      a Document is open and session locked.
+      data loss and errors.
     </p>
   </div>
 </div>
-</div></header><h2 class="anchor anchorWithStickyNavbar_LWe7" id="types">Types<a href="#types" class="hash-link" aria-label="Direct link to Types" title="Direct link to Types">​</a></h2><div class="divider_rE5g"></div><h3 class="anchor anchorWithStickyNavbar_LWe7" id="ReadWriteResult&lt;T&gt;"><code style="text-decoration:none">ReadWriteResult&lt;T&gt;</code><a href="#ReadWriteResult&lt;T&gt;" class="hash-link" aria-label="Direct link to ReadWriteResult&lt;T&gt;" title="Direct link to ReadWriteResult&lt;T&gt;">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/anthony0br/DocumentService/blob/main/src/Document.luau#L94"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code class="purple_ieR2">type</code> <code>ReadWriteResult&lt;T&gt;<!-- --> = </code> <code class="blue_P4bS">Result</code><code class="op_lSLc">&lt;</code><code class="blue_P4bS">T,</code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/DocumentService/api/DocumentService#RobloxAPIError">RobloxAPIError</a></code><code class="op_lSLc"> | </code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/DocumentService/api/DocumentService#SessionLockedError">SessionLockedError</a></code><code class="op_lSLc">&gt;</code></div><div></div><h2 class="anchor anchorWithStickyNavbar_LWe7" id="functions">Functions<a href="#functions" class="hash-link" aria-label="Direct link to Functions" title="Direct link to Functions">​</a></h2><div class="divider_rE5g"></div><h3 class="anchor anchorWithStickyNavbar_LWe7" id="Open"><code style="text-decoration:none">Open</code><a href="#Open" class="hash-link" aria-label="Direct link to Open" title="Direct link to Open">​</a></h3><span class="badge_Ba2I" style="color:#f1c40f"><span class="badgeTooltip_cWXP">This is a yielding function. When called, it will pause the Lua thread that called the function until a result is ready to be returned, without interrupting other scripts.</span><span class="badgeToolTipTail_H9D_"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="#f1c40f" role="img" aria-label="This is a yielding function. When called, it will pause the Lua thread that called the function until a result is ready to be returned, without interrupting other scripts."><path d="M96.4 11.9c-1.4-2.5-4-4-6.9-4H10.8c-2.9 0-5.4 1.5-6.9 4-1.4 2.5-1.4 5.5 0 7.9L43.3 88c1.4 2.5 4 4 6.9 4 2.9 0 5.4-1.5 6.9-4l39.3-68.2c1.4-2.4 1.4-5.4 0-7.9zM46.3 54.5c1.1-1.1 2.3-1.6 3.8-1.6s2.8.5 3.8 1.6c1.1 1.1 1.6 2.3 1.6 3.8s-.5 2.8-1.6 3.8c-1.1 1.1-2.3 1.6-3.8 1.6s-2.8-.5-3.8-1.6c-1.1-1.1-1.6-2.3-1.6-3.8.1-1.5.6-2.8 1.6-3.8zm-.5-4.9V21.8h8.8v27.8h-8.8z"></path></svg> <!-- -->Yields</span></span><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/anthony0br/DocumentService/blob/main/src/Document.luau#L297"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>Document<!-- -->.</code><code class="green_DgR4">Open</code><code>(</code><code>self<!-- -->: </code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/DocumentService/api/Document">Document</a></code><code class="op_lSLc">&lt;</code><code class="blue_P4bS">T</code><code class="op_lSLc">&gt;</code><code>) → </code><code class="blue_P4bS">OpenResult</code><code class="op_lSLc">&lt;</code><code class="blue_P4bS">T</code><code class="op_lSLc">&gt;</code></div><h3>Types</h3><h3 class="anchor anchorWithStickyNavbar_LWe7" id="OpenResult&lt;T&gt;"><a href="#OpenResult&lt;T&gt;" class="hash-link" aria-label="Direct link to OpenResult&lt;T&gt;" title="Direct link to OpenResult&lt;T&gt;">​</a></h3><div class="memberString_GwaU"><code class="purple_ieR2">type</code> <code>OpenResult&lt;T&gt;<!-- --> = </code> <code class="blue_P4bS">Result</code><code class="op_lSLc">&lt;</code><code class="blue_P4bS">T,</code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/DocumentService/api/DocumentService#RobloxAPIError">RobloxAPIError</a></code><code class="op_lSLc"> | </code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/DocumentService/api/DocumentService#BackwardsCompatibilityError">BackwardsCompatibilityError</a></code><code class="op_lSLc"> | </code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/DocumentService/api/DocumentService#CheckError">CheckError</a></code><code class="op_lSLc"> | </code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/DocumentService/api/DocumentService#SessionLockedError">SessionLockedError</a></code><code class="op_lSLc">&gt;</code></div><div></div><div>
+<div class="admonition admonition-warning alert alert--danger">
+  <div class="admonition-heading">
+    <h5><span class="admonition-icon"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="16" viewBox="0 0 12 16">
+          <path d="M5.05.31c.81 2.17.41 3.38-.52 4.31C3.55 5.67 1.98 6.45.9 7.98c-1.45 2.05-1.7 6.53 3.53 7.7-2.2-1.16-2.67-4.52-.3-6.61-.61 2.03.53 3.33 1.94 2.86 1.39-.47 2.3.53 2.27 1.67-.02.78-.31 1.44-1.13 1.81 3.42-.59 4.78-3.42 4.78-5.56 0-2.84-2.53-3.22-1.25-5.61-1.52.13-2.03 1.13-1.89 2.75.09 1.08-1.02 1.8-1.86 1.33-.67-.41-.66-1.19-.06-1.78C8.18 5.31 8.68 2.45 5.05.32L5.03.3l.02.01z"></path>
+        </svg></span>warning</h5>
+  </div>
+  <div class="admonition-content">
+    <p>
+      Types for your data are provided under the assumption that the data
+      stored in Data Stores will not change schema/interface while a Document
+      is open.
+    </p>
+  </div>
+</div>
+</div></header><h2 class="anchor anchorWithStickyNavbar_LWe7" id="types">Types<a href="#types" class="hash-link" aria-label="Direct link to Types" title="Direct link to Types">​</a></h2><div class="divider_rE5g"></div><h3 class="anchor anchorWithStickyNavbar_LWe7" id="WriteResult&lt;T&gt;"><code style="text-decoration:none">WriteResult&lt;T&gt;</code><a href="#WriteResult&lt;T&gt;" class="hash-link" aria-label="Direct link to WriteResult&lt;T&gt;" title="Direct link to WriteResult&lt;T&gt;">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/anthony0br/DocumentService/blob/main/src/Document.luau#L100"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code class="purple_ieR2">type</code> <code>WriteResult&lt;T&gt;<!-- --> = </code> <code class="blue_P4bS">Result</code><code class="op_lSLc">&lt;</code><code class="blue_P4bS">T,</code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/DocumentService/api/DocumentService#RobloxAPIError">RobloxAPIError</a></code><code class="op_lSLc"> | </code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/DocumentService/api/DocumentService#SessionLockedError">SessionLockedError</a></code><code class="op_lSLc">&gt;</code></div><div></div><h2 class="anchor anchorWithStickyNavbar_LWe7" id="functions">Functions<a href="#functions" class="hash-link" aria-label="Direct link to Functions" title="Direct link to Functions">​</a></h2><div class="divider_rE5g"></div><h3 class="anchor anchorWithStickyNavbar_LWe7" id="Open"><code style="text-decoration:none">Open</code><a href="#Open" class="hash-link" aria-label="Direct link to Open" title="Direct link to Open">​</a></h3><span class="badge_Ba2I" style="color:#f1c40f"><span class="badgeTooltip_cWXP">This is a yielding function. When called, it will pause the Lua thread that called the function until a result is ready to be returned, without interrupting other scripts.</span><span class="badgeToolTipTail_H9D_"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="#f1c40f" role="img" aria-label="This is a yielding function. When called, it will pause the Lua thread that called the function until a result is ready to be returned, without interrupting other scripts."><path d="M96.4 11.9c-1.4-2.5-4-4-6.9-4H10.8c-2.9 0-5.4 1.5-6.9 4-1.4 2.5-1.4 5.5 0 7.9L43.3 88c1.4 2.5 4 4 6.9 4 2.9 0 5.4-1.5 6.9-4l39.3-68.2c1.4-2.4 1.4-5.4 0-7.9zM46.3 54.5c1.1-1.1 2.3-1.6 3.8-1.6s2.8.5 3.8 1.6c1.1 1.1 1.6 2.3 1.6 3.8s-.5 2.8-1.6 3.8c-1.1 1.1-2.3 1.6-3.8 1.6s-2.8-.5-3.8-1.6c-1.1-1.1-1.6-2.3-1.6-3.8.1-1.5.6-2.8 1.6-3.8zm-.5-4.9V21.8h8.8v27.8h-8.8z"></path></svg> <!-- -->Yields</span></span><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/anthony0br/DocumentService/blob/main/src/Document.luau#L309"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>Document<!-- -->.</code><code class="green_DgR4">Open</code><code>(</code><code>self<!-- -->: </code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/DocumentService/api/Document">Document</a></code><code class="op_lSLc">&lt;</code><code class="blue_P4bS">T</code><code class="op_lSLc">&gt;</code><code>) → </code><code class="blue_P4bS">OpenResult</code><code class="op_lSLc">&lt;</code><code class="blue_P4bS">T</code><code class="op_lSLc">&gt;</code></div><h3>Types</h3><h3 class="anchor anchorWithStickyNavbar_LWe7" id="OpenResult&lt;T&gt;"><a href="#OpenResult&lt;T&gt;" class="hash-link" aria-label="Direct link to OpenResult&lt;T&gt;" title="Direct link to OpenResult&lt;T&gt;">​</a></h3><div class="memberString_GwaU"><code class="purple_ieR2">type</code> <code>OpenResult&lt;T&gt;<!-- --> = </code> <code class="blue_P4bS">Result</code><code class="op_lSLc">&lt;</code><code class="blue_P4bS">T,</code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/DocumentService/api/DocumentService#RobloxAPIError">RobloxAPIError</a></code><code class="op_lSLc"> | </code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/DocumentService/api/DocumentService#BackwardsCompatibilityError">BackwardsCompatibilityError</a></code><code class="op_lSLc"> | </code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/DocumentService/api/DocumentService#CheckError">CheckError</a></code><code class="op_lSLc"> | </code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/DocumentService/api/DocumentService#SessionLockedError">SessionLockedError</a></code><code class="op_lSLc">&gt;</code></div><div></div><div>
 <p>
   Validates the document if one exists, creates a default document if no
   document exists, or creates a document with the data that is in the given
@@ -135,7 +158,7 @@ a Document is open and session locked.
     </p>
   </div>
 </div>
-</div><div class="divider_rE5g"></div><h3 class="anchor anchorWithStickyNavbar_LWe7" id="Steal"><code style="text-decoration:none">Steal</code><a href="#Steal" class="hash-link" aria-label="Direct link to Steal" title="Direct link to Steal">​</a></h3><span class="badge_Ba2I" style="color:#f1c40f"><span class="badgeTooltip_cWXP">This is a yielding function. When called, it will pause the Lua thread that called the function until a result is ready to be returned, without interrupting other scripts.</span><span class="badgeToolTipTail_H9D_"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="#f1c40f" role="img" aria-label="This is a yielding function. When called, it will pause the Lua thread that called the function until a result is ready to be returned, without interrupting other scripts."><path d="M96.4 11.9c-1.4-2.5-4-4-6.9-4H10.8c-2.9 0-5.4 1.5-6.9 4-1.4 2.5-1.4 5.5 0 7.9L43.3 88c1.4 2.5 4 4 6.9 4 2.9 0 5.4-1.5 6.9-4l39.3-68.2c1.4-2.4 1.4-5.4 0-7.9zM46.3 54.5c1.1-1.1 2.3-1.6 3.8-1.6s2.8.5 3.8 1.6c1.1 1.1 1.6 2.3 1.6 3.8s-.5 2.8-1.6 3.8c-1.1 1.1-2.3 1.6-3.8 1.6s-2.8-.5-3.8-1.6c-1.1-1.1-1.6-2.3-1.6-3.8.1-1.5.6-2.8 1.6-3.8zm-.5-4.9V21.8h8.8v27.8h-8.8z"></path></svg> <!-- -->Yields</span></span><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/anthony0br/DocumentService/blob/main/src/Document.luau#L444"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>Document<!-- -->.</code><code class="green_DgR4">Steal</code><code>(</code><code>self<!-- -->: </code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/DocumentService/api/Document">Document</a></code><code class="op_lSLc">&lt;</code><code class="blue_P4bS">T</code><code class="op_lSLc">&gt;</code><code>) → </code><code class="blue_P4bS">Result</code><code class="op_lSLc">&lt;</code><code class="blue_P4bS">T,</code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/DocumentService/api/DocumentService#RobloxAPIError">RobloxAPIError</a></code><code class="op_lSLc"> | </code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/DocumentService/api/DocumentService#SchemaError">SchemaError</a></code><code class="op_lSLc">&gt;</code></div><div>
+</div><div class="divider_rE5g"></div><h3 class="anchor anchorWithStickyNavbar_LWe7" id="Steal"><code style="text-decoration:none">Steal</code><a href="#Steal" class="hash-link" aria-label="Direct link to Steal" title="Direct link to Steal">​</a></h3><span class="badge_Ba2I" style="color:#f1c40f"><span class="badgeTooltip_cWXP">This is a yielding function. When called, it will pause the Lua thread that called the function until a result is ready to be returned, without interrupting other scripts.</span><span class="badgeToolTipTail_H9D_"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="#f1c40f" role="img" aria-label="This is a yielding function. When called, it will pause the Lua thread that called the function until a result is ready to be returned, without interrupting other scripts."><path d="M96.4 11.9c-1.4-2.5-4-4-6.9-4H10.8c-2.9 0-5.4 1.5-6.9 4-1.4 2.5-1.4 5.5 0 7.9L43.3 88c1.4 2.5 4 4 6.9 4 2.9 0 5.4-1.5 6.9-4l39.3-68.2c1.4-2.4 1.4-5.4 0-7.9zM46.3 54.5c1.1-1.1 2.3-1.6 3.8-1.6s2.8.5 3.8 1.6c1.1 1.1 1.6 2.3 1.6 3.8s-.5 2.8-1.6 3.8c-1.1 1.1-2.3 1.6-3.8 1.6s-2.8-.5-3.8-1.6c-1.1-1.1-1.6-2.3-1.6-3.8.1-1.5.6-2.8 1.6-3.8zm-.5-4.9V21.8h8.8v27.8h-8.8z"></path></svg> <!-- -->Yields</span></span><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/anthony0br/DocumentService/blob/main/src/Document.luau#L455"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>Document<!-- -->.</code><code class="green_DgR4">Steal</code><code>(</code><code>self<!-- -->: </code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/DocumentService/api/Document">Document</a></code><code class="op_lSLc">&lt;</code><code class="blue_P4bS">T</code><code class="op_lSLc">&gt;</code><code>) → </code><code class="blue_P4bS">Result</code><code class="op_lSLc">&lt;</code><code class="blue_P4bS">T,</code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/DocumentService/api/DocumentService#RobloxAPIError">RobloxAPIError</a></code><code class="op_lSLc"> | </code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/DocumentService/api/DocumentService#SchemaError">SchemaError</a></code><code class="op_lSLc">&gt;</code></div><div>
 <p>
   Steals a session lock. This removes any existing lock held by any other
   session, and locks the document for ourselves.
@@ -154,9 +177,12 @@ a Document is open and session locked.
     </p>
   </div>
 </div>
-</div><div class="divider_rE5g"></div><h3 class="anchor anchorWithStickyNavbar_LWe7" id="IsWriteAvailable"><code style="text-decoration:none">IsWriteAvailable</code><a href="#IsWriteAvailable" class="hash-link" aria-label="Direct link to IsWriteAvailable" title="Direct link to IsWriteAvailable">​</a></h3><span class="badge_Ba2I" style="color:#f1c40f"><span class="badgeTooltip_cWXP">This is a yielding function. When called, it will pause the Lua thread that called the function until a result is ready to be returned, without interrupting other scripts.</span><span class="badgeToolTipTail_H9D_"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="#f1c40f" role="img" aria-label="This is a yielding function. When called, it will pause the Lua thread that called the function until a result is ready to be returned, without interrupting other scripts."><path d="M96.4 11.9c-1.4-2.5-4-4-6.9-4H10.8c-2.9 0-5.4 1.5-6.9 4-1.4 2.5-1.4 5.5 0 7.9L43.3 88c1.4 2.5 4 4 6.9 4 2.9 0 5.4-1.5 6.9-4l39.3-68.2c1.4-2.4 1.4-5.4 0-7.9zM46.3 54.5c1.1-1.1 2.3-1.6 3.8-1.6s2.8.5 3.8 1.6c1.1 1.1 1.6 2.3 1.6 3.8s-.5 2.8-1.6 3.8c-1.1 1.1-2.3 1.6-3.8 1.6s-2.8-.5-3.8-1.6c-1.1-1.1-1.6-2.3-1.6-3.8.1-1.5.6-2.8 1.6-3.8zm-.5-4.9V21.8h8.8v27.8h-8.8z"></path></svg> <!-- -->Yields</span></span><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/anthony0br/DocumentService/blob/main/src/Document.luau#L507"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>Document<!-- -->.</code><code class="green_DgR4">IsWriteAvailable</code><code>(</code><code>self<!-- -->: </code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/DocumentService/api/Document">Document</a></code><code class="op_lSLc">&lt;</code><code class="blue_P4bS">T</code><code class="op_lSLc">&gt;</code><code>) → </code><code class="blue_P4bS">Result</code><code class="op_lSLc">&lt;</code><code class="blue_P4bS">boolean,</code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/DocumentService/api/DocumentService#RobloxAPIError">RobloxAPIError</a></code><code class="op_lSLc"> | </code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/DocumentService/api/DocumentService#SchemaError">SchemaError</a></code><code class="op_lSLc">&gt;</code></div><div>
-<p>Returns false if the Document is locked by another session.</p>
-<p>If props.sessionLock is false, it will always return true.</p>
+</div><div class="divider_rE5g"></div><h3 class="anchor anchorWithStickyNavbar_LWe7" id="IsOpenAvailable"><code style="text-decoration:none">IsOpenAvailable</code><a href="#IsOpenAvailable" class="hash-link" aria-label="Direct link to IsOpenAvailable" title="Direct link to IsOpenAvailable">​</a></h3><span class="badge_Ba2I" style="color:#f1c40f"><span class="badgeTooltip_cWXP">This is a yielding function. When called, it will pause the Lua thread that called the function until a result is ready to be returned, without interrupting other scripts.</span><span class="badgeToolTipTail_H9D_"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="#f1c40f" role="img" aria-label="This is a yielding function. When called, it will pause the Lua thread that called the function until a result is ready to be returned, without interrupting other scripts."><path d="M96.4 11.9c-1.4-2.5-4-4-6.9-4H10.8c-2.9 0-5.4 1.5-6.9 4-1.4 2.5-1.4 5.5 0 7.9L43.3 88c1.4 2.5 4 4 6.9 4 2.9 0 5.4-1.5 6.9-4l39.3-68.2c1.4-2.4 1.4-5.4 0-7.9zM46.3 54.5c1.1-1.1 2.3-1.6 3.8-1.6s2.8.5 3.8 1.6c1.1 1.1 1.6 2.3 1.6 3.8s-.5 2.8-1.6 3.8c-1.1 1.1-2.3 1.6-3.8 1.6s-2.8-.5-3.8-1.6c-1.1-1.1-1.6-2.3-1.6-3.8.1-1.5.6-2.8 1.6-3.8zm-.5-4.9V21.8h8.8v27.8h-8.8z"></path></svg> <!-- -->Yields</span></span><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/anthony0br/DocumentService/blob/main/src/Document.luau#L519"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>Document<!-- -->.</code><code class="green_DgR4">IsOpenAvailable</code><code>(</code><code>self<!-- -->: </code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/DocumentService/api/Document">Document</a></code><code class="op_lSLc">&lt;</code><code class="blue_P4bS">T</code><code class="op_lSLc">&gt;</code><code>) → </code><code class="blue_P4bS">Result</code><code class="op_lSLc">&lt;</code><code class="blue_P4bS">boolean,</code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/DocumentService/api/DocumentService#RobloxAPIError">RobloxAPIError</a></code><code class="op_lSLc">&gt;</code></div><div>
+<p>
+  Returns a false Result if Document is currently open, locked by another
+  session, otherwise returns a true Result.
+</p>
+<p>If props.lockSessions is false, this will always return a true Result.</p>
 <div class="admonition admonition-tip alert alert--success">
   <div class="admonition-heading">
     <h5><span class="admonition-icon"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="16" viewBox="0 0 12 16">
@@ -170,18 +196,20 @@ a Document is open and session locked.
     </p>
   </div>
 </div>
-</div><div class="divider_rE5g"></div><h3 class="anchor anchorWithStickyNavbar_LWe7" id="IsOpen"><code style="text-decoration:none">IsOpen</code><a href="#IsOpen" class="hash-link" aria-label="Direct link to IsOpen" title="Direct link to IsOpen">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/anthony0br/DocumentService/blob/main/src/Document.luau#L549"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>Document<!-- -->.</code><code class="green_DgR4">IsOpen</code><code>(</code><code>self<!-- -->: </code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/DocumentService/api/Document">Document</a></code><code class="op_lSLc">&lt;</code><code class="blue_P4bS">T</code><code class="op_lSLc">&gt;</code><code>) → </code><code class="blue_P4bS">boolean</code></div><div>
+</div><div class="divider_rE5g"></div><h3 class="anchor anchorWithStickyNavbar_LWe7" id="IsOpen"><code style="text-decoration:none">IsOpen</code><a href="#IsOpen" class="hash-link" aria-label="Direct link to IsOpen" title="Direct link to IsOpen">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/anthony0br/DocumentService/blob/main/src/Document.luau#L570"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>Document<!-- -->.</code><code class="green_DgR4">IsOpen</code><code>(</code><code>self<!-- -->: </code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/DocumentService/api/Document">Document</a></code><code class="op_lSLc">&lt;</code><code class="blue_P4bS">T</code><code class="op_lSLc">&gt;</code><code>) → </code><code class="blue_P4bS">boolean</code></div><div>
 <p>Returns whether the document is open or not</p>
-</div><div class="divider_rE5g"></div><h3 class="anchor anchorWithStickyNavbar_LWe7" id="Close"><code style="text-decoration:none">Close</code><a href="#Close" class="hash-link" aria-label="Direct link to Close" title="Direct link to Close">​</a></h3><span class="badge_Ba2I" style="color:#f1c40f"><span class="badgeTooltip_cWXP">This is a yielding function. When called, it will pause the Lua thread that called the function until a result is ready to be returned, without interrupting other scripts.</span><span class="badgeToolTipTail_H9D_"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="#f1c40f" role="img" aria-label="This is a yielding function. When called, it will pause the Lua thread that called the function until a result is ready to be returned, without interrupting other scripts."><path d="M96.4 11.9c-1.4-2.5-4-4-6.9-4H10.8c-2.9 0-5.4 1.5-6.9 4-1.4 2.5-1.4 5.5 0 7.9L43.3 88c1.4 2.5 4 4 6.9 4 2.9 0 5.4-1.5 6.9-4l39.3-68.2c1.4-2.4 1.4-5.4 0-7.9zM46.3 54.5c1.1-1.1 2.3-1.6 3.8-1.6s2.8.5 3.8 1.6c1.1 1.1 1.6 2.3 1.6 3.8s-.5 2.8-1.6 3.8c-1.1 1.1-2.3 1.6-3.8 1.6s-2.8-.5-3.8-1.6c-1.1-1.1-1.6-2.3-1.6-3.8.1-1.5.6-2.8 1.6-3.8zm-.5-4.9V21.8h8.8v27.8h-8.8z"></path></svg> <!-- -->Yields</span></span><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/anthony0br/DocumentService/blob/main/src/Document.luau#L566"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>Document<!-- -->.</code><code class="green_DgR4">Close</code><code>(</code><code>self<!-- -->: </code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/DocumentService/api/Document">Document</a></code><code class="op_lSLc">&lt;</code><code class="blue_P4bS">T</code><code class="op_lSLc">&gt;</code><code>) → </code><code class="blue_P4bS">ReadWriteResult</code><code class="op_lSLc">&lt;</code><code class="blue_P4bS">T?</code><code class="op_lSLc">&gt;</code></div><div>
+</div><div class="divider_rE5g"></div><h3 class="anchor anchorWithStickyNavbar_LWe7" id="Close"><code style="text-decoration:none">Close</code><a href="#Close" class="hash-link" aria-label="Direct link to Close" title="Direct link to Close">​</a></h3><span class="badge_Ba2I" style="color:#f1c40f"><span class="badgeTooltip_cWXP">This is a yielding function. When called, it will pause the Lua thread that called the function until a result is ready to be returned, without interrupting other scripts.</span><span class="badgeToolTipTail_H9D_"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="#f1c40f" role="img" aria-label="This is a yielding function. When called, it will pause the Lua thread that called the function until a result is ready to be returned, without interrupting other scripts."><path d="M96.4 11.9c-1.4-2.5-4-4-6.9-4H10.8c-2.9 0-5.4 1.5-6.9 4-1.4 2.5-1.4 5.5 0 7.9L43.3 88c1.4 2.5 4 4 6.9 4 2.9 0 5.4-1.5 6.9-4l39.3-68.2c1.4-2.4 1.4-5.4 0-7.9zM46.3 54.5c1.1-1.1 2.3-1.6 3.8-1.6s2.8.5 3.8 1.6c1.1 1.1 1.6 2.3 1.6 3.8s-.5 2.8-1.6 3.8c-1.1 1.1-2.3 1.6-3.8 1.6s-2.8-.5-3.8-1.6c-1.1-1.1-1.6-2.3-1.6-3.8.1-1.5.6-2.8 1.6-3.8zm-.5-4.9V21.8h8.8v27.8h-8.8z"></path></svg> <!-- -->Yields</span></span><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/anthony0br/DocumentService/blob/main/src/Document.luau#L589"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>Document<!-- -->.</code><code class="green_DgR4">Close</code><code>(</code><code>self<!-- -->: </code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/DocumentService/api/Document">Document</a></code><code class="op_lSLc">&lt;</code><code class="blue_P4bS">T</code><code class="op_lSLc">&gt;</code><code>) → </code><code class="blue_P4bS">WriteResult</code><code class="op_lSLc">&lt;</code><code class="blue_P4bS">T?</code><code class="op_lSLc">&gt;</code></div><div>
 <p>Destroys the document instance.</p>
+<p>The document must be open before using this method.</p>
 <p>If session locked, will save the document and remove the lock first.</p>
 <p>
   After closing a Document, you will need to call
   DocumentStore:GetDocument() to retrieve a new one if you wish to access the
   Document again.
 </p>
-</div><div class="divider_rE5g"></div><h3 class="anchor anchorWithStickyNavbar_LWe7" id="SetCache"><code style="text-decoration:none">SetCache</code><a href="#SetCache" class="hash-link" aria-label="Direct link to SetCache" title="Direct link to SetCache">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/anthony0br/DocumentService/blob/main/src/Document.luau#L606"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>Document<!-- -->.</code><code class="green_DgR4">SetCache</code><code>(</code><div class="inset_uKQm"><div><code>self<!-- -->: </code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/DocumentService/api/Document">Document</a></code><code class="op_lSLc">&lt;</code><code class="blue_P4bS">T</code><code class="op_lSLc">&gt;</code><code>,</code></div><div><code>newCache<!-- -->: </code><code class="blue_P4bS">T</code></div></div><code>) → </code><code class="blue_P4bS">T</code></div><div>
+</div><div class="divider_rE5g"></div><h3 class="anchor anchorWithStickyNavbar_LWe7" id="SetCache"><code style="text-decoration:none">SetCache</code><a href="#SetCache" class="hash-link" aria-label="Direct link to SetCache" title="Direct link to SetCache">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/anthony0br/DocumentService/blob/main/src/Document.luau#L644"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>Document<!-- -->.</code><code class="green_DgR4">SetCache</code><code>(</code><div class="inset_uKQm"><div><code>self<!-- -->: </code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/DocumentService/api/Document">Document</a></code><code class="op_lSLc">&lt;</code><code class="blue_P4bS">T</code><code class="op_lSLc">&gt;</code><code>,</code></div><div><code>newCache<!-- -->: </code><code class="blue_P4bS">T</code></div></div><code>) → </code><code class="blue_P4bS">T</code></div><div>
 <p>Sets the cache.</p>
+<p>The document must be open before using this method.</p>
 <div class="admonition admonition-warning alert alert--danger">
   <div class="admonition-heading">
     <h5><span class="admonition-icon"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="16" viewBox="0 0 12 16">
@@ -205,8 +233,9 @@ a Document is open and session locked.
     <p>You must use immutable operations on cache, i.e. clone any table you intend to edit.</p>
   </div>
 </div>
-</div><div class="divider_rE5g"></div><h3 class="anchor anchorWithStickyNavbar_LWe7" id="GetCache"><code style="text-decoration:none">GetCache</code><a href="#GetCache" class="hash-link" aria-label="Direct link to GetCache" title="Direct link to GetCache">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/anthony0br/DocumentService/blob/main/src/Document.luau#L629"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>Document<!-- -->.</code><code class="green_DgR4">GetCache</code><code>(</code><code>self<!-- -->: </code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/DocumentService/api/Document">Document</a></code><code class="op_lSLc">&lt;</code><code class="blue_P4bS">T</code><code class="op_lSLc">&gt;</code><code>) → </code><code class="blue_P4bS">T</code></div><div>
+</div><div class="divider_rE5g"></div><h3 class="anchor anchorWithStickyNavbar_LWe7" id="GetCache"><code style="text-decoration:none">GetCache</code><a href="#GetCache" class="hash-link" aria-label="Direct link to GetCache" title="Direct link to GetCache">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/anthony0br/DocumentService/blob/main/src/Document.luau#L669"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>Document<!-- -->.</code><code class="green_DgR4">GetCache</code><code>(</code><code>self<!-- -->: </code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/DocumentService/api/Document">Document</a></code><code class="op_lSLc">&lt;</code><code class="blue_P4bS">T</code><code class="op_lSLc">&gt;</code><code>) → </code><code class="blue_P4bS">T</code></div><div>
 <p>Retrieves the cache.</p>
+<p>The document must be open before using this method.</p>
 <div class="admonition admonition-warning alert alert--danger">
   <div class="admonition-heading">
     <h5><span class="admonition-icon"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="16" viewBox="0 0 12 16">
@@ -230,8 +259,9 @@ a Document is open and session locked.
     <p>You must use immutable operations on cache, i.e. clone any table you intend to edit.</p>
   </div>
 </div>
-</div><div class="divider_rE5g"></div><h3 class="anchor anchorWithStickyNavbar_LWe7" id="UpdateCache"><code style="text-decoration:none">UpdateCache</code><a href="#UpdateCache" class="hash-link" aria-label="Direct link to UpdateCache" title="Direct link to UpdateCache">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/anthony0br/DocumentService/blob/main/src/Document.luau#L651"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>Document<!-- -->.</code><code class="green_DgR4">UpdateCache</code><code>(</code><div class="inset_uKQm"><div><code>self<!-- -->: </code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/DocumentService/api/Document">Document</a></code><code class="op_lSLc">&lt;</code><code class="blue_P4bS">T</code><code class="op_lSLc">&gt;</code><code>,</code></div><div><code>transform<!-- -->: </code><code class="blue_P4bS">Transform</code><code class="op_lSLc">&lt;</code><code class="blue_P4bS">T</code><code class="op_lSLc">&gt;</code></div></div><code>) → </code><code class="blue_P4bS">T</code></div><div>
+</div><div class="divider_rE5g"></div><h3 class="anchor anchorWithStickyNavbar_LWe7" id="UpdateCache"><code style="text-decoration:none">UpdateCache</code><a href="#UpdateCache" class="hash-link" aria-label="Direct link to UpdateCache" title="Direct link to UpdateCache">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/anthony0br/DocumentService/blob/main/src/Document.luau#L693"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>Document<!-- -->.</code><code class="green_DgR4">UpdateCache</code><code>(</code><div class="inset_uKQm"><div><code>self<!-- -->: </code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/DocumentService/api/Document">Document</a></code><code class="op_lSLc">&lt;</code><code class="blue_P4bS">T</code><code class="op_lSLc">&gt;</code><code>,</code></div><div><code>transform<!-- -->: </code><code class="blue_P4bS">Transform</code><code class="op_lSLc">&lt;</code><code class="blue_P4bS">T</code><code class="op_lSLc">&gt;</code></div></div><code>) → </code><code class="blue_P4bS">T</code></div><div>
 <p>Transforms the cache.</p>
+<p>A document must be open before using this method.</p>
 <div class="admonition admonition-warning alert alert--danger">
   <div class="admonition-heading">
     <h5><span class="admonition-icon"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="16" viewBox="0 0 12 16">
@@ -255,22 +285,11 @@ a Document is open and session locked.
     <p>You must use immutable operations on cache, i.e. clone any table you intend to edit.</p>
   </div>
 </div>
-</div><div class="divider_rE5g"></div><h3 class="anchor anchorWithStickyNavbar_LWe7" id="Read"><code style="text-decoration:none">Read</code><a href="#Read" class="hash-link" aria-label="Direct link to Read" title="Direct link to Read">​</a></h3><span class="badge_Ba2I" style="color:#f1c40f"><span class="badgeTooltip_cWXP">This is a yielding function. When called, it will pause the Lua thread that called the function until a result is ready to be returned, without interrupting other scripts.</span><span class="badgeToolTipTail_H9D_"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="#f1c40f" role="img" aria-label="This is a yielding function. When called, it will pause the Lua thread that called the function until a result is ready to be returned, without interrupting other scripts."><path d="M96.4 11.9c-1.4-2.5-4-4-6.9-4H10.8c-2.9 0-5.4 1.5-6.9 4-1.4 2.5-1.4 5.5 0 7.9L43.3 88c1.4 2.5 4 4 6.9 4 2.9 0 5.4-1.5 6.9-4l39.3-68.2c1.4-2.4 1.4-5.4 0-7.9zM46.3 54.5c1.1-1.1 2.3-1.6 3.8-1.6s2.8.5 3.8 1.6c1.1 1.1 1.6 2.3 1.6 3.8s-.5 2.8-1.6 3.8c-1.1 1.1-2.3 1.6-3.8 1.6s-2.8-.5-3.8-1.6c-1.1-1.1-1.6-2.3-1.6-3.8.1-1.5.6-2.8 1.6-3.8zm-.5-4.9V21.8h8.8v27.8h-8.8z"></path></svg> <!-- -->Yields</span></span><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/anthony0br/DocumentService/blob/main/src/Document.luau#L671"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>Document<!-- -->.</code><code class="green_DgR4">Read</code><code>(</code><code>self<!-- -->: </code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/DocumentService/api/Document">Document</a></code><code class="op_lSLc">&lt;</code><code class="blue_P4bS">T</code><code class="op_lSLc">&gt;</code><code>) → </code><code class="blue_P4bS">ReadWriteResult</code><code class="op_lSLc">&lt;</code><code class="blue_P4bS">T</code><code class="op_lSLc">&gt;</code></div><div>
-<p>Reads from the DataStore.</p>
-<div class="admonition admonition-warning alert alert--danger">
-  <div class="admonition-heading">
-    <h5><span class="admonition-icon"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="16" viewBox="0 0 12 16">
-          <path d="M5.05.31c.81 2.17.41 3.38-.52 4.31C3.55 5.67 1.98 6.45.9 7.98c-1.45 2.05-1.7 6.53 3.53 7.7-2.2-1.16-2.67-4.52-.3-6.61-.61 2.03.53 3.33 1.94 2.86 1.39-.47 2.3.53 2.27 1.67-.02.78-.31 1.44-1.13 1.81 3.42-.59 4.78-3.42 4.78-5.56 0-2.84-2.53-3.22-1.25-5.61-1.52.13-2.03 1.13-1.89 2.75.09 1.08-1.02 1.8-1.86 1.33-.67-.41-.66-1.19-.06-1.78C8.18 5.31 8.68 2.45 5.05.32L5.03.3l.02.01z"></path>
-        </svg></span>warning</h5>
-  </div>
-  <div class="admonition-content">
-    <p>Overwrites the cache. If you are using session locking, you should only read once.</p>
-  </div>
-</div>
-</div><div class="divider_rE5g"></div><h3 class="anchor anchorWithStickyNavbar_LWe7" id="Update"><code style="text-decoration:none">Update</code><a href="#Update" class="hash-link" aria-label="Direct link to Update" title="Direct link to Update">​</a></h3><span class="badge_Ba2I" style="color:#f1c40f"><span class="badgeTooltip_cWXP">This is a yielding function. When called, it will pause the Lua thread that called the function until a result is ready to be returned, without interrupting other scripts.</span><span class="badgeToolTipTail_H9D_"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="#f1c40f" role="img" aria-label="This is a yielding function. When called, it will pause the Lua thread that called the function until a result is ready to be returned, without interrupting other scripts."><path d="M96.4 11.9c-1.4-2.5-4-4-6.9-4H10.8c-2.9 0-5.4 1.5-6.9 4-1.4 2.5-1.4 5.5 0 7.9L43.3 88c1.4 2.5 4 4 6.9 4 2.9 0 5.4-1.5 6.9-4l39.3-68.2c1.4-2.4 1.4-5.4 0-7.9zM46.3 54.5c1.1-1.1 2.3-1.6 3.8-1.6s2.8.5 3.8 1.6c1.1 1.1 1.6 2.3 1.6 3.8s-.5 2.8-1.6 3.8c-1.1 1.1-2.3 1.6-3.8 1.6s-2.8-.5-3.8-1.6c-1.1-1.1-1.6-2.3-1.6-3.8.1-1.5.6-2.8 1.6-3.8zm-.5-4.9V21.8h8.8v27.8h-8.8z"></path></svg> <!-- -->Yields</span></span><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/anthony0br/DocumentService/blob/main/src/Document.luau#L734"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>Document<!-- -->.</code><code class="green_DgR4">Update</code><code>(</code><div class="inset_uKQm"><div><code>self<!-- -->: </code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/DocumentService/api/Document">Document</a></code><code class="op_lSLc">&lt;</code><code class="blue_P4bS">T</code><code class="op_lSLc">&gt;</code><code>,</code></div><div><code>transform<!-- -->: </code><code class="blue_P4bS">Transform</code><code class="op_lSLc">&lt;</code><code class="blue_P4bS">T</code><code class="op_lSLc">&gt;</code><span class="inlineDescription_G7Er">-- <span>
+</div><div class="divider_rE5g"></div><h3 class="anchor anchorWithStickyNavbar_LWe7" id="Update"><code style="text-decoration:none">Update</code><a href="#Update" class="hash-link" aria-label="Direct link to Update" title="Direct link to Update">​</a></h3><span class="badge_Ba2I" style="color:#f1c40f"><span class="badgeTooltip_cWXP">This is a yielding function. When called, it will pause the Lua thread that called the function until a result is ready to be returned, without interrupting other scripts.</span><span class="badgeToolTipTail_H9D_"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="#f1c40f" role="img" aria-label="This is a yielding function. When called, it will pause the Lua thread that called the function until a result is ready to be returned, without interrupting other scripts."><path d="M96.4 11.9c-1.4-2.5-4-4-6.9-4H10.8c-2.9 0-5.4 1.5-6.9 4-1.4 2.5-1.4 5.5 0 7.9L43.3 88c1.4 2.5 4 4 6.9 4 2.9 0 5.4-1.5 6.9-4l39.3-68.2c1.4-2.4 1.4-5.4 0-7.9zM46.3 54.5c1.1-1.1 2.3-1.6 3.8-1.6s2.8.5 3.8 1.6c1.1 1.1 1.6 2.3 1.6 3.8s-.5 2.8-1.6 3.8c-1.1 1.1-2.3 1.6-3.8 1.6s-2.8-.5-3.8-1.6c-1.1-1.1-1.6-2.3-1.6-3.8.1-1.5.6-2.8 1.6-3.8zm-.5-4.9V21.8h8.8v27.8h-8.8z"></path></svg> <!-- -->Yields</span></span><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/anthony0br/DocumentService/blob/main/src/Document.luau#L726"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>Document<!-- -->.</code><code class="green_DgR4">Update</code><code>(</code><div class="inset_uKQm"><div><code>self<!-- -->: </code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/DocumentService/api/Document">Document</a></code><code class="op_lSLc">&lt;</code><code class="blue_P4bS">T</code><code class="op_lSLc">&gt;</code><code>,</code></div><div><code>transform<!-- -->: </code><code class="blue_P4bS">Transform</code><code class="op_lSLc">&lt;</code><code class="blue_P4bS">T</code><code class="op_lSLc">&gt;</code><span class="inlineDescription_G7Er">-- <span>
 <p>Transform function for the transaction.</p>
-</span></span></div></div><code>) → </code><code class="blue_P4bS">ReadWriteResult</code><code class="op_lSLc">&lt;</code><code class="blue_P4bS">T</code><code class="op_lSLc">&gt;</code></div><div>
+</span></span></div></div><code>) → </code><code class="blue_P4bS">WriteResult</code><code class="op_lSLc">&lt;</code><code class="blue_P4bS">T</code><code class="op_lSLc">&gt;</code></div><div>
 <p>Performs an atomic transaction on the Document, writing to the DataStore.</p>
+<p>The document must be open before using this method.</p>
 <p>If using session locking, transforms will build on cached data.</p>
 <p>Throws if data is not storable or the transform return value is invalid.</p>
 <div class="admonition admonition-tip alert alert--success">
@@ -299,12 +318,12 @@ a Document is open and session locked.
     </p>
   </div>
 </div>
-</div><div class="divider_rE5g"></div><h3 class="anchor anchorWithStickyNavbar_LWe7" id="Save"><code style="text-decoration:none">Save</code><a href="#Save" class="hash-link" aria-label="Direct link to Save" title="Direct link to Save">​</a></h3><span class="badge_Ba2I" style="color:#f1c40f"><span class="badgeTooltip_cWXP">This is a yielding function. When called, it will pause the Lua thread that called the function until a result is ready to be returned, without interrupting other scripts.</span><span class="badgeToolTipTail_H9D_"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="#f1c40f" role="img" aria-label="This is a yielding function. When called, it will pause the Lua thread that called the function until a result is ready to be returned, without interrupting other scripts."><path d="M96.4 11.9c-1.4-2.5-4-4-6.9-4H10.8c-2.9 0-5.4 1.5-6.9 4-1.4 2.5-1.4 5.5 0 7.9L43.3 88c1.4 2.5 4 4 6.9 4 2.9 0 5.4-1.5 6.9-4l39.3-68.2c1.4-2.4 1.4-5.4 0-7.9zM46.3 54.5c1.1-1.1 2.3-1.6 3.8-1.6s2.8.5 3.8 1.6c1.1 1.1 1.6 2.3 1.6 3.8s-.5 2.8-1.6 3.8c-1.1 1.1-2.3 1.6-3.8 1.6s-2.8-.5-3.8-1.6c-1.1-1.1-1.6-2.3-1.6-3.8.1-1.5.6-2.8 1.6-3.8zm-.5-4.9V21.8h8.8v27.8h-8.8z"></path></svg> <!-- -->Yields</span></span><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/anthony0br/DocumentService/blob/main/src/Document.luau#L853"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>Document<!-- -->.</code><code class="green_DgR4">Save</code><code>(</code><code>self<!-- -->: </code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/DocumentService/api/Document">Document</a></code><code class="op_lSLc">&lt;</code><code class="blue_P4bS">T</code><code class="op_lSLc">&gt;</code><code>) → </code><code class="blue_P4bS">ReadWriteResult</code><code class="op_lSLc">&lt;</code><code class="blue_P4bS">T</code><code class="op_lSLc">&gt;</code></div><div>
+</div><div class="divider_rE5g"></div><h3 class="anchor anchorWithStickyNavbar_LWe7" id="Save"><code style="text-decoration:none">Save</code><a href="#Save" class="hash-link" aria-label="Direct link to Save" title="Direct link to Save">​</a></h3><span class="badge_Ba2I" style="color:#f1c40f"><span class="badgeTooltip_cWXP">This is a yielding function. When called, it will pause the Lua thread that called the function until a result is ready to be returned, without interrupting other scripts.</span><span class="badgeToolTipTail_H9D_"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="#f1c40f" role="img" aria-label="This is a yielding function. When called, it will pause the Lua thread that called the function until a result is ready to be returned, without interrupting other scripts."><path d="M96.4 11.9c-1.4-2.5-4-4-6.9-4H10.8c-2.9 0-5.4 1.5-6.9 4-1.4 2.5-1.4 5.5 0 7.9L43.3 88c1.4 2.5 4 4 6.9 4 2.9 0 5.4-1.5 6.9-4l39.3-68.2c1.4-2.4 1.4-5.4 0-7.9zM46.3 54.5c1.1-1.1 2.3-1.6 3.8-1.6s2.8.5 3.8 1.6c1.1 1.1 1.6 2.3 1.6 3.8s-.5 2.8-1.6 3.8c-1.1 1.1-2.3 1.6-3.8 1.6s-2.8-.5-3.8-1.6c-1.1-1.1-1.6-2.3-1.6-3.8.1-1.5.6-2.8 1.6-3.8zm-.5-4.9V21.8h8.8v27.8h-8.8z"></path></svg> <!-- -->Yields</span></span><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/anthony0br/DocumentService/blob/main/src/Document.luau#L858"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>Document<!-- -->.</code><code class="green_DgR4">Save</code><code>(</code><code>self<!-- -->: </code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/DocumentService/api/Document">Document</a></code><code class="op_lSLc">&lt;</code><code class="blue_P4bS">T</code><code class="op_lSLc">&gt;</code><code>) → </code><code class="blue_P4bS">WriteResult</code><code class="op_lSLc">&lt;</code><code class="blue_P4bS">T</code><code class="op_lSLc">&gt;</code></div><div>
 <p>
   Saves a Document's cache to its DataStore. Equivalent to calling Update
   without transforming the data.
 </p>
-<p>Can fail due to <code>RobloxAPIFail</code> or <code>SessionLocked</code> (in the case the lock is stolen).</p>
+<p>The document must be open before using this method.</p>
 <div class="admonition admonition-warning alert alert--danger">
   <div class="admonition-heading">
     <h5><span class="admonition-icon"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="16" viewBox="0 0 12 16">
@@ -318,13 +337,21 @@ a Document is open and session locked.
     </p>
   </div>
 </div>
-</div><div class="divider_rE5g"></div><h3 class="anchor anchorWithStickyNavbar_LWe7" id="Erase"><code style="text-decoration:none">Erase</code><a href="#Erase" class="hash-link" aria-label="Direct link to Erase" title="Direct link to Erase">​</a></h3><span class="badge_Ba2I" style="color:#f1c40f"><span class="badgeTooltip_cWXP">This is a yielding function. When called, it will pause the Lua thread that called the function until a result is ready to be returned, without interrupting other scripts.</span><span class="badgeToolTipTail_H9D_"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="#f1c40f" role="img" aria-label="This is a yielding function. When called, it will pause the Lua thread that called the function until a result is ready to be returned, without interrupting other scripts."><path d="M96.4 11.9c-1.4-2.5-4-4-6.9-4H10.8c-2.9 0-5.4 1.5-6.9 4-1.4 2.5-1.4 5.5 0 7.9L43.3 88c1.4 2.5 4 4 6.9 4 2.9 0 5.4-1.5 6.9-4l39.3-68.2c1.4-2.4 1.4-5.4 0-7.9zM46.3 54.5c1.1-1.1 2.3-1.6 3.8-1.6s2.8.5 3.8 1.6c1.1 1.1 1.6 2.3 1.6 3.8s-.5 2.8-1.6 3.8c-1.1 1.1-2.3 1.6-3.8 1.6s-2.8-.5-3.8-1.6c-1.1-1.1-1.6-2.3-1.6-3.8.1-1.5.6-2.8 1.6-3.8zm-.5-4.9V21.8h8.8v27.8h-8.8z"></path></svg> <!-- -->Yields</span></span><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/anthony0br/DocumentService/blob/main/src/Document.luau#L871"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>Document<!-- -->.</code><code class="green_DgR4">Erase</code><code>(</code><code>self<!-- -->: </code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/DocumentService/api/Document">Document</a></code><code class="op_lSLc">&lt;</code><code class="blue_P4bS">T</code><code class="op_lSLc">&gt;</code><code>) → </code><code class="blue_P4bS">Result</code><code class="op_lSLc">&lt;</code><code class="blue_P4bS">nil,</code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/DocumentService/api/DocumentService#RobloxAPIError">RobloxAPIError</a></code><code class="op_lSLc">&gt;</code></div><div>
+</div><div class="divider_rE5g"></div><h3 class="anchor anchorWithStickyNavbar_LWe7" id="Erase"><code style="text-decoration:none">Erase</code><a href="#Erase" class="hash-link" aria-label="Direct link to Erase" title="Direct link to Erase">​</a></h3><span class="badge_Ba2I" style="color:#f1c40f"><span class="badgeTooltip_cWXP">This is a yielding function. When called, it will pause the Lua thread that called the function until a result is ready to be returned, without interrupting other scripts.</span><span class="badgeToolTipTail_H9D_"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="#f1c40f" role="img" aria-label="This is a yielding function. When called, it will pause the Lua thread that called the function until a result is ready to be returned, without interrupting other scripts."><path d="M96.4 11.9c-1.4-2.5-4-4-6.9-4H10.8c-2.9 0-5.4 1.5-6.9 4-1.4 2.5-1.4 5.5 0 7.9L43.3 88c1.4 2.5 4 4 6.9 4 2.9 0 5.4-1.5 6.9-4l39.3-68.2c1.4-2.4 1.4-5.4 0-7.9zM46.3 54.5c1.1-1.1 2.3-1.6 3.8-1.6s2.8.5 3.8 1.6c1.1 1.1 1.6 2.3 1.6 3.8s-.5 2.8-1.6 3.8c-1.1 1.1-2.3 1.6-3.8 1.6s-2.8-.5-3.8-1.6c-1.1-1.1-1.6-2.3-1.6-3.8.1-1.5.6-2.8 1.6-3.8zm-.5-4.9V21.8h8.8v27.8h-8.8z"></path></svg> <!-- -->Yields</span></span><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/anthony0br/DocumentService/blob/main/src/Document.luau#L876"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>Document<!-- -->.</code><code class="green_DgR4">Erase</code><code>(</code><code>self<!-- -->: </code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/DocumentService/api/Document">Document</a></code><code class="op_lSLc">&lt;</code><code class="blue_P4bS">T</code><code class="op_lSLc">&gt;</code><code>) → </code><code class="blue_P4bS">Result</code><code class="op_lSLc">&lt;</code><code class="blue_P4bS">nil,</code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/DocumentService/api/DocumentService#RobloxAPIError">RobloxAPIError</a></code><code class="op_lSLc">&gt;</code></div><div>
 <p>Wipes all data associated with the key and closes the document.</p>
 <p>Satisfies compliance with GDPR right of erasure.</p>
-</div><div class="divider_rE5g"></div><h3 class="anchor anchorWithStickyNavbar_LWe7" id="Peek"><code style="text-decoration:none">Peek</code><a href="#Peek" class="hash-link" aria-label="Direct link to Peek" title="Direct link to Peek">​</a></h3><span class="badge_Ba2I" style="color:#f1c40f"><span class="badgeTooltip_cWXP">This is a yielding function. When called, it will pause the Lua thread that called the function until a result is ready to be returned, without interrupting other scripts.</span><span class="badgeToolTipTail_H9D_"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="#f1c40f" role="img" aria-label="This is a yielding function. When called, it will pause the Lua thread that called the function until a result is ready to be returned, without interrupting other scripts."><path d="M96.4 11.9c-1.4-2.5-4-4-6.9-4H10.8c-2.9 0-5.4 1.5-6.9 4-1.4 2.5-1.4 5.5 0 7.9L43.3 88c1.4 2.5 4 4 6.9 4 2.9 0 5.4-1.5 6.9-4l39.3-68.2c1.4-2.4 1.4-5.4 0-7.9zM46.3 54.5c1.1-1.1 2.3-1.6 3.8-1.6s2.8.5 3.8 1.6c1.1 1.1 1.6 2.3 1.6 3.8s-.5 2.8-1.6 3.8c-1.1 1.1-2.3 1.6-3.8 1.6s-2.8-.5-3.8-1.6c-1.1-1.1-1.6-2.3-1.6-3.8.1-1.5.6-2.8 1.6-3.8zm-.5-4.9V21.8h8.8v27.8h-8.8z"></path></svg> <!-- -->Yields</span></span><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/anthony0br/DocumentService/blob/main/src/Document.luau#L896"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>Document<!-- -->.</code><code class="green_DgR4">Peek</code><code>(</code><code>self<!-- -->: </code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/DocumentService/api/Document">Document</a></code><code class="op_lSLc">&lt;</code><code class="blue_P4bS">T</code><code class="op_lSLc">&gt;</code><code>) → </code><code class="blue_P4bS">Result</code><code class="op_lSLc">&lt;</code><code class="blue_P4bS">any,</code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/DocumentService/api/DocumentService#RobloxAPIError">RobloxAPIError</a></code><code class="op_lSLc"> | </code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/DocumentService/api/DocumentService#SchemaError">SchemaError</a></code><code class="op_lSLc">&gt;</code></div><div>
-<p>Reads the data of a potentially locked or unopened Document.</p>
-<p>Does not update the cache.</p>
-</div><div class="divider_rE5g"></div><h3 class="anchor anchorWithStickyNavbar_LWe7" id="HookBefore"><code style="text-decoration:none">HookBefore</code><a href="#HookBefore" class="hash-link" aria-label="Direct link to HookBefore" title="Direct link to HookBefore">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/anthony0br/DocumentService/blob/main/src/Document.luau#L934"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>Document<!-- -->.</code><code class="green_DgR4">HookBefore</code><code>(</code><div class="inset_uKQm"><div><code>self<!-- -->: </code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/DocumentService/api/Document">Document</a></code><code class="op_lSLc">&lt;</code><code class="blue_P4bS">T</code><code class="op_lSLc">&gt;</code><code>,</code></div><div><code>event<!-- -->: </code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/DocumentService/api/DocumentService#PreHookEvent">PreHookEvent</a></code><code>,</code><span class="inlineDescription_G7Er">-- <span>
+</div><div class="divider_rE5g"></div><h3 class="anchor anchorWithStickyNavbar_LWe7" id="Peek"><code style="text-decoration:none">Peek</code><a href="#Peek" class="hash-link" aria-label="Direct link to Peek" title="Direct link to Peek">​</a></h3><span class="badge_Ba2I" style="color:#f1c40f"><span class="badgeTooltip_cWXP">This is a yielding function. When called, it will pause the Lua thread that called the function until a result is ready to be returned, without interrupting other scripts.</span><span class="badgeToolTipTail_H9D_"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="#f1c40f" role="img" aria-label="This is a yielding function. When called, it will pause the Lua thread that called the function until a result is ready to be returned, without interrupting other scripts."><path d="M96.4 11.9c-1.4-2.5-4-4-6.9-4H10.8c-2.9 0-5.4 1.5-6.9 4-1.4 2.5-1.4 5.5 0 7.9L43.3 88c1.4 2.5 4 4 6.9 4 2.9 0 5.4-1.5 6.9-4l39.3-68.2c1.4-2.4 1.4-5.4 0-7.9zM46.3 54.5c1.1-1.1 2.3-1.6 3.8-1.6s2.8.5 3.8 1.6c1.1 1.1 1.6 2.3 1.6 3.8s-.5 2.8-1.6 3.8c-1.1 1.1-2.3 1.6-3.8 1.6s-2.8-.5-3.8-1.6c-1.1-1.1-1.6-2.3-1.6-3.8.1-1.5.6-2.8 1.6-3.8zm-.5-4.9V21.8h8.8v27.8h-8.8z"></path></svg> <!-- -->Yields</span></span><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/anthony0br/DocumentService/blob/main/src/Document.luau#L906"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>Document<!-- -->.</code><code class="green_DgR4">Peek</code><code>(</code><code>self<!-- -->: </code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/DocumentService/api/Document">Document</a></code><code class="op_lSLc">&lt;</code><code class="blue_P4bS">T</code><code class="op_lSLc">&gt;</code><code>) → </code><code class="blue_P4bS">Result</code><code class="op_lSLc">&lt;</code><code class="blue_P4bS">any,</code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/DocumentService/api/DocumentService#RobloxAPIError">RobloxAPIError</a></code><code class="op_lSLc"> | </code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/DocumentService/api/DocumentService#SchemaError">SchemaError</a></code><code class="op_lSLc">&gt;</code></div><div>
+<p>Reads the latest data stored in Data Stores.</p>
+<p>This may be called while the document is not open, so the return type is</p>
+<p>Runs Read hooks.</p>
+</div><div class="divider_rE5g"></div><h3 class="anchor anchorWithStickyNavbar_LWe7" id="Read"><code style="text-decoration:none">Read</code><a href="#Read" class="hash-link" aria-label="Direct link to Read" title="Direct link to Read">​</a></h3><span class="badge_Ba2I" style="color:#f1c40f"><span class="badgeTooltip_cWXP">This is a yielding function. When called, it will pause the Lua thread that called the function until a result is ready to be returned, without interrupting other scripts.</span><span class="badgeToolTipTail_H9D_"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="#f1c40f" role="img" aria-label="This is a yielding function. When called, it will pause the Lua thread that called the function until a result is ready to be returned, without interrupting other scripts."><path d="M96.4 11.9c-1.4-2.5-4-4-6.9-4H10.8c-2.9 0-5.4 1.5-6.9 4-1.4 2.5-1.4 5.5 0 7.9L43.3 88c1.4 2.5 4 4 6.9 4 2.9 0 5.4-1.5 6.9-4l39.3-68.2c1.4-2.4 1.4-5.4 0-7.9zM46.3 54.5c1.1-1.1 2.3-1.6 3.8-1.6s2.8.5 3.8 1.6c1.1 1.1 1.6 2.3 1.6 3.8s-.5 2.8-1.6 3.8c-1.1 1.1-2.3 1.6-3.8 1.6s-2.8-.5-3.8-1.6c-1.1-1.1-1.6-2.3-1.6-3.8.1-1.5.6-2.8 1.6-3.8zm-.5-4.9V21.8h8.8v27.8h-8.8z"></path></svg> <!-- -->Yields</span></span><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/anthony0br/DocumentService/blob/main/src/Document.luau#L947"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>Document<!-- -->.</code><code class="green_DgR4">Read</code><code>(</code><code>self<!-- -->: </code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/DocumentService/api/Document">Document</a></code><code class="op_lSLc">&lt;</code><code class="blue_P4bS">T</code><code class="op_lSLc">&gt;</code><code>) → </code><code class="blue_P4bS">Result</code><code class="op_lSLc">&lt;</code><code class="blue_P4bS">T,</code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/DocumentService/api/DocumentService#RobloxAPIError">RobloxAPIError</a></code><code class="op_lSLc"> | </code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/DocumentService/api/DocumentService#SchemaError">SchemaError</a></code><code class="op_lSLc">&gt;</code></div><div>
+<p>Reads the latest data stored in Data Stores.</p>
+<p>
+  Peeks, but can only be called once the Document is open, so
+  the returned Result.data is typed.
+</p>
+<p>Since this calls Peek, Read hooks are run.</p>
+</div><div class="divider_rE5g"></div><h3 class="anchor anchorWithStickyNavbar_LWe7" id="HookBefore"><code style="text-decoration:none">HookBefore</code><a href="#HookBefore" class="hash-link" aria-label="Direct link to HookBefore" title="Direct link to HookBefore">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/anthony0br/DocumentService/blob/main/src/Document.luau#L973"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>Document<!-- -->.</code><code class="green_DgR4">HookBefore</code><code>(</code><div class="inset_uKQm"><div><code>self<!-- -->: </code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/DocumentService/api/Document">Document</a></code><code class="op_lSLc">&lt;</code><code class="blue_P4bS">T</code><code class="op_lSLc">&gt;</code><code>,</code></div><div><code>event<!-- -->: </code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/DocumentService/api/DocumentService#PreHookEvent">PreHookEvent</a></code><code>,</code><span class="inlineDescription_G7Er">-- <span>
 <p>the operation to call the hook before</p>
 </span></span></div><div><code>hook<!-- -->: </code><code class="purple_ieR2">(</code><code class="purple_ieR2">)</code><code class="purple_ieR2"> → </code><code class="purple_ieR2">(</code><code class="purple_ieR2">)</code><span class="inlineDescription_G7Er">-- <span>
 <p>a hook function that receives the arguments passed in to the operation</p>
@@ -335,7 +362,7 @@ a Document is open and session locked.
   are called in the order they are added.
 </p>
 <p>Hooks cannot currently mutate arguments.</p>
-</div><div class="divider_rE5g"></div><h3 class="anchor anchorWithStickyNavbar_LWe7" id="HookAfter"><code style="text-decoration:none">HookAfter</code><a href="#HookAfter" class="hash-link" aria-label="Direct link to HookAfter" title="Direct link to HookAfter">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/anthony0br/DocumentService/blob/main/src/Document.luau#L950"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>Document<!-- -->.</code><code class="green_DgR4">HookAfter</code><code>(</code><div class="inset_uKQm"><div><code>self<!-- -->: </code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/DocumentService/api/Document">Document</a></code><code class="op_lSLc">&lt;</code><code class="blue_P4bS">T</code><code class="op_lSLc">&gt;</code><code>,</code></div><div><code>event<!-- -->: </code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/DocumentService/api/DocumentService#PostHookEvent">PostHookEvent</a></code><code>,</code><span class="inlineDescription_G7Er">-- <span>
+</div><div class="divider_rE5g"></div><h3 class="anchor anchorWithStickyNavbar_LWe7" id="HookAfter"><code style="text-decoration:none">HookAfter</code><a href="#HookAfter" class="hash-link" aria-label="Direct link to HookAfter" title="Direct link to HookAfter">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/anthony0br/DocumentService/blob/main/src/Document.luau#L989"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>Document<!-- -->.</code><code class="green_DgR4">HookAfter</code><code>(</code><div class="inset_uKQm"><div><code>self<!-- -->: </code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/DocumentService/api/Document">Document</a></code><code class="op_lSLc">&lt;</code><code class="blue_P4bS">T</code><code class="op_lSLc">&gt;</code><code>,</code></div><div><code>event<!-- -->: </code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/DocumentService/api/DocumentService#PostHookEvent">PostHookEvent</a></code><code>,</code><span class="inlineDescription_G7Er">-- <span>
 <p>the operation to call the hook after</p>
 </span></span></div><div><code>hook<!-- -->: </code><code class="purple_ieR2">(</code><code class="purple_ieR2">)</code><code class="purple_ieR2"> → </code><code class="purple_ieR2">(</code><code class="purple_ieR2">)</code><span class="inlineDescription_G7Er">-- <span>
 <p>a hook function that receives the arguments passed in to the operation</p>
@@ -349,7 +376,7 @@ a Document is open and session locked.
   Hooks added with HookAfter only run if the operation is successful, and
   cannot mutate the result.
 </p>
-</div><div class="divider_rE5g"></div><h3 class="anchor anchorWithStickyNavbar_LWe7" id="isDocument"><code style="text-decoration:none">isDocument</code><a href="#isDocument" class="hash-link" aria-label="Direct link to isDocument" title="Direct link to isDocument">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/anthony0br/DocumentService/blob/main/src/Document.luau#L967"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>Document<!-- -->.</code><code class="green_DgR4">isDocument</code><code>(</code><code>instance<!-- -->: </code><code class="blue_P4bS">metatable</code><code>) → </code><code class="blue_P4bS">boolean</code></div><div>
+</div><div class="divider_rE5g"></div><h3 class="anchor anchorWithStickyNavbar_LWe7" id="isDocument"><code style="text-decoration:none">isDocument</code><a href="#isDocument" class="hash-link" aria-label="Direct link to isDocument" title="Direct link to isDocument">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/anthony0br/DocumentService/blob/main/src/Document.luau#L1006"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>Document<!-- -->.</code><code class="green_DgR4">isDocument</code><code>(</code><code>instance<!-- -->: </code><code class="blue_P4bS">metatable</code><code>) → </code><code class="blue_P4bS">boolean</code></div><div>
 <p>Checks if a metatable passed is a Document.</p>
 </div></div></article></div><details><summary>Show raw api</summary><pre style="max-width:100%;white-space:pre-wrap">{
     &quot;functions&quot;: [
@@ -372,7 +399,7 @@ a Document is open and session locked.
             &quot;function_type&quot;: &quot;static&quot;,
             &quot;private&quot;: true,
             &quot;source&quot;: {
-                &quot;line&quot;: 232,
+                &quot;line&quot;: 238,
                 &quot;path&quot;: &quot;src/Document.luau&quot;
             }
         },
@@ -395,7 +422,7 @@ a Document is open and session locked.
             &quot;function_type&quot;: &quot;static&quot;,
             &quot;yields&quot;: true,
             &quot;source&quot;: {
-                &quot;line&quot;: 297,
+                &quot;line&quot;: 309,
                 &quot;path&quot;: &quot;src/Document.luau&quot;
             }
         },
@@ -418,13 +445,13 @@ a Document is open and session locked.
             &quot;function_type&quot;: &quot;static&quot;,
             &quot;yields&quot;: true,
             &quot;source&quot;: {
-                &quot;line&quot;: 444,
+                &quot;line&quot;: 455,
                 &quot;path&quot;: &quot;src/Document.luau&quot;
             }
         },
         {
-            &quot;name&quot;: &quot;IsWriteAvailable&quot;,
-            &quot;desc&quot;: &quot;Returns false if the Document is locked by another session.\n\nIf props.sessionLock is false, it will always return true.\n\n:::tip\nYou can use this to check if a player is active to avoid data loss while\nediting data from another server.\n:::&quot;,
+            &quot;name&quot;: &quot;IsOpenAvailable&quot;,
+            &quot;desc&quot;: &quot;Returns a false Result if Document is currently open, locked by another \nsession, otherwise returns a true Result.\n\nIf props.lockSessions is false, this will always return a true Result.\n\n:::tip\nYou can use this to check if a player is active to avoid data loss while\nediting data from another server.\n:::&quot;,
             &quot;params&quot;: [
                 {
                     &quot;name&quot;: &quot;self&quot;,
@@ -435,13 +462,13 @@ a Document is open and session locked.
             &quot;returns&quot;: [
                 {
                     &quot;desc&quot;: &quot;&quot;,
-                    &quot;lua_type&quot;: &quot;Result&lt;boolean, RobloxAPIError | SchemaError&gt;&quot;
+                    &quot;lua_type&quot;: &quot;Result&lt;boolean, RobloxAPIError&gt;&quot;
                 }
             ],
             &quot;function_type&quot;: &quot;static&quot;,
             &quot;yields&quot;: true,
             &quot;source&quot;: {
-                &quot;line&quot;: 507,
+                &quot;line&quot;: 519,
                 &quot;path&quot;: &quot;src/Document.luau&quot;
             }
         },
@@ -463,13 +490,13 @@ a Document is open and session locked.
             ],
             &quot;function_type&quot;: &quot;static&quot;,
             &quot;source&quot;: {
-                &quot;line&quot;: 549,
+                &quot;line&quot;: 570,
                 &quot;path&quot;: &quot;src/Document.luau&quot;
             }
         },
         {
             &quot;name&quot;: &quot;Close&quot;,
-            &quot;desc&quot;: &quot;Destroys the document instance.\n\nIf session locked, will save the document and remove the lock first.\n\nAfter closing a Document, you will need to call \nDocumentStore:GetDocument() to retrieve a new one if you wish to access the\nDocument again.&quot;,
+            &quot;desc&quot;: &quot;Destroys the document instance.\n\nThe document must be open before using this method.\n\nIf session locked, will save the document and remove the lock first.\n\nAfter closing a Document, you will need to call \nDocumentStore:GetDocument() to retrieve a new one if you wish to access the\nDocument again.&quot;,
             &quot;params&quot;: [
                 {
                     &quot;name&quot;: &quot;self&quot;,
@@ -480,19 +507,19 @@ a Document is open and session locked.
             &quot;returns&quot;: [
                 {
                     &quot;desc&quot;: &quot;&quot;,
-                    &quot;lua_type&quot;: &quot;ReadWriteResult&lt;T?&gt;&quot;
+                    &quot;lua_type&quot;: &quot;WriteResult&lt;T?&gt;&quot;
                 }
             ],
             &quot;function_type&quot;: &quot;static&quot;,
             &quot;yields&quot;: true,
             &quot;source&quot;: {
-                &quot;line&quot;: 566,
+                &quot;line&quot;: 589,
                 &quot;path&quot;: &quot;src/Document.luau&quot;
             }
         },
         {
             &quot;name&quot;: &quot;SetCache&quot;,
-            &quot;desc&quot;: &quot;Sets the cache.\n\n:::warning\nYou can only use cache for session-locked data. See `Open` for how to\nenable session locking.\n:::\n\n:::info\nYou must use immutable operations on cache, i.e. clone any table you intend to edit.\n:::&quot;,
+            &quot;desc&quot;: &quot;Sets the cache.\n\nThe document must be open before using this method.\n\n:::warning\nYou can only use cache for session-locked data. See `Open` for how to\nenable session locking.\n:::\n\n:::info\nYou must use immutable operations on cache, i.e. clone any table you intend to edit.\n:::&quot;,
             &quot;params&quot;: [
                 {
                     &quot;name&quot;: &quot;self&quot;,
@@ -513,13 +540,13 @@ a Document is open and session locked.
             ],
             &quot;function_type&quot;: &quot;static&quot;,
             &quot;source&quot;: {
-                &quot;line&quot;: 606,
+                &quot;line&quot;: 644,
                 &quot;path&quot;: &quot;src/Document.luau&quot;
             }
         },
         {
             &quot;name&quot;: &quot;GetCache&quot;,
-            &quot;desc&quot;: &quot;Retrieves the cache.\n\n:::warning\nYou can only use cache for session-locked data. See `Open` for how to\nenable session locking.\n:::\n\n:::info\nYou must use immutable operations on cache, i.e. clone any table you intend to edit.\n:::&quot;,
+            &quot;desc&quot;: &quot;Retrieves the cache.\n\nThe document must be open before using this method.\n\n:::warning\nYou can only use cache for session-locked data. See `Open` for how to\nenable session locking.\n:::\n\n:::info\nYou must use immutable operations on cache, i.e. clone any table you intend to edit.\n:::&quot;,
             &quot;params&quot;: [
                 {
                     &quot;name&quot;: &quot;self&quot;,
@@ -535,13 +562,13 @@ a Document is open and session locked.
             ],
             &quot;function_type&quot;: &quot;static&quot;,
             &quot;source&quot;: {
-                &quot;line&quot;: 629,
+                &quot;line&quot;: 669,
                 &quot;path&quot;: &quot;src/Document.luau&quot;
             }
         },
         {
             &quot;name&quot;: &quot;UpdateCache&quot;,
-            &quot;desc&quot;: &quot;Transforms the cache.\n\n:::warning\nYou can only use cache for session-locked data. See `Open` for how to\nenable session locking.\n:::\n\n:::info\nYou must use immutable operations on cache, i.e. clone any table you intend to edit.\n:::&quot;,
+            &quot;desc&quot;: &quot;Transforms the cache.\n\nA document must be open before using this method.\n\n:::warning\nYou can only use cache for session-locked data. See `Open` for how to\nenable session locking.\n:::\n\n:::info\nYou must use immutable operations on cache, i.e. clone any table you intend to edit.\n:::&quot;,
             &quot;params&quot;: [
                 {
                     &quot;name&quot;: &quot;self&quot;,
@@ -562,36 +589,13 @@ a Document is open and session locked.
             ],
             &quot;function_type&quot;: &quot;static&quot;,
             &quot;source&quot;: {
-                &quot;line&quot;: 651,
-                &quot;path&quot;: &quot;src/Document.luau&quot;
-            }
-        },
-        {
-            &quot;name&quot;: &quot;Read&quot;,
-            &quot;desc&quot;: &quot;Reads from the DataStore.\n\n:::warning\nOverwrites the cache. If you are using session locking, you should only read once.\n:::&quot;,
-            &quot;params&quot;: [
-                {
-                    &quot;name&quot;: &quot;self&quot;,
-                    &quot;desc&quot;: &quot;&quot;,
-                    &quot;lua_type&quot;: &quot;Document&lt;T&gt;&quot;
-                }
-            ],
-            &quot;returns&quot;: [
-                {
-                    &quot;desc&quot;: &quot;&quot;,
-                    &quot;lua_type&quot;: &quot;ReadWriteResult&lt;T&gt;&quot;
-                }
-            ],
-            &quot;function_type&quot;: &quot;static&quot;,
-            &quot;yields&quot;: true,
-            &quot;source&quot;: {
-                &quot;line&quot;: 671,
+                &quot;line&quot;: 693,
                 &quot;path&quot;: &quot;src/Document.luau&quot;
             }
         },
         {
             &quot;name&quot;: &quot;Update&quot;,
-            &quot;desc&quot;: &quot;Performs an atomic transaction on the Document, writing to the DataStore.\n\nIf using session locking, transforms will build on cached data.\n\nThrows if data is not storable or the transform return value is invalid.\n\n:::tip\nDue to Luau limitations with the old solver, you will get the\nbest experience if you manually annotate the type of the transform parameter.\n:::\n\n:::warning\nThe transform function must not yield, and shouldn&#x27;t rely on any\nfrom outside.\n:::&quot;,
+            &quot;desc&quot;: &quot;Performs an atomic transaction on the Document, writing to the DataStore.\n\nThe document must be open before using this method.\n\nIf using session locking, transforms will build on cached data.\n\nThrows if data is not storable or the transform return value is invalid.\n\n:::tip\nDue to Luau limitations with the old solver, you will get the\nbest experience if you manually annotate the type of the transform parameter.\n:::\n\n:::warning\nThe transform function must not yield, and shouldn&#x27;t rely on any\nfrom outside.\n:::&quot;,
             &quot;params&quot;: [
                 {
                     &quot;name&quot;: &quot;self&quot;,
@@ -607,19 +611,19 @@ a Document is open and session locked.
             &quot;returns&quot;: [
                 {
                     &quot;desc&quot;: &quot;&quot;,
-                    &quot;lua_type&quot;: &quot;ReadWriteResult&lt;T&gt;&quot;
+                    &quot;lua_type&quot;: &quot;WriteResult&lt;T&gt;&quot;
                 }
             ],
             &quot;function_type&quot;: &quot;static&quot;,
             &quot;yields&quot;: true,
             &quot;source&quot;: {
-                &quot;line&quot;: 734,
+                &quot;line&quot;: 726,
                 &quot;path&quot;: &quot;src/Document.luau&quot;
             }
         },
         {
             &quot;name&quot;: &quot;Save&quot;,
-            &quot;desc&quot;: &quot;Saves a Document&#x27;s cache to its DataStore. Equivalent to calling Update\nwithout transforming the data.\n\nCan fail due to `RobloxAPIFail` or `SessionLocked` (in the case the lock is stolen).\n\n:::warning\nYou can only use cache for session-locked data. See `Open` for how to\nenable session locking.\n:::&quot;,
+            &quot;desc&quot;: &quot;Saves a Document&#x27;s cache to its DataStore. Equivalent to calling Update\nwithout transforming the data.\n\nThe document must be open before using this method.\n\n:::warning\nYou can only use cache for session-locked data. See `Open` for how to\nenable session locking.\n:::&quot;,
             &quot;params&quot;: [
                 {
                     &quot;name&quot;: &quot;self&quot;,
@@ -630,13 +634,13 @@ a Document is open and session locked.
             &quot;returns&quot;: [
                 {
                     &quot;desc&quot;: &quot;&quot;,
-                    &quot;lua_type&quot;: &quot;ReadWriteResult&lt;T&gt;&quot;
+                    &quot;lua_type&quot;: &quot;WriteResult&lt;T&gt;&quot;
                 }
             ],
             &quot;function_type&quot;: &quot;static&quot;,
             &quot;yields&quot;: true,
             &quot;source&quot;: {
-                &quot;line&quot;: 853,
+                &quot;line&quot;: 858,
                 &quot;path&quot;: &quot;src/Document.luau&quot;
             }
         },
@@ -659,13 +663,13 @@ a Document is open and session locked.
             &quot;function_type&quot;: &quot;static&quot;,
             &quot;yields&quot;: true,
             &quot;source&quot;: {
-                &quot;line&quot;: 871,
+                &quot;line&quot;: 876,
                 &quot;path&quot;: &quot;src/Document.luau&quot;
             }
         },
         {
             &quot;name&quot;: &quot;Peek&quot;,
-            &quot;desc&quot;: &quot;Reads the data of a potentially locked or unopened Document.\n\nDoes not update the cache.&quot;,
+            &quot;desc&quot;: &quot;Reads the latest data stored in Data Stores.\n\nThis may be called while the document is not open, so the return type is\n\nRuns Read hooks.&quot;,
             &quot;params&quot;: [
                 {
                     &quot;name&quot;: &quot;self&quot;,
@@ -682,7 +686,30 @@ a Document is open and session locked.
             &quot;function_type&quot;: &quot;static&quot;,
             &quot;yields&quot;: true,
             &quot;source&quot;: {
-                &quot;line&quot;: 896,
+                &quot;line&quot;: 906,
+                &quot;path&quot;: &quot;src/Document.luau&quot;
+            }
+        },
+        {
+            &quot;name&quot;: &quot;Read&quot;,
+            &quot;desc&quot;: &quot;Reads the latest data stored in Data Stores.\n\nPeeks, but can only be called once the Document is open, so\nthe returned Result.data is typed.\n\nSince this calls Peek, Read hooks are run.&quot;,
+            &quot;params&quot;: [
+                {
+                    &quot;name&quot;: &quot;self&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;Document&lt;T&gt;&quot;
+                }
+            ],
+            &quot;returns&quot;: [
+                {
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;Result&lt;T, RobloxAPIError | SchemaError&gt;&quot;
+                }
+            ],
+            &quot;function_type&quot;: &quot;static&quot;,
+            &quot;yields&quot;: true,
+            &quot;source&quot;: {
+                &quot;line&quot;: 947,
                 &quot;path&quot;: &quot;src/Document.luau&quot;
             }
         },
@@ -709,7 +736,7 @@ a Document is open and session locked.
             &quot;returns&quot;: [],
             &quot;function_type&quot;: &quot;static&quot;,
             &quot;source&quot;: {
-                &quot;line&quot;: 934,
+                &quot;line&quot;: 973,
                 &quot;path&quot;: &quot;src/Document.luau&quot;
             }
         },
@@ -736,7 +763,7 @@ a Document is open and session locked.
             &quot;returns&quot;: [],
             &quot;function_type&quot;: &quot;static&quot;,
             &quot;source&quot;: {
-                &quot;line&quot;: 950,
+                &quot;line&quot;: 989,
                 &quot;path&quot;: &quot;src/Document.luau&quot;
             }
         },
@@ -754,7 +781,7 @@ a Document is open and session locked.
             &quot;function_type&quot;: &quot;static&quot;,
             &quot;ignore&quot;: true,
             &quot;source&quot;: {
-                &quot;line&quot;: 957,
+                &quot;line&quot;: 996,
                 &quot;path&quot;: &quot;src/Document.luau&quot;
             }
         },
@@ -776,7 +803,7 @@ a Document is open and session locked.
             ],
             &quot;function_type&quot;: &quot;static&quot;,
             &quot;source&quot;: {
-                &quot;line&quot;: 967,
+                &quot;line&quot;: 1006,
                 &quot;path&quot;: &quot;src/Document.luau&quot;
             }
         }
@@ -788,16 +815,16 @@ a Document is open and session locked.
             &quot;desc&quot;: &quot;&quot;,
             &quot;lua_type&quot;: &quot;Result&lt;T, RobloxAPIError | BackwardsCompatibilityError | CheckError | SessionLockedError&gt;&quot;,
             &quot;source&quot;: {
-                &quot;line&quot;: 87,
+                &quot;line&quot;: 93,
                 &quot;path&quot;: &quot;src/Document.luau&quot;
             }
         },
         {
-            &quot;name&quot;: &quot;ReadWriteResult&lt;T&gt;&quot;,
+            &quot;name&quot;: &quot;WriteResult&lt;T&gt;&quot;,
             &quot;desc&quot;: &quot;&quot;,
             &quot;lua_type&quot;: &quot;Result&lt;T, RobloxAPIError | SessionLockedError&gt;&quot;,
             &quot;source&quot;: {
-                &quot;line&quot;: 94,
+                &quot;line&quot;: 100,
                 &quot;path&quot;: &quot;src/Document.luau&quot;
             }
         },
@@ -838,19 +865,19 @@ a Document is open and session locked.
             ],
             &quot;private&quot;: true,
             &quot;source&quot;: {
-                &quot;line&quot;: 223,
+                &quot;line&quot;: 229,
                 &quot;path&quot;: &quot;src/Document.luau&quot;
             }
         }
     ],
     &quot;name&quot;: &quot;Document&quot;,
-    &quot;desc&quot;: &quot;An abstraction over keys in a DataStore.\n\nDocuments are designed to contain information about an entity in a schema.\nThis schema is enforced by your check function, and should be changed\nthrough migrations. You may, of course, decide to not use a schema by\ndefining an empty check function, but this generally isn&#x27;t recommended.\n\n:::tip\nSession locking prevents your data from being edited by mutliple servers,\nand ensures one server is finished with it before it is opened by another.\n\nIn DocumentService, session locking enables the use of the caching methods\n`SetCache`, `GetCache`, and `UpdateCache`.\n\nThis is ideal for player data, or any data that needs frequent updates\nand does not need multi-server editing.\n:::\n\n:::warning\nYou are free to edit the contents of the table in the .data field with\na tool like DataStore Editor, but manually changing other fields could cause\ndata loss and errors. You should also take care not to edit any data while\na Document is open and session locked.\n:::&quot;,
+    &quot;desc&quot;: &quot;An abstraction over keys in a DataStore.\n\nDocuments are designed to contain information about an entity in a schema.\nThis schema is enforced by your check function, and should be changed\nthrough migrations. You may, of course, decide to not use a schema by\ndefining an empty check function, but this generally isn&#x27;t recommended.\n\n:::tip\nSession locking prevents your data from being edited by mutliple servers,\nand ensures one server is finished with it before it is opened by another.\n\nIn DocumentService, session locking enables the use of the caching methods\n`SetCache`, `GetCache`, and `UpdateCache`.\n\nThis is ideal for player data, or any data that needs frequent updates\nand does not need multi-server editing.\n:::\n\n:::warning\nYou are free to edit the contents of the table in the .data field with\na tool like DataStore Editor, but manually changing other fields could cause\ndata loss and errors.\n:::\n\n:::warning\nTypes for your data are provided under the assumption that the data\nstored in Data Stores will not change schema/interface while a Document\nis open.\n:::&quot;,
     &quot;source&quot;: {
-        &quot;line&quot;: 39,
+        &quot;line&quot;: 44,
         &quot;path&quot;: &quot;src/Document.luau&quot;
     }
-}</pre></details></div><div class="col col--3"><div class="tableOfContents_bqdL thin-scrollbar"><ul class="table-of-contents table-of-contents__left-border"><li><a href="#types" class="table-of-contents__link toc-highlight">Types</a><ul><li><a href="#OpenResult&lt;T&gt;" class="table-of-contents__link toc-highlight">OpenResult<t></t></a></li><li><a href="#ReadWriteResult&lt;T&gt;" class="table-of-contents__link toc-highlight">ReadWriteResult<t></t></a></li></ul></li><li><a href="#properties" class="table-of-contents__link toc-highlight">Properties</a></li><li><a href="#functions" class="table-of-contents__link toc-highlight">Functions</a><ul><li><a href="#Close" class="table-of-contents__link toc-highlight">.Close</a></li><li><a href="#Erase" class="table-of-contents__link toc-highlight">.Erase</a></li><li><a href="#GetCache" class="table-of-contents__link toc-highlight">.GetCache</a></li><li><a href="#HookAfter" class="table-of-contents__link toc-highlight">.HookAfter</a></li><li><a href="#HookBefore" class="table-of-contents__link toc-highlight">.HookBefore</a></li><li><a href="#isDocument" class="table-of-contents__link toc-highlight">.isDocument</a></li><li><a href="#IsOpen" class="table-of-contents__link toc-highlight">.IsOpen</a></li><li><a href="#IsWriteAvailable" class="table-of-contents__link toc-highlight">.IsWriteAvailable</a></li><li><a href="#Open" class="table-of-contents__link toc-highlight">.Open</a></li><li><a href="#Peek" class="table-of-contents__link toc-highlight">.Peek</a></li><li><a href="#Read" class="table-of-contents__link toc-highlight">.Read</a></li><li><a href="#Save" class="table-of-contents__link toc-highlight">.Save</a></li><li><a href="#SetCache" class="table-of-contents__link toc-highlight">.SetCache</a></li><li><a href="#Steal" class="table-of-contents__link toc-highlight">.Steal</a></li><li><a href="#Update" class="table-of-contents__link toc-highlight">.Update</a></li><li><a href="#UpdateCache" class="table-of-contents__link toc-highlight">.UpdateCache</a></li></ul></li></ul></div></div></div></div></main></div></div><footer class="footer footer--dark"><div class="container container-fluid"><div class="footer__bottom text--center"><div class="footer__copyright">Copyright © 2024 anthony0br. Built with Moonwave and Docusaurus.</div></div></div></footer></div>
-<script src="/DocumentService/assets/js/runtime~main.4e063bf3.js"></script>
-<script src="/DocumentService/assets/js/main.ce8166e9.js"></script>
+}</pre></details></div><div class="col col--3"><div class="tableOfContents_bqdL thin-scrollbar"><ul class="table-of-contents table-of-contents__left-border"><li><a href="#types" class="table-of-contents__link toc-highlight">Types</a><ul><li><a href="#OpenResult&lt;T&gt;" class="table-of-contents__link toc-highlight">OpenResult<t></t></a></li><li><a href="#WriteResult&lt;T&gt;" class="table-of-contents__link toc-highlight">WriteResult<t></t></a></li></ul></li><li><a href="#properties" class="table-of-contents__link toc-highlight">Properties</a></li><li><a href="#functions" class="table-of-contents__link toc-highlight">Functions</a><ul><li><a href="#Close" class="table-of-contents__link toc-highlight">.Close</a></li><li><a href="#Erase" class="table-of-contents__link toc-highlight">.Erase</a></li><li><a href="#GetCache" class="table-of-contents__link toc-highlight">.GetCache</a></li><li><a href="#HookAfter" class="table-of-contents__link toc-highlight">.HookAfter</a></li><li><a href="#HookBefore" class="table-of-contents__link toc-highlight">.HookBefore</a></li><li><a href="#isDocument" class="table-of-contents__link toc-highlight">.isDocument</a></li><li><a href="#IsOpen" class="table-of-contents__link toc-highlight">.IsOpen</a></li><li><a href="#IsOpenAvailable" class="table-of-contents__link toc-highlight">.IsOpenAvailable</a></li><li><a href="#Open" class="table-of-contents__link toc-highlight">.Open</a></li><li><a href="#Peek" class="table-of-contents__link toc-highlight">.Peek</a></li><li><a href="#Read" class="table-of-contents__link toc-highlight">.Read</a></li><li><a href="#Save" class="table-of-contents__link toc-highlight">.Save</a></li><li><a href="#SetCache" class="table-of-contents__link toc-highlight">.SetCache</a></li><li><a href="#Steal" class="table-of-contents__link toc-highlight">.Steal</a></li><li><a href="#Update" class="table-of-contents__link toc-highlight">.Update</a></li><li><a href="#UpdateCache" class="table-of-contents__link toc-highlight">.UpdateCache</a></li></ul></li></ul></div></div></div></div></main></div></div><footer class="footer footer--dark"><div class="container container-fluid"><div class="footer__bottom text--center"><div class="footer__copyright">Copyright © 2024 anthony0br. Built with Moonwave and Docusaurus.</div></div></div></footer></div>
+<script src="/DocumentService/assets/js/runtime~main.77aab6ca.js"></script>
+<script src="/DocumentService/assets/js/main.905ccee7.js"></script>
 </body>
 </html>
