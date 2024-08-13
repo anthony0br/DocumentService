@@ -804,8 +804,6 @@ end)
 Test("Migrations do not re-run after going from latest -> outdated -> latest session", function()
 	local mockDataStore = DataStoreService:GetDataStore(uuid())
 
-	local migrationRunCount = 0
-
 	-- We join a new server
 	do
 		local CheckInterface = {
@@ -838,7 +836,6 @@ Test("Migrations do not re-run after going from latest -> outdated -> latest ses
 					backwardsCompatible = true,
 					migrate = function(data)
 						data.newField = "new field migrated"
-						migrationRunCount += 1
 
 						return data
 					end,
@@ -848,9 +845,6 @@ Test("Migrations do not re-run after going from latest -> outdated -> latest ses
 		})
 
 		local document = store:GetDocument("1")
-		document:Open()
-		document:Close()
-		document = store:GetDocument("1")
 		local result = document:Open()
 		assert(result.success)
 		check(result.data)
@@ -889,10 +883,63 @@ Test("Migrations do not re-run after going from latest -> outdated -> latest ses
 		local result = document:Open()
 		assert(result.success)
 		check(result.data)
+		print(result.data)
 		document:Close()
 	end
 
 	-- We now join a new server
+	do
+		local CheckInterface = {
+			testString = Guard.String,
+			testNumber = Guard.Number,
+			newField = Guard.String,
+		}
+
+		local function check(value: unknown)
+			assert(type(value) == "table")
+			local Value: any = value
+
+			return {
+				testString = CheckInterface.testString(Value.testString),
+				testNumber = CheckInterface.testNumber(Value.testNumber),
+				newField = CheckInterface.newField(Value.newField),
+			}
+		end
+
+		local store = DocumentService.DocumentStore.new({
+			dataStore = mockDataStore,
+			check = Guard.Check(check),
+			default = {
+				testString = "bad string",
+				testNumber = 10000,
+				newField = "new field default",
+			},
+			migrations = {
+				{
+					backwardsCompatible = true,
+					migrate = function(data)
+						data.newField = "new field migrated"
+						error("This migration shouldn't run")
+
+						return data
+					end,
+				},
+			},
+			lockSessions = true,
+		})
+
+		local document = store:GetDocument("1")
+		local result1 = document:Open()
+		print(result1.reason)
+		assert(result1.success)
+		document:Close()
+		document = store:GetDocument("1")
+		local result = document:Open()
+		assert(result.success)
+		check(result.data)
+		print(result.data)
+		document:Close()
+	end
 end)
 
 --Test("Backwards incompatible schemas fail with BackwardsCompatibilityError")
