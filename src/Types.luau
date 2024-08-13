@@ -99,8 +99,7 @@ export type BackwardsCompatibilityError = "BackwardsCompatibilityError"
 	This indicates the key provided is not managed by DocumentService, or has
 	been corrupted.
 
-	This is for DataStore-requesting methods that can be called before the
-	Document is opened. In the case of a SchemaError during opening, a new
+	In the case of a SchemaError during opening, a new
 	Document will be created, enclosing the existing value at the key.
 	
 	@within DocumentService
