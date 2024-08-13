@@ -151,6 +151,7 @@ local function runMigrations<T>(
 	for i, migration in ipairs(migrations) do
 		local fromVersion = i - 1
 		local targetVersion = i
+
 		if fromVersion == dataVersion then
 			data = migration.migrate(data)
 			dataVersion = targetVersion
@@ -366,6 +367,7 @@ function Document.Open<T>(self: Document<T>): OpenResult<T>
 			local lockedByUs = locked and (keyData.sessionLockId == self._sessionId)
 			if locked and not lockedByUs then
 				lockedByOther = true
+				-- Throw a Luau error so the pcall fails and we retry
 				error("Session lock held by another session.")
 			end
 		end
