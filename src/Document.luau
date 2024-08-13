@@ -497,9 +497,9 @@ function Document.Steal<T>(self: Document<T>): Result<T, RobloxAPIError | Schema
 end
 
 --[=[
-	Returns false if the Document is locked by another session.
+	Returns false whether the Document is currently locked by another session.
 
-	If props.sessionLock is false, it will always return true.
+	If props.lockSessions is false, this will always return true.
 
 	:::tip
 	You can use this to check if a player is active to avoid data loss while
@@ -510,7 +510,7 @@ end
 
 	@return Result<boolean, RobloxAPIError | SchemaError>
 ]=]
-function Document.IsWriteAvailable<T>(self: Document<T>): Result<boolean, RobloxAPIError | SchemaError>
+function Document.IsOpenAvailable<T>(self: Document<T>): Result<boolean, RobloxAPIError | SchemaError>
 	assert(not self._isClosing, "Document is closing")
 
 	if not self._lockSessions then
@@ -677,7 +677,8 @@ function Document.UpdateCache<T>(self: Document<T>, transform: Transform<T>): T
 end
 
 --[=[
-	Reads from the DataStore.
+	Reads from the DataStore, setting the cache and garuanteeing the return type,
+	assuming the data has not been corrupted since the last `:Open`.
 
 	:::warning
 	Overwrites the cache. If you are using session locking, you should only read once.
