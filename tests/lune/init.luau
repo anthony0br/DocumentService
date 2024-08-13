@@ -622,7 +622,123 @@ Test("Migrating from version 0 runs all migrations exactly once", function()
 	assert(migrationRunCount == 1, "Migration ran " .. migrationRunCount .. " times, it should run once")
 end)
 
---Test("Migrating from a non-zero version does not run old migrations")
+Test("Migrating from a non-zero version does not run old migrations", function()
+	local mockDataStore = DataStoreService:GetDataStore(uuid())
+
+	local migrationRunCount = 0
+
+	do
+		local CheckInterface = {
+			testString = Guard.String,
+			testNumber = Guard.Number,
+		}
+
+		local function check(value: unknown)
+			assert(type(value) == "table")
+			local Value: any = value
+
+			return {
+				testString = CheckInterface.testString(Value.testString),
+				testNumber = CheckInterface.testNumber(Value.testNumber),
+			}
+		end
+
+		local store = DocumentService.DocumentStore.new({
+			dataStore = mockDataStore,
+			check = Guard.Check(check),
+			default = {
+				testString = "string",
+				testNumber = 0,
+			},
+			migrations = {
+				{
+					backwardsCompatible = true,
+					migrate = function(data)
+						data.testNumber = -1
+						error("First migration ran")
+
+						return data
+					end,
+				},
+			},
+			lockSessions = true,
+		})
+
+		local document = store:GetDocument("1")
+		-- Opening from the first time should use default
+		local result = document:Open()
+		assert(result.success)
+		check(result.data)
+		assert(result.data.testNumber == 0)
+		document:Close()
+	end
+
+	-- Imagine now we update the game and add a migration
+
+	do
+		local CheckInterface = {
+			testString = Guard.String,
+			testNumber = Guard.Number,
+			newField = Guard.String,
+		}
+
+		local function check(value: unknown)
+			assert(type(value) == "table")
+			local Value: any = value
+
+			return {
+				testString = CheckInterface.testString(Value.testString),
+				testNumber = CheckInterface.testNumber(Value.testNumber),
+				newField = CheckInterface.newField(Value.newField),
+			}
+		end
+
+		local store = DocumentService.DocumentStore.new({
+			dataStore = mockDataStore,
+			check = Guard.Check(check),
+			default = {
+				testString = "bad string",
+				testNumber = 10000,
+				newField = "new field default",
+			},
+			migrations = {
+				{
+					backwardsCompatible = true,
+					migrate = function(data)
+						data.testNumber = -1
+						error("First migration ran")
+
+						return data
+					end,
+				},
+				{
+					backwardsCompatible = true,
+					migrate = function(data)
+						data.newField = "new field migrated"
+						migrationRunCount += 1
+
+						return data
+					end,
+				},
+			},
+			lockSessions = true,
+		})
+
+		local document = store:GetDocument("1")
+		document:Open()
+		document:Close()
+		document = store:GetDocument("1")
+		local result = document:Open()
+		assert(result.success)
+		check(result.data)
+		assert(result.data.newField == "new field migrated")
+		assert(result.data.testString == "string")
+		assert(result.data.testNumber == 0)
+		document:Close()
+	end
+
+	assert(migrationRunCount == 1, "Migration ran " .. migrationRunCount .. " times, it should run once")
+end)
 
 --Test("Using default data never runs migrations")
 
