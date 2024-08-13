@@ -5,7 +5,9 @@
 
 	Runs before the operation.
 
-	Update hooks will run on any operation that saves the datastore e.g. :Save().
+	Update hooks will run on any operation that writes to Data Stores e.g. :Save().
+
+	Read hooks will run on any operation that reads from Data Stores e.g. :Peek()
 
 	@within DocumentService
 ]=]
@@ -16,7 +18,9 @@ export type PreHookEvent = "Open" | "Close" | "Update" | "Read"
 
 	Runs after the operation.
 
-	Update hooks will run on any operation that saves the datastore e.g. :Save().
+	Update hooks will run on any operation that writes to Data Stores e.g. :Save().
+
+	Read hooks will run on any operation that reads from Data Stores e.g. :Peek()
 
 	@within DocumentService
 ]=]
