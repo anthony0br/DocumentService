@@ -5,8 +5,6 @@ local DocumentService = require("../../src/init")
 local Guard = require("./Guard")
 local DataStoreService = require("./mock-datastore/init").new()
 
-local mockDataStore = DataStoreService:GetDataStore("name")
-
 local Results = {
 	passed = 0,
 	failed = 0,
@@ -62,21 +60,10 @@ end
 	Creates a unique DocumentStore on a unique DataStore in a standard format for testing
 ]=]
 local function createTestDocumentStore()
-	return DocumentService.DocumentStore.new({
-		dataStore = DataStoreService:GetDataStore(uuid()),
-		check = Guard.Check(testDataCheck),
-		default = {
-			Document = "Document",
-			Service = 3,
-		},
-		migrations = {},
-		lockSessions = true,
-	})
-end
+	local datastore = DataStoreService:GetDataStore(uuid())
 
-local function createTestDocumentStoreNotLocked()
 	return DocumentService.DocumentStore.new({
-		dataStore = DataStoreService:GetDataStore(uuid()),
+		dataStore = datastore,
 		check = Guard.Check(testDataCheck),
 		default = {
 			Document = "Document",
@@ -84,7 +71,24 @@ local function createTestDocumentStoreNotLocked()
 		},
 		migrations = {},
 		lockSessions = false,
-	})
+	}),
+		datastore
+end
+
+local function createTestDocumentStoreNotLocked()
+	local datastore = DataStoreService:GetDataStore(uuid())
+
+	return DocumentService.DocumentStore.new({
+		dataStore = datastore,
+		check = Guard.Check(testDataCheck),
+		default = {
+			Document = "Document",
+			Service = 3,
+		},
+		migrations = {},
+		lockSessions = false,
+	}),
+		datastore
 end
 
 Test("Opens document with no simulated errors and valid is valid", function()
@@ -124,7 +128,7 @@ end)
 Test("isDocumentStore works", function()
 	local documentStore = createTestDocumentStore()
 	assert(documentStore.isDocumentStore(documentStore))
-	assert(not documentStore.isDocumentStore(mockDataStore))
+	assert(not documentStore.isDocumentStore(DataStoreService:GetDataStore(uuid())))
 end)
 
 Test("isDocument works", function()
@@ -163,7 +167,7 @@ Test("GetDocument returns a new document after an old document is closed", funct
 end)
 
 Test("Opens document with simulated error", function()
-	local documentStore = createTestDocumentStore()
+	local documentStore, mockDataStore = createTestDocumentStore()
 	mockDataStore.errors:addSimulatedErrors(1)
 	local document = documentStore:GetDocument("2")
 	local result = document:Open()
@@ -174,7 +178,7 @@ Test("Opens document with simulated error", function()
 end)
 
 Test("Opens document with 4 simulated errors", function()
-	local documentStore = createTestDocumentStore()
+	local documentStore, mockDataStore = createTestDocumentStore()
 	mockDataStore.errors:addSimulatedErrors(4)
 	local document = documentStore:GetDocument("2")
 	local result = document:Open()
@@ -187,7 +191,7 @@ end)
 -- Now that all operations only use a single datastore API request, we only need
 -- to test up to 5 simulated errors
 Test("Fails to open document with 5 simulated errors", function()
-	local documentStore = createTestDocumentStore()
+	local documentStore, mockDataStore = createTestDocumentStore()
 	mockDataStore.errors:addSimulatedErrors(5)
 	local document = documentStore:GetDocument("3")
 	local result = document:Open()
@@ -289,13 +293,19 @@ Test("Save fails if not session locked", function()
 	end)
 end)
 
-Test("IsOpen returns correctly", function() end)
+Test("IsOpen returns correctly", function()
+	local documentStore = createTestDocumentStoreNotLocked()
+	local document = documentStore:GetDocument("1")
+	assert(document:IsOpen() == false)
+	document:Open()
+	assert(document:IsOpen() == true)
+end)
 
-Test("Session locking affects IsWriteAvailable correctly", function() end)
+Test("Session locking affects IsOpenAvailable correctly", function()
+	local mockDataStore = DataStoreService:GetDataStore(uuid())
 
-Test("Session locking prevents other sessions from opening", function()
 	local session1 = DocumentService.DocumentStore.new({
-		dataStore = DataStoreService:GetDataStore("TestStore"),
+		dataStore = mockDataStore,
 		check = Guard.Check(testDataCheck),
 		default = {
 			Document = "Document",
@@ -305,7 +315,7 @@ Test("Session locking prevents other sessions from opening", function()
 		lockSessions = true,
 	})
 	local session2 = DocumentService.DocumentStore.new({
-		dataStore = DataStoreService:GetDataStore("TestStore"),
+		dataStore = mockDataStore,
 		check = Guard.Check(testDataCheck),
 		default = {
 			Document = "Document",
@@ -316,11 +326,50 @@ Test("Session locking prevents other sessions from opening", function()
 	})
 	do
 		local document = session1:GetDocument("sessionLockTest1")
+		local openAvailable = document:IsOpenAvailable()
+		local result = document:Open()
+		assert(result.success == true)
+		assert(openAvailable.success == true)
+		assert(openAvailable.data == true)
+	end
+	do
+		local document = session2:GetDocument("sessionLockTest1")
+		local result = document:IsOpenAvailable()
+		assert(result.success == true)
+		assert(result.data == false)
+	end
+end)
+
+Test("Session locking prevents other sessions from opening", function()
+	local mockDataStore = DataStoreService:GetDataStore(uuid())
+
+	local session1 = DocumentService.DocumentStore.new({
+		dataStore = mockDataStore,
+		check = Guard.Check(testDataCheck),
+		default = {
+			Document = "Document",
+			Service = 3,
+		},
+		migrations = {},
+		lockSessions = true,
+	})
+	local session2 = DocumentService.DocumentStore.new({
+		dataStore = mockDataStore,
+		check = Guard.Check(testDataCheck),
+		default = {
+			Document = "Document",
+			Service = 3,
+		},
+		migrations = {},
+		lockSessions = true,
+	})
+	do
+		local document = session1:GetDocument("1")
 		local result = document:Open()
 		assert(result.success == true)
 	end
 	do
-		local document = session2:GetDocument("sessionLockTest1")
+		local document = session2:GetDocument("1")
 		local result = document:Open()
 		assert(result.success == false)
 		assert(result.reason == "SessionLockedError")
@@ -372,6 +421,7 @@ Test("Data mutations persist with no migrations", function()
 end)
 
 Test("Migrate from an invalid data with no migration should fail with CheckFailed", function()
+	local mockDataStore = DataStoreService:GetDataStore(uuid())
 	local store = DocumentService.DocumentStore.new({
 		dataStore = mockDataStore,
 		check = Guard.Check(testDataCheck),
@@ -405,6 +455,8 @@ Test("Close fails if not open", function()
 end)
 
 Test("When migrating from from no library with a migration, the migration runs exactly once", function()
+	local mockDataStore = DataStoreService:GetDataStore(uuid())
+
 	local CheckInterface2 = {
 		testString = Guard.String,
 		testNumber = Guard.Number,
@@ -470,14 +522,16 @@ Test("When migrating from from no library with a migration, the migration runs e
 	assert(result2.success)
 	check2(result2.data)
 
-	assert(migrationRunCount == 1, "Migration ran more than once")
+	assert(migrationRunCount == 1, "Migration ran more than once or not at all")
 end)
 
 Test("Migrating from version 0 runs all migrations exactly once", function()
+	local mockDataStore = DataStoreService:GetDataStore(uuid())
+
 	local migrationRunCount = 0
 
 	do
-		local CheckInterface2 = {
+		local CheckInterface = {
 			testString = Guard.String,
 			testNumber = Guard.Number,
 		}
@@ -487,12 +541,10 @@ Test("Migrating from version 0 runs all migrations exactly once", function()
 			local Value: any = value
 
 			return {
-				testString = CheckInterface2.testString(Value.testString),
-				testNumber = CheckInterface2.testNumber(Value.testNumber),
+				testString = CheckInterface.testString(Value.testString),
+				testNumber = CheckInterface.testNumber(Value.testNumber),
 			}
 		end
-
-		local migrations = {}
 
 		local store = DocumentService.DocumentStore.new({
 			dataStore = mockDataStore,
@@ -501,7 +553,7 @@ Test("Migrating from version 0 runs all migrations exactly once", function()
 				testString = "string",
 				testNumber = 0,
 			},
-			migrations = migrations,
+			migrations = {},
 			lockSessions = true,
 		})
 
@@ -532,33 +584,42 @@ Test("Migrating from version 0 runs all migrations exactly once", function()
 			}
 		end
 
-		local migrations = {}
-
 		local store = DocumentService.DocumentStore.new({
 			dataStore = mockDataStore,
 			check = Guard.Check(check),
 			default = {
 				testString = "bad string",
-				testNumber = -10000,
-				newField = "new field",
+				testNumber = 10000,
+				newField = "new field default",
 			},
-			migrations = migrations,
+			migrations = {
+				{
+					backwardsCompatible = true,
+					migrate = function(data)
+						data.newField = "new field migrated"
+						migrationRunCount += 1
+
+						return data
+					end,
+				},
+			},
 			lockSessions = true,
 		})
 
 		local document = store:GetDocument("1")
+		document:Open()
+		document:Close()
+		document = store:GetDocument("1")
 		local result = document:Open()
 		assert(result.success)
 		check(result.data)
+		assert(result.data.newField == "new field migrated")
+		assert(result.data.testString == "string")
+		assert(result.data.testNumber == 0)
 		document:Close()
 	end
 
-	document = store:GetDocument("1")
-	local result2 = document:Open()
-	assert(result2.success)
-	check2(result2.data)
-
-	assert(migrationRunCount == 1, "Migration ran more than once")
+	assert(migrationRunCount == 1, "Migration ran " .. migrationRunCount .. " times, it should run once")
 end)
 
 --Test("Migrating from a non-zero version does not run old migrations")
