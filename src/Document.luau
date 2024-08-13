@@ -6,7 +6,7 @@ local SaveUtil = require("./SaveUtil")
 local deepFreeze = require("./DeepFreeze")
 
 local SESSION_EXPIRE_TIME = 600
-local AUTOSAVE_PERIOD = 150
+local AUTOSAVE_INTERVAL = 150
 
 --[=[
 	@class Document
@@ -431,7 +431,7 @@ function Document.Open<T>(self: Document<T>): OpenResult<T>
 
 	self._autoSaveThread = task.defer(function()
 		while self._lockSessions and self._open do
-			task.wait(AUTOSAVE_PERIOD)
+			task.wait(AUTOSAVE_INTERVAL)
 			self:Save()
 		end
 	end)
