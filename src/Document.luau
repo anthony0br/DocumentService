@@ -577,6 +577,7 @@ end
 	The document must be open before using this method.
 
 	If session locked, will save the document and remove the lock first.
+	If this fails, the document will not be destroyed.
 
 	After closing a Document, you will need to call 
 	DocumentStore:GetDocument() to retrieve a new one if you wish to access the
@@ -865,7 +866,10 @@ function Document.Save<T>(self: Document<T>): WriteResult<T>
 end
 
 --[=[
-	Wipes all data associated with the key and closes the document.
+	Erases all data associated with the key.
+
+	The document cannot be open. It is up to you to check if the document
+	is open elsewhere, e.g. via `IsOpenAvailable`.
 
 	Satisfies compliance with GDPR right of erasure.
 
@@ -874,9 +878,7 @@ end
 	@yields
 ]=]
 function Document.Erase<T>(self: Document<T>): Result<nil, RobloxAPIError>
-	if self._open then
-		self:Close()
-	end
+	assert(not self._open, "Cannot erase an open document")
 
 	local success = SaveUtil.removeAsync(self._dataStore, self._key)
 
