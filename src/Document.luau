@@ -508,9 +508,9 @@ end
 
 	@yields
 
-	@return Result<boolean, RobloxAPIError | SchemaError>
+	@return Result<boolean, RobloxAPIError>
 ]=]
-function Document.IsOpenAvailable<T>(self: Document<T>): Result<boolean, RobloxAPIError | SchemaError>
+function Document.IsOpenAvailable<T>(self: Document<T>): Result<boolean, RobloxAPIError>
 	assert(not self._isClosing, "Document is closing")
 
 	if not self._lockSessions then
@@ -531,10 +531,12 @@ function Document.IsOpenAvailable<T>(self: Document<T>): Result<boolean, RobloxA
 
 	local keyData = getKeyData(getValue)
 
+	-- Since the behaviour of Open in this case if to put the existing value
+	-- in the key into keyData.data, return a true Result.
 	if not keyData then
 		return {
-			success = false,
-			reason = "SchemaError",
+			success = true,
+			data = true,
 		}
 	end
 
