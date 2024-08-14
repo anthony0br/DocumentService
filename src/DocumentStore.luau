@@ -37,6 +37,7 @@ export type DocumentStore<T> = typeof(setmetatable(
 		-- Ideally, we could avoid this boolean option, but this is better
 		-- than trying to do inheritance in Luau
 		_lockSessions: boolean,
+		_documentsOpening: number,
 	},
 	DocumentStore
 ))
@@ -86,20 +87,22 @@ function DocumentStore.new<T>(props: {
 		_migrations = deepFreeze(props.migrations),
 		_documents = {},
 		_lockSessions = props.lockSessions,
+		_documentsOpening = 0,
 	}, DocumentStore)
 
 	-- Save and close all documents as fast as possible on BindToClose
 	-- Yielding on BindToClose in studio can cause studio to take a very long
 	-- time to stop play test sessions, so we check :IsStudio()
-	if _G.IS_ROBLOX and not RunService:IsStudio() then
+	if _G.IS_ROBLOX then
 		game:BindToClose(function()
 			gameClosing = true
-			-- BindToClose callbacks run for 30 seconds. This loop tries to make
-			-- sure any documents that are opened after BindToClose callbacks
-			-- begin are also closed.
-			while true do
+
+			while self._documentsOpening ~= 0 do
 				self:CloseAllDocuments()
+				task.wait()
 			end
+
+			self:CloseAllDocuments()
 		end)
 	end
 
@@ -128,6 +131,14 @@ function DocumentStore.GetDocument<T>(self: DocumentStore<T>, key: string): Docu
 		migrations = self._migrations,
 		lockSessions = self._lockSessions,
 	})
+
+	document:HookBefore("Open", function()
+		self._documentsOpening += 1
+	end)
+
+	document:HookAfter("Open", function()
+		self._documentsOpening -= 1
+	end)
 
 	document:HookAfter("Close", function()
 		self._documents[key] = nil
@@ -175,12 +186,15 @@ function DocumentStore.CloseAllDocuments<T>(self: DocumentStore<T>)
 				documentsClosing -= 1
 
 				if documentsClosing == 0 then
-					task.spawn(thread)
+					-- Defer so that the coroutine.yield() runs first
+					task.defer(thread)
 				end
 			end)
 		end
 
-		coroutine.yield()
+		if openDocumentsExist then
+			coroutine.yield()
+		end
 	end
 end
 

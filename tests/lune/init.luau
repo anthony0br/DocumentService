@@ -1028,6 +1028,69 @@ Test("Migrations do not re-run after going from latest -> outdated -> latest ses
 	end
 end)
 
+Test("DocumentStore:CloseAllDocuments yields until all documents are closed", function()
+	local mockDataStore = DataStoreService:GetDataStore(uuid())
+
+	-- We join a new server
+	local CheckInterface = {
+		testString = Guard.String,
+		testNumber = Guard.Number,
+	}
+
+	local function check(value: unknown)
+		assert(type(value) == "table")
+		local Value: any = value
+
+		return {
+			testString = CheckInterface.testString(Value.testString),
+			testNumber = CheckInterface.testNumber(Value.testNumber),
+		}
+	end
+
+	local store = DocumentService.DocumentStore.new({
+		dataStore = mockDataStore,
+		check = Guard.Check(check),
+		default = {
+			testString = "data from first server",
+			testNumber = 10000,
+		},
+		migrations = {
+			{
+				backwardsCompatible = true,
+				migrate = function(data)
+					data.newField = "new field migrated"
+
+					return data
+				end,
+			},
+		},
+		lockSessions = true,
+	})
+
+	do
+		local document = store:GetDocument("1")
+		local result = document:Open()
+		assert(result.success)
+	end
+	do
+		local document = store:GetDocument("2")
+		local result = document:Open()
+		assert(result.success)
+	end
+	do
+		local document = store:GetDocument("3")
+	end
+	do
+		local document = store:GetDocument("4")
+	end
+
+	-- We should be able to call it sequentially as many times as we like
+	store:CloseAllDocuments()
+	assert(store:GetDocument("1"):IsOpen() == false)
+	assert(store:GetDocument("2"):IsOpen() == false)
+	store:CloseAllDocuments()
+end)
+
 -- Test: update method
 
 -- Test: read method
