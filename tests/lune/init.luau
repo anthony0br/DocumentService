@@ -801,6 +801,92 @@ Test("Migrating from a non-zero version does not run old migrations", function()
 	assert(migrationRunCount == 1, "Migration ran " .. migrationRunCount .. " times, it should run once")
 end)
 
+Test("Backwards incompatible schemas fail with BackwardsCompatibilityError", function()
+	local mockDataStore = DataStoreService:GetDataStore(uuid())
+
+	-- We join a new server
+	do
+		local CheckInterface = {
+			testString = Guard.String,
+			testNumber = Guard.Number,
+			newField = Guard.String,
+		}
+
+		local function check(value: unknown)
+			assert(type(value) == "table")
+			local Value: any = value
+
+			return {
+				testString = CheckInterface.testString(Value.testString),
+				testNumber = CheckInterface.testNumber(Value.testNumber),
+				newField = CheckInterface.newField(Value.newField),
+			}
+		end
+
+		local store = DocumentService.DocumentStore.new({
+			dataStore = mockDataStore,
+			check = Guard.Check(check),
+			default = {
+				testString = "data from first server",
+				testNumber = 10000,
+				newField = "new field default",
+			},
+			migrations = {
+				{
+					backwardsCompatible = false,
+					migrate = function(data)
+						data.newField = "new field migrated"
+
+						return data
+					end,
+				},
+			},
+			lockSessions = true,
+		})
+
+		local document = store:GetDocument("1")
+		local result = document:Open()
+		assert(result.success)
+		check(result.data)
+		document:Close()
+	end
+
+	-- We join an old server
+	do
+		local CheckInterface = {
+			testString = Guard.String,
+			testNumber = Guard.Number,
+		}
+
+		local function check(value: unknown)
+			assert(type(value) == "table")
+			local Value: any = value
+
+			return {
+				testString = CheckInterface.testString(Value.testString),
+				testNumber = CheckInterface.testNumber(Value.testNumber),
+			}
+		end
+
+		local store = DocumentService.DocumentStore.new({
+			dataStore = mockDataStore,
+			check = Guard.Check(check),
+			default = {
+				testString = "string",
+				testNumber = 0,
+			},
+			migrations = {},
+			lockSessions = true,
+		})
+
+		local document = store:GetDocument("1")
+		local result = document:Open()
+		assert(result.success == false)
+		assert(result.reason == "BackwardsCompatibilityError")
+		document:Close()
+	end
+end)
+
 Test("Migrations do not re-run after going from latest -> outdated -> latest session", function()
 	local mockDataStore = DataStoreService:GetDataStore(uuid())
 
@@ -827,7 +913,7 @@ Test("Migrations do not re-run after going from latest -> outdated -> latest ses
 			dataStore = mockDataStore,
 			check = Guard.Check(check),
 			default = {
-				testString = "bad string",
+				testString = "data from first server",
 				testNumber = 10000,
 				newField = "new field default",
 			},
@@ -941,8 +1027,6 @@ Test("Migrations do not re-run after going from latest -> outdated -> latest ses
 		document:Close()
 	end
 end)
-
---Test("Backwards incompatible schemas fail with BackwardsCompatibilityError")
 
 -- Test: update method
 
