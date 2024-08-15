@@ -903,7 +903,9 @@ end
 --[=[
 	Reads the latest data stored in Data Stores.
 
-	This may be called while the document is not open, so the return type is
+	Runs migrations and the check function, but does not save changes.
+
+	This may be called while the document is not open.
 
 	Runs Read hooks.
 
@@ -911,7 +913,9 @@ end
 
 	@yields
 ]=]
-function Document.Peek<T>(self: Document<T>): Result<any, RobloxAPIError | SchemaError>
+function Document.Read<T>(
+	self: Document<T>
+): Result<T, RobloxAPIError | SchemaError | CheckError | BackwardsCompatibilityError>
 	runHooks(self._preHooks.Read)
 
 	local success, getValue: any = SaveUtil.getAsync(self._dataStore, self._key)
@@ -932,38 +936,29 @@ function Document.Peek<T>(self: Document<T>): Result<any, RobloxAPIError | Schem
 		}
 	end
 
+	local migrationResult = runMigrations(self._migrations, keyData.data, keyData.dataSchemaVersion)
+
+	local checkOk, checkedData = self._check(migrationResult.data)
+
+	if not checkOk then
+		return {
+			success = false,
+			reason = "CheckError",
+		}
+	end
+
+	if keyData.lastCompatibleVersion > migrationResult.version then
+		return {
+			success = false,
+			reason = "BackwardsCompatibilityError",
+		}
+	end
+
 	runHooks(self._postHooks.Read)
 
 	return {
 		success = true,
-		data = keyData.data,
-	}
-end
-
---[=[
-	Reads the latest data stored in Data Stores.
-
-	Peeks, but can only be called once the Document is open, so
-	the returned Result.data is typed.
-
-	Since this calls Peek, Read hooks are run.
-	
-	@return Result<T, RobloxAPIError | SchemaError>
-
-	@yields
-]=]
-function Document.Read<T>(self: Document<T>): Result<T, RobloxAPIError | SchemaError>
-	assert(self._open, "Document not open - open it or use Peek instead")
-
-	local result = self:Peek()
-
-	if not result.success then
-		return result
-	end
-
-	return {
-		success = true,
-		data = result.data :: T,
+		data = checkedData,
 	}
 end
 
