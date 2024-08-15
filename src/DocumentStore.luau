@@ -37,7 +37,8 @@ export type DocumentStore<T> = typeof(setmetatable(
 		-- Ideally, we could avoid this boolean option, but this is better
 		-- than trying to do inheritance in Luau
 		_lockSessions: boolean,
-		_documentsOpening: number,
+		_openingDocuments: number,
+		_openDocuments: number,
 	},
 	DocumentStore
 ))
@@ -87,7 +88,8 @@ function DocumentStore.new<T>(props: {
 		_migrations = deepFreeze(props.migrations),
 		_documents = {},
 		_lockSessions = props.lockSessions,
-		_documentsOpening = 0,
+		_openingDocuments = 0,
+		_openDocuments = 0,
 	}, DocumentStore)
 
 	-- Save and close all documents as fast as possible on BindToClose
@@ -96,11 +98,6 @@ function DocumentStore.new<T>(props: {
 	if _G.IS_ROBLOX then
 		game:BindToClose(function()
 			gameClosing = true
-
-			while self._documentsOpening ~= 0 do
-				self:CloseAllDocuments()
-				task.wait()
-			end
 
 			self:CloseAllDocuments()
 		end)
@@ -133,14 +130,16 @@ function DocumentStore.GetDocument<T>(self: DocumentStore<T>, key: string): Docu
 	})
 
 	document:HookBefore("Open", function()
-		self._documentsOpening += 1
+		self._openingDocuments += 1
 	end)
 
 	document:HookAfter("Open", function()
-		self._documentsOpening -= 1
+		self._openingDocuments -= 1
+		self._openDocuments += 1
 	end)
 
 	document:HookAfter("Close", function()
+		self._openDocuments -= 1
 		self._documents[key] = nil
 	end)
 
@@ -152,49 +151,67 @@ end
 --[=[
 	Closes all open documents as fast as possible. This runs on BindToClose already.
 
+	Will also wait for any documents that are opening to open, and then close them.
+
+	:::warning
+	Yields until all documents are closed. If there is a systematic error
+	in your :Close, for example a hook errors, this could infinitely yield.
+	:::
+
+	Closes documents asynchronously when request budget allows, and yields
+	all open documents are closed.
+
 	@yields
 ]=]
 function DocumentStore.CloseAllDocuments<T>(self: DocumentStore<T>)
-	local openDocumentsExist = true
+	local thread = coroutine.running()
 
-	while openDocumentsExist do
+	-- This while loop exists for two reasons:
+	-- 1. if budget is limited, we can wait for
+	-- more to be available before spawning future threads, so documents
+	-- are closed as quickly as possilbe by minimising retries
+	-- 2. ensures documents that are opening and not yet opened when
+	-- this is called are closed
+	while self._openDocuments > 0 or self._openingDocuments > 0 do
+		-- In each pass, we close the number of open documents recorded at the
+		-- start of the pass, or the size of the budget - whichever is smaller
 		local budget = Util.getUpdateBudget()
-		local count = 0
-		openDocumentsExist = false
-
-		local thread = coroutine.running()
-		local documentsClosing = 0
+		local documentsToClose = math.min(self._openDocuments, budget)
+		local requestCount = 0
 
 		for _, v: Document<T> in pairs(self._documents) do
 			if not v:IsOpen() then
 				continue
 			end
 
-			openDocumentsExist = true
-
-			if count >= budget then
+			if requestCount >= budget then
 				break
 			end
 
 			if self._lockSessions then
-				count += 1
+				requestCount += 1
 			end
 
 			task.spawn(function()
-				documentsClosing += 1
+				-- If Close fails, the After hook won't run and it will be
+				-- attempted again in the next while iteration
 				v:Close()
-				documentsClosing -= 1
+				documentsToClose -= 1
 
-				if documentsClosing == 0 then
-					-- Defer so that the coroutine.yield() runs first
+				if documentsToClose == 0 then
+					-- Defer so that the coroutine.yield() always runs first
 					task.defer(thread)
 				end
 			end)
 		end
 
-		if openDocumentsExist then
+		-- We need to yield the thread inside the while loop, otherwise we
+		-- will try to close the same documents lots of times
+		if self._openDocuments > 0 then
 			coroutine.yield()
 		end
+
+		task.wait()
 	end
 end
 
