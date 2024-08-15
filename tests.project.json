@@ -1,0 +1,6 @@
+{
+    "name": "documentservice-source",
+    "tree": {
+      "$path": "./tests"
+    }
+  }
