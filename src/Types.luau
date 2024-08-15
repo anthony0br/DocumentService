@@ -121,6 +121,11 @@ export type SchemaError = "SchemaError"
 
 	The current version is defined by the length of this array.
 
+	:::warning
+	If you make a not-backwards-compatible migration on not-session-locked
+	Documents, you must shut down all servers, or old servers will break.
+	:::
+
 	@within DocumentService
 
 ]=]
