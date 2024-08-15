@@ -1124,9 +1124,14 @@ Test("DocumentStore:CloseAllDocuments yields until all documents are closed", fu
 	end
 	do
 		local document = store:GetDocument("3")
+		local result = document:Open()
 	end
 	do
 		local document = store:GetDocument("4")
+		local result = document:Open()
+	end
+	do
+		local document = store:GetDocument("5")
 	end
 
 	-- We should be able to call it sequentially as many times as we like
@@ -1138,10 +1143,15 @@ Test("DocumentStore:CloseAllDocuments yields until all documents are closed", fu
 	end)
 	assert(store:GetDocument("1"):IsOpen() == true)
 	assert(store:GetDocument("2"):IsOpen() == true)
+	assert(store:GetDocument("3"):IsOpen() == true)
+	assert(store:GetDocument("4"):IsOpen() == true)
+	assert(store:GetDocument("5"):IsOpen() == false)
 	store:CloseAllDocuments()
 	assert(store:GetDocument("1"):IsOpen() == false)
 	assert(store:GetDocument("2"):IsOpen() == false)
-	store:CloseAllDocuments()
+	assert(store:GetDocument("3"):IsOpen() == false)
+	assert(store:GetDocument("4"):IsOpen() == false)
+	assert(store:GetDocument("5"):IsOpen() == false)
 end)
 
 --Test("Erase method sets the key to nil")

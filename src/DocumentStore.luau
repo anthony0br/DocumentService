@@ -171,10 +171,10 @@ function DocumentStore.CloseAllDocuments<T>(self: DocumentStore<T>)
 	-- more to be available before spawning future threads, so documents
 	-- are closed as quickly as possilbe by minimising retries
 	-- 2. ensures documents that are opening and not yet opened when
-	-- this is called are closed
+	-- this is called are closed.
 	while self._openDocuments > 0 or self._openingDocuments > 0 do
 		-- In each pass, we close the number of open documents recorded at the
-		-- start of the pass, or the size of the budget - whichever is smaller
+		-- start of the pass, or the size of the budget - whichever is smaller.
 		local budget = Util.getUpdateBudget()
 		local documentsToClose = math.min(self._openDocuments, budget)
 		local requestCount = 0
@@ -188,13 +188,11 @@ function DocumentStore.CloseAllDocuments<T>(self: DocumentStore<T>)
 				break
 			end
 
-			if self._lockSessions then
-				requestCount += 1
-			end
-
 			task.spawn(function()
 				-- If Close fails, the After hook won't run and it will be
 				-- attempted again in the next while iteration
+				requestCount += 1
+				print("Closing", tostring(v))
 				v:Close()
 				documentsToClose -= 1
 
@@ -206,9 +204,12 @@ function DocumentStore.CloseAllDocuments<T>(self: DocumentStore<T>)
 		end
 
 		-- We need to yield the thread inside the while loop, otherwise we
-		-- will try to close the same documents lots of times
-		if self._openDocuments > 0 then
+		-- will try to close the same documents lots of times, which would
+		-- waste request budget.
+		if documentsToClose > 0 then
+			print("Waiting for documents in pass to close")
 			coroutine.yield()
+			print("Pass complete!")
 		end
 
 		task.wait()
