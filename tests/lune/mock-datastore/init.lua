@@ -1,7 +1,7 @@
 local Budget = require("./Budget")
 local Constants = require("./Constants")
 local SimulatedErrors = require("./SimulatedErrors")
-local GlobalDataStore = require("./GlobalDataStore")
+local DataStore = require("./DataStore")
 local SimulatedYield = require("./SimulatedYield")
 local validateString = require("./validateString")
 
@@ -36,7 +36,7 @@ function DataStoreServiceMock:GetDataStore(name, scope)
 	end
 
 	if self.dataStores[name][scope] == nil then
-		self.dataStores[name][scope] = GlobalDataStore.new(self.budget, self.errors, self.yield)
+		self.dataStores[name][scope] = DataStore.new(self.budget, self.errors, self.yield)
 	end
 
 	return self.dataStores[name][scope]

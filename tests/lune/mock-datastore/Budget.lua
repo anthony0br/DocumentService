@@ -1,10 +1,10 @@
-if not task then
+if not _G.IS_ROBLOX then
 	task = require("@lune/task")
 end
 
 local PLAYER_COUNT = 1
 
-if not Enum then
+if not _G.IS_ROBLOX then
 	Enum = {
 		DataStoreRequestType = {
 			UpdateAsync = 2,

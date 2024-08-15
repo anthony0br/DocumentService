@@ -21,10 +21,20 @@ local function copyDeep(value)
 	return copy
 end
 
-local GlobalDataStore = {}
-GlobalDataStore.__index = GlobalDataStore
+local function copyDataStoreKeyInfo(keyInfo)
+	return DataStoreKeyInfo.new(
+		keyInfo.CreatedTime,
+		keyInfo.UpdatedTime,
+		keyInfo.Version,
+		keyInfo.userIds,
+		keyInfo.metadata
+	)
+end
 
-function GlobalDataStore.new(budget, errors, yield)
+local DataStore = {}
+DataStore.__index = DataStore
+
+function DataStore.new(budget, errors, yield)
 	return setmetatable({
 		data = {},
 		keyInfos = {},
@@ -32,10 +42,10 @@ function GlobalDataStore.new(budget, errors, yield)
 		budget = budget,
 		errors = errors,
 		yield = yield,
-	}, GlobalDataStore)
+	}, DataStore)
 end
 
-function GlobalDataStore:write(key, data, userIds, metadata)
+function DataStore:write(key, data, userIds, metadata)
 	local now = if _G.IS_ROBLOX then DateTime.now().UnixTimestampMillis else DateTime.now().unixTimestampMillis
 
 	local keyInfo = self.keyInfos[key]
@@ -52,11 +62,18 @@ function GlobalDataStore:write(key, data, userIds, metadata)
 	self.data[key] = copyDeep(data)
 end
 
-function GlobalDataStore:GetAsync(key: string, options: DataStoreGetOptions?)
+function DataStore:GetAsync(key: string, options: DataStoreGetOptions?)
 	validateString("key", key, Constants.MAX_KEY_LENGTH)
 
 	if (options == nil or options.UseCache) and self.getCache[key] ~= nil and os.clock() < self.getCache[key] then
-		return copyDeep(self.data[key])
+		local data = self.data[key]
+		local keyInfo = self.keyInfos[key]
+
+		if data == nil then
+			return nil, nil
+		end
+
+		return copyDeep(data), copyDataStoreKeyInfo(keyInfo)
 	end
 
 	if self.errors ~= nil then
@@ -67,15 +84,19 @@ function GlobalDataStore:GetAsync(key: string, options: DataStoreGetOptions?)
 
 	self.getCache[key] = os.clock() + Constants.GET_CACHE_DURATION
 
-	local data = copyDeep(self.data[key])
-	local keyInfo = self.keyInfos[key]
-
 	self.yield:yield()
 
-	return data, keyInfo
+	local data = self.data[key]
+	local keyInfo = self.keyInfos[key]
+
+	if data == nil then
+		return nil, nil
+	end
+
+	return copyDeep(data), copyDataStoreKeyInfo(keyInfo)
 end
 
-function GlobalDataStore:UpdateAsync(key: string, transform)
+function DataStore:UpdateAsync(key: string, transform)
 	validateString("key", key, Constants.MAX_KEY_LENGTH)
 
 	if typeof(transform) ~= "function" then
@@ -93,10 +114,12 @@ function GlobalDataStore:UpdateAsync(key: string, transform)
 		else { Enum.DataStoreRequestType.GetAsync, Enum.DataStoreRequestType.SetIncrementAsync }
 
 	self.budget:yieldForBudget(requestsTypes)
+	self.yield:yield()
 
-	local oldValue = self.data[key]
+	local oldValue = copyDeep(self.data[key])
+	local oldKeyInfo = if oldValue ~= nil then copyDataStoreKeyInfo(self.keyInfos[key]) else nil
 
-	local ok, transformed, userIds, metadata = pcall(transform, copyDeep(oldValue), self.keyInfos[key])
+	local ok, transformed, userIds, metadata = pcall(transform, oldValue, oldKeyInfo)
 
 	if not ok then
 		task.spawn(error, transformed)
@@ -109,13 +132,33 @@ function GlobalDataStore:UpdateAsync(key: string, transform)
 
 	-- TODO: Make sure transformed data is savable.
 
-	self.yield:yield()
-
 	self:write(key, transformed, userIds, metadata)
 
 	self.getCache[key] = os.clock() + Constants.GET_CACHE_DURATION
 
-	return copyDeep(transformed), self.keyInfos[key]
+	return copyDeep(transformed), copyDataStoreKeyInfo(self.keyInfos[key])
 end
 
-return GlobalDataStore
+function DataStore:RemoveAsync(key: string)
+	validateString("key", key, Constants.MAX_KEY_LENGTH)
+
+	if self.errors ~= nil then
+		self.errors:simulateError("RemoveAsync")
+	end
+
+	self.budget:yieldForBudget({ Enum.DataStoreRequestType.SetIncrementAsync })
+	self.yield:yield()
+
+	local oldValue = self.data[key]
+	local keyInfo = self.keyInfos[key]
+
+	if oldValue == nil then
+		return nil, nil
+	end
+
+	self:write(key)
+
+	return copyDeep(oldValue), copyDataStoreKeyInfo(keyInfo)
+end
+
+return DataStore

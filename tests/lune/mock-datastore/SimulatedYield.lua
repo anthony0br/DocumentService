@@ -1,4 +1,4 @@
-if not task then
+if not _G.IS_ROBLOX then
 	task = require("@lune/task")
 end
 
