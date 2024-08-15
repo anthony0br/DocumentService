@@ -376,7 +376,7 @@ Test("Session locking prevents other sessions from opening", function()
 	end
 end)
 
-Test("Data mutations persist with no migrations", function()
+Test("Data mutations with :Update persist with no migrations", function()
 	local documentStore = createTestDocumentStore()
 	local document = documentStore:GetDocument("6")
 	local result = document:Open()
@@ -418,6 +418,52 @@ Test("Data mutations persist with no migrations", function()
 	end
 	assert(result3.data.Service == 20000)
 	assert(result3.data.Document == "hi!... hi!")
+end)
+
+Test("Update succeeds with less than 4 API fails", function()
+	local documentStore, mockDataStore = createTestDocumentStore()
+	local document = documentStore:GetDocument("1")
+
+	local result = document:Open()
+
+	if not result.success then
+		error(result.reason)
+	end
+
+	mockDataStore.errors:addSimulatedErrors(4)
+
+	local updateResult = document:Update(function(data: TestData)
+		data = table.clone(data)
+		data.Service = -100
+		data.Document = "hi!"
+
+		return data
+	end)
+	assert(updateResult.success)
+	assert(updateResult.data.Service == -100)
+end)
+
+Test("Update fails with RobloxAPIFail for 5 or more API fails", function()
+	local documentStore, mockDataStore = createTestDocumentStore()
+
+	local document = documentStore:GetDocument("1")
+
+	local result = document:Open()
+	if not result.success then
+		error(result.reason)
+	end
+
+	mockDataStore.errors:addSimulatedErrors(5)
+
+	local updateResult = document:Update(function(data: TestData)
+		data = table.clone(data)
+		data.Service = 10000
+		data.Document = "hi!"
+
+		return data
+	end)
+	assert(not updateResult.success)
+	assert(updateResult.reason == "RobloxAPIError")
 end)
 
 Test("Migrate from an invalid data with no migration should fail with CheckFailed", function()
@@ -1016,8 +1062,7 @@ Test("Migrations do not re-run after going from latest -> outdated -> latest ses
 
 		local document = store:GetDocument("1")
 		local result1 = document:Open()
-		print(result1.reason)
-		assert(result1.success)
+		assert(result1.success, if not result1.success then result1.reason else "")
 		document:Close()
 		document = store:GetDocument("1")
 		local result = document:Open()
@@ -1085,11 +1130,21 @@ Test("DocumentStore:CloseAllDocuments yields until all documents are closed", fu
 	end
 
 	-- We should be able to call it sequentially as many times as we like
+
+	task.spawn(function()
+		mockDataStore.yield:startYield()
+		task.wait()
+		mockDataStore.yield:stopYield()
+	end)
+	assert(store:GetDocument("1"):IsOpen() == true)
+	assert(store:GetDocument("2"):IsOpen() == true)
 	store:CloseAllDocuments()
 	assert(store:GetDocument("1"):IsOpen() == false)
 	assert(store:GetDocument("2"):IsOpen() == false)
 	store:CloseAllDocuments()
 end)
+
+--Test("Erase method sets the key to nil")
 
 -- Test: update method
 
