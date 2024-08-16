@@ -929,6 +929,92 @@ Test("Backwards incompatible schemas fail with BackwardsCompatibilityError", fun
 		local result = document:Open()
 		assert(result.success == false)
 		assert(result.reason == "BackwardsCompatibilityError")
+	end
+end)
+
+Test("Backwards compatible schemas do not fail to open and preserve additional fields", function()
+	local mockDataStore = DataStoreService:GetDataStore(uuid())
+
+	-- We join a new server
+	do
+		local CheckInterface = {
+			testString = Guard.String,
+			testNumber = Guard.Number,
+			newField = Guard.String,
+		}
+
+		local function check(value: unknown)
+			assert(type(value) == "table")
+			local Value: any = value
+
+			return {
+				testString = CheckInterface.testString(Value.testString),
+				testNumber = CheckInterface.testNumber(Value.testNumber),
+				newField = CheckInterface.newField(Value.newField),
+			}
+		end
+
+		local store = DocumentService.DocumentStore.new({
+			dataStore = mockDataStore,
+			check = Guard.Check(check),
+			default = {
+				testString = "data from first server",
+				testNumber = 10000,
+				newField = "new field default",
+			},
+			migrations = {
+				{
+					backwardsCompatible = true,
+					migrate = function(data)
+						data.newField = "new field migrated"
+
+						return data
+					end,
+				},
+			},
+			lockSessions = true,
+		})
+
+		local document = store:GetDocument("1")
+		local result = document:Open()
+		assert(result.success)
+		check(result.data)
+		document:Close()
+	end
+
+	-- We join an old server
+	do
+		local CheckInterface = {
+			testString = Guard.String,
+			testNumber = Guard.Number,
+		}
+
+		local function check(value: unknown)
+			assert(type(value) == "table")
+			local Value: any = value
+
+			return {
+				testString = CheckInterface.testString(Value.testString),
+				testNumber = CheckInterface.testNumber(Value.testNumber),
+			}
+		end
+
+		local store = DocumentService.DocumentStore.new({
+			dataStore = mockDataStore,
+			check = Guard.Check(check),
+			default = {
+				testString = "string",
+				testNumber = 0,
+			},
+			migrations = {},
+			lockSessions = true,
+		})
+
+		local document = store:GetDocument("1")
+		local result = document:Open()
+		assert(result.success == true)
+		check(result.data)
+		assert((result.data :: any).newField == "new field default")
 		document:Close()
 	end
 end)
@@ -1135,7 +1221,6 @@ Test("DocumentStore:CloseAllDocuments yields until all documents are closed", fu
 	end
 
 	-- We should be able to call it sequentially as many times as we like
-
 	task.spawn(function()
 		mockDataStore.yield:startYield()
 		task.wait()

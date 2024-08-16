@@ -136,15 +136,7 @@ local function getLastCompatibleVersion<T>(migrations: Migrations<T>): number
 	return 0
 end
 
-local function runMigrations<T>(
-	migrations: Migrations<T>,
-	initialData: unknown,
-	initialVersion: number
-): {
-	data: unknown,
-	version: number,
-	lastCompatibleVersion: number,
-}
+local function runMigrations<T>(migrations: Migrations<T>, initialData: unknown, initialVersion: number): unknown
 	local data = initialData
 	local dataVersion = initialVersion
 
@@ -162,11 +154,7 @@ local function runMigrations<T>(
 		end
 	end
 
-	return {
-		data = data,
-		version = dataVersion,
-		lastCompatibleVersion = getLastCompatibleVersion(migrations),
-	}
+	return data
 end
 
 local function isLocked(keyData: KeyData<any>): boolean
@@ -385,14 +373,14 @@ function Document.Open<T>(self: Document<T>): OpenResult<T>
 			savedVersion = keyData.dataSchemaVersion
 		end
 
-		local migrationResult = runMigrations(self._migrations, dataToMigrate, savedVersion)
+		local migratedData = runMigrations(self._migrations, dataToMigrate, savedVersion)
 
 		-- If keyData exists, the data could be in a future version, or the data
 		-- could be session locked
 		if keyData then
 			-- This is for the case where a player joins a new server, their
 			-- data is migrated, then they rejoin an old server
-			if migrationResult.version < keyData.lastCompatibleVersion then
+			if #self._migrations < keyData.lastCompatibleVersion then
 				incompatibleVersion = true
 				return
 			end
@@ -406,14 +394,14 @@ function Document.Open<T>(self: Document<T>): OpenResult<T>
 			end
 		end
 
-		local checkOk = self._check(migrationResult.data)
+		local checkOk = self._check(migratedData)
 
 		if not checkOk then
 			failedCheck = true
 			return
 		end
 
-		local data = migrationResult.data :: T
+		local data = migratedData :: T
 
 		self._cache = deepFreeze(data)
 
@@ -425,8 +413,8 @@ function Document.Open<T>(self: Document<T>): OpenResult<T>
 			-- If we are in an old server and the data is of a future version
 			-- that is backwards compatible, keep the version number so that
 			-- migrations do not run more than once
-			dataSchemaVersion = math.max(migrationResult.version, savedVersion),
-			lastCompatibleVersion = migrationResult.lastCompatibleVersion,
+			dataSchemaVersion = math.max(#self._migrations, savedVersion),
+			lastCompatibleVersion = getLastCompatibleVersion(self._migrations),
 			data = data,
 		}
 	end, self._dataStore, self._key)
@@ -968,11 +956,9 @@ function Document.Read<T>(
 		}
 	end
 
-	local migrationResult = runMigrations(self._migrations, keyData.data, keyData.dataSchemaVersion)
+	local migratedData = runMigrations(self._migrations, keyData.data, keyData.dataSchemaVersion)
 
-	local checkOk = self._check(migrationResult.data)
-
-	local data = migrationResult.data :: T
+	local checkOk = self._check(migratedData)
 
 	if not checkOk then
 		return {
@@ -981,7 +967,9 @@ function Document.Read<T>(
 		}
 	end
 
-	if keyData.lastCompatibleVersion > migrationResult.version then
+	local data = migratedData :: T
+
+	if #self._migrations < keyData.lastCompatibleVersion then
 		return {
 			success = false,
 			reason = "BackwardsCompatibilityError",
