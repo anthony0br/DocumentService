@@ -1093,7 +1093,6 @@ Test("Migrations do not re-run after going from latest -> outdated -> latest ses
 		local result = document:Open()
 		assert(result.success)
 		check(result.data)
-		print(result.data)
 		document:Close()
 	end
 
@@ -1146,7 +1145,6 @@ Test("Migrations do not re-run after going from latest -> outdated -> latest ses
 		local result = document:Open()
 		assert(result.success)
 		check(result.data)
-		print(result.data)
 		document:Close()
 	end
 end)
