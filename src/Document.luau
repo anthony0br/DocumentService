@@ -224,10 +224,40 @@ end
 	@within Document
 	.key string -- The datastore key
 	.dataStore DataStore -- The object returned by DataStoreService:GetDataStore()
-	.check (unknown) -> (boolean, T) -- A type check function for your data, errors if types are invalid
+	.check (unknown) -> (boolean, T) -- A pure function that verifies your data schema
 	.default T -- Default values, which are set if keys are empty
 	.migrations Types.Migrations<T> -- Migrations
 	.sessionLock boolean -- Should the document be session locked?
+
+	:::info
+	Your check function should return true if the provided table contains all of
+	the correctly typed fields from T (the type of your data schema).
+
+	The check function should accept tables with additional properties, and
+	should not mutate the table in any way. The second return value exists to
+	assist you by typechecking the interfaces you write, but is not currently
+	used, to ensure data is not lost when loaded by an old server.
+
+	For example, with [Guard](https://util.redblox.dev/guard.html)
+	```
+		local TestDataInterface = {
+			Document = Guard.String,
+			Service = Guard.Number,
+		}
+
+		local function testDataCheck(value: unknown): TestData
+			assert(type(value) == "table")
+			local Value: any = value
+
+			return {
+				Document = TestDataInterface.Document(Value.Document),
+				Service = TestDataInterface.Service(Value.Service),
+			}
+		end
+	```
+
+	If you do not wish to dynamically check your data, write a placeholder with typecasting.
+	:::
 
 	@private
 ]=]
@@ -376,14 +406,16 @@ function Document.Open<T>(self: Document<T>): OpenResult<T>
 			end
 		end
 
-		local ok, checkedData = self._check(migrationResult.data)
+		local checkOk = self._check(migrationResult.data)
 
-		if not ok then
+		if not checkOk then
 			failedCheck = true
 			return
 		end
 
-		self._cache = deepFreeze(checkedData)
+		local data = migrationResult.data :: T
+
+		self._cache = deepFreeze(data)
 
 		return {
 			documentServiceSchemaVersion = INTERNAL_SCHEMA_VERSION,
@@ -395,7 +427,7 @@ function Document.Open<T>(self: Document<T>): OpenResult<T>
 			-- migrations do not run more than once
 			dataSchemaVersion = math.max(migrationResult.version, savedVersion),
 			lastCompatibleVersion = migrationResult.lastCompatibleVersion,
-			data = checkedData,
+			data = data,
 		}
 	end, self._dataStore, self._key)
 
@@ -938,7 +970,9 @@ function Document.Read<T>(
 
 	local migrationResult = runMigrations(self._migrations, keyData.data, keyData.dataSchemaVersion)
 
-	local checkOk, checkedData = self._check(migrationResult.data)
+	local checkOk = self._check(migrationResult.data)
+
+	local data = migrationResult.data :: T
 
 	if not checkOk then
 		return {
@@ -958,7 +992,7 @@ function Document.Read<T>(
 
 	return {
 		success = true,
-		data = checkedData,
+		data = data,
 	}
 end
 
