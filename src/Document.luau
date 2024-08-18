@@ -925,11 +925,14 @@ end
 
 	Runs migrations and the check function, but does not save changes.
 
-	This may be called while the document is not open.
+	This may be called while the document is not open. However, a `SchemaError`
+	will be returned if document has never been opened before, so it is
+	strongly recommended to handle this case, and Open the document before
+	reading it if possible.
 
 	Runs Read hooks.
 
-	@return Result<any, RobloxAPIError | SchemaError>
+	@return Result<any, RobloxAPIError | SchemaError | CheckError | BackwardsCompatibilityError>
 
 	@yields
 ]=]
