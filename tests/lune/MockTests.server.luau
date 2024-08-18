@@ -1229,18 +1229,42 @@ Test("DocumentStore:CloseAllDocuments yields until all documents are closed", fu
 	assert(store:GetDocument("5"):IsOpen() == false)
 end)
 
---Test("Erase method sets the key to nil")
+Test("Erase method sets the key to nil", function()
+	local documentStore, mockDataStore = createTestDocumentStore()
+	local document = documentStore:GetDocument("1")
+	local result = document:Open()
+	assert(result.success)
+	assert(mockDataStore:GetAsync("1") ~= nil)
+	document:Close()
+	document = documentStore:GetDocument("1")
+	document:Erase()
+	assert(mockDataStore:GetAsync("1") == nil)
+end)
 
--- Test: update method
+Test("Read fails with SchemaError if key not initialised")
 
--- Test: read method
+Test("Read fails with SchemaError if key corrupted")
 
--- Test: peek method
+Test("Read correctly reads data set properly")
 
--- Test: caching
+Test("Update fails with SchemaError if key corrupted")
 
--- Test: Cache is set correctly opening a document
+Test("Save fails with SchemaError if key corrupted")
 
--- Test: hooks
+Test("If the lock is stolen, Update returns SessionLockedError")
+
+Test("If the lock is stolen, Save returns SessionLockedError")
+
+Test("If the lock is stolen, Open returns SessionLockedError")
+
+Test("Cache is set correctly opening a document")
+
+Test("Cache can be updated asynchronously")
+
+Test("Before Open Hooks run correctly")
+
+Test("After Open Hooks run correctly")
+
+Test("Open Hooks run correctly")
 
 print(`Tests complete. {Results.passed} passed, {Results.failed} failed`)
