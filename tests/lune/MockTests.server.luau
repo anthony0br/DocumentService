@@ -1247,6 +1247,8 @@ Test("Read fails with SchemaError if key corrupted")
 
 Test("Read correctly reads data set properly")
 
+Test("Read runs migrations correctly")
+
 Test("Update fails with SchemaError if key corrupted")
 
 Test("Save fails with SchemaError if key corrupted")
@@ -1263,8 +1265,40 @@ Test("Cache can be updated asynchronously")
 
 Test("Before Open Hooks run correctly")
 
-Test("After Open Hooks run correctly")
+Test("After Open Hooks run correctly", function()
+	local documentStore, mockDataStore = createTestDocumentStore()
+	local document = documentStore:GetDocument("1")
+	local hookRan = false
+	document:HookAfter("Open", function()
+		assert(document:IsOpen(), "Document not open")
+		hookRan = true
+	end)
+	local result = document:Open()
+	assert(hookRan, "Hook didn't run")
+	assert(result.success, "Open failed")
+end)
 
-Test("Open Hooks run correctly")
+Test("Before Close Hooks run correctly", function()
+	local documentStore, mockDataStore = createTestDocumentStore()
+	local document = documentStore:GetDocument("1")
+	local hookRan = false
+	document:HookBefore("Open", function()
+		assert(not document:IsOpen(), "Document open")
+		hookRan = true
+	end)
+	local result = document:Open()
+	assert(hookRan, "Hook didn't run")
+	assert(result.success, "Open failed")
+end)
+
+Test("After Close Hooks run correctly")
+
+Test("Before Update Hooks run correctly")
+
+Test("After Update Hooks run correctly")
+
+Test("Before Read Hooks run correctly")
+
+Test("After Read Hooks run correctly")
 
 print(`Tests complete. {Results.passed} passed, {Results.failed} failed`)
