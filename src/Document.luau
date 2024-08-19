@@ -71,6 +71,7 @@ export type Document<T> = typeof(setmetatable(
 		_isClosing: boolean,
 		_lockSessions: boolean,
 		_autoSaveThread: thread?,
+		_shouldSteal: boolean,
 	},
 	Document
 ))
@@ -294,6 +295,7 @@ function Document.new<T>(props: {
 		_isClosing = false,
 		_cache = props.default,
 		_lockSessions = props.lockSessions,
+		_shouldSteal = false,
 	}, Document)
 
 	if _G.IS_ROBLOX then
@@ -387,7 +389,8 @@ function Document.Open<T>(self: Document<T>): OpenResult<T>
 
 			local locked = isLocked(keyData)
 			local lockedByUs = locked and (keyData.sessionLockId == self._sessionId)
-			if locked and not lockedByUs then
+
+			if locked and not lockedByUs and not self._shouldSteal then
 				lockedByOther = true
 				-- Throw a Luau error so the pcall fails and we retry
 				error("Session lock held by another session.")
@@ -465,66 +468,26 @@ function Document.Open<T>(self: Document<T>): OpenResult<T>
 end
 
 --[=[
-	Steals a session lock. This removes any existing lock held by any other
-	session, and locks the document for ourselves.
+	Marks the lock as stolen. The next `:Open` call will ignore any existing
+	locks.
+
+	:::info
+	Generally, it is recommended to call `:Steal` and then :Open` in the case
+	that the initial `:Open` fails due to `SessionLockedError`.
+	:::
 
 	:::warning
-	Do not use this unless you are certain the previous session is dead, or you
-	will likely cause data loss.
-	Only usable on session-locked Documents.
+	Do not use this unless you are very sure the previous session is dead, or
+	you could cause data loss. Only usable on session-locked Documents.
 	:::
-	
-	@return Result<T, RobloxAPIError | SchemaError>
 
 	@yields
 ]=]
-function Document.Steal<T>(self: Document<T>): Result<T, RobloxAPIError | SchemaError>
+function Document.Steal<T>(self: Document<T>)
 	assert(not self._isClosing, "Document is closing")
 	assert(self._lockSessions, "Stealing locks is only applicable to session-locked Documents")
 
-	-- Error flags
-	local schemaError = false
-
-	local updateOk, updatedKeyData = SaveUtil.updateAsync(function(getValue: unknown): KeyData<T>?
-		-- Reset error flags in case function re-runs
-		schemaError = false
-
-		local keyData = checkKeyData(getValue)
-
-		if not keyData then
-			schemaError = true
-			return
-		end
-
-		return {
-			documentServiceSchemaVersion = INTERNAL_SCHEMA_VERSION,
-			sessionLockId = self._sessionId,
-			lockTimestamp = os.time(),
-			isLocked = true,
-			dataSchemaVersion = keyData.dataSchemaVersion,
-			lastCompatibleVersion = keyData.lastCompatibleVersion,
-			data = keyData.data :: any,
-		}
-	end, self._dataStore, self._key)
-
-	if not updateOk then
-		return {
-			success = false,
-			reason = "RobloxAPIError",
-		}
-	end
-
-	if schemaError then
-		return {
-			success = false,
-			reason = "SchemaError",
-		}
-	end
-
-	return {
-		success = true,
-		data = (updatedKeyData :: KeyData<T>).data,
-	}
+	self._shouldSteal = true
 end
 
 --[=[
