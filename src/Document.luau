@@ -342,7 +342,7 @@ function Document.Open<T>(self: Document<T>): OpenResult<T>
 
 	runHooks(self._preHooks.Open)
 
-	local updateOk, updatedKeyData = SaveUtil.updateAsync(function(getValue: unknown): KeyData<T>?
+	local updateOk, updatedKeyData = SaveUtil.updateAsync(function(abortAttempt, getValue): KeyData<T>?
 		-- Reset error flags in case function re-runs
 		lockedByOther = false
 		incompatibleVersion = false
@@ -392,8 +392,8 @@ function Document.Open<T>(self: Document<T>): OpenResult<T>
 
 			if locked and not lockedByUs and not self._shouldSteal then
 				lockedByOther = true
-				-- Throw a Luau error so the pcall fails and we retry
-				error("Session lock held by another session.")
+				abortAttempt("Session lock held by another session.")
+				return
 			end
 		end
 
@@ -422,6 +422,15 @@ function Document.Open<T>(self: Document<T>): OpenResult<T>
 		}
 	end, self._dataStore, self._key)
 
+	-- We need to check this first, since updateOk will be false in
+	-- the case of a SessionLockedError
+	if lockedByOther then
+		return {
+			success = false,
+			reason = "SessionLockedError",
+		}
+	end
+
 	if not updateOk then
 		return {
 			success = false,
@@ -433,13 +442,6 @@ function Document.Open<T>(self: Document<T>): OpenResult<T>
 		return {
 			success = false,
 			reason = "BackwardsCompatibilityError",
-		}
-	end
-
-	if lockedByOther then
-		return {
-			success = false,
-			reason = "SessionLockedError",
 		}
 	end
 
@@ -723,7 +725,14 @@ end
 
 	:::warning
 	If you are using session locking, your transform needs to use immutable
-	operations (in the same way updating cache does).
+	operations (in the same way updating cache does). Unlike `Open`, this
+	method will not retry if the lock is stolen, and will instead return a
+	`SessionLockedError` after the first attempt.
+	:::
+
+	:::warning
+	If your transform errors, the update will be aborted and the error
+	will be thrown in a new thread (Roblox behaviour).
 	:::
 	
 	@param transform -- Transform function for the transaction.
@@ -742,7 +751,7 @@ function Document.Update<T>(self: Document<T>, transform: Transform<T>): WriteRe
 	local schemaError: boolean
 	local notStorableErr: string
 
-	local success, updatedKeyData = SaveUtil.updateAsync(function(value: unknown): KeyData<T>?
+	local success, updatedKeyData = SaveUtil.updateAsync(function(_abortAttempt, value: unknown): KeyData<T>?
 		-- Reset error flags in case callback runs multiple times
 		lockedByOther = false
 		transformInvalid = false

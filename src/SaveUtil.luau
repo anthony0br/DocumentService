@@ -128,7 +128,7 @@ function SaveUtil.getGetBudget()
 end
 
 --[=[
-	Luau uuid implementation
+	Luau uuid implementation.
 
 	Based off of https://gist.github.com/jrus/3197011
 ]=]
@@ -146,28 +146,47 @@ function SaveUtil.uuid(): string
 end
 
 --[=[
-	A wrapper for UpdateAsync that retries with exponential backoff and prevents use of the throttle 'queue'
+	A wrapper for UpdateAsync that retries with exponential backoff, prevents
+	use of the throttle 'queue', and allows retries to be aborted.
 
 	@yields
 ]=]
 function SaveUtil.updateAsync<T>(
-	transform: (any, DataStoreKeyInfo) -> (any, { number }?, {}?),
+	transform: ((err: string) -> (), unknown, DataStoreKeyInfo) -> (any, { number }?, {}?),
 	dataStore: DataStoreInterface,
 	key: string
 ): (boolean, any, DataStoreKeyInfo)
 	local result = Retry(RETRY.ATTEMPTS, RETRY.INITIAL_WAIT, function(): (any, DataStoreKeyInfo)
+		-- This exists because for some reason, the behaviour of errors in the
+		-- UpdateAsync transform is to return nil and error on a new thread
+		local shouldAbort = false
+		local abortError: string
+		local function abortAttempt(err: string)
+			shouldAbort = true
+			abortError = err
+		end
+
 		-- This is necessary to ensure autosaves happen in the correct order and saves have predictable timeouts
 		-- since Retry will give up long before the next autosave and the throttle 'queue' does not respect FIFO
 		assert(SaveUtil.getUpdateBudget() > 0, "Ran out of budget")
 
-		return dataStore:UpdateAsync(key, transform)
+		local resultData, resultKeyInfo = dataStore:UpdateAsync(key, function(data: any, keyInfo: DataStoreKeyInfo)
+			return transform(abortAttempt, data, keyInfo)
+		end)
+
+		if shouldAbort then
+			error(abortError)
+		end
+
+		return resultData, resultKeyInfo
 	end)
 
 	return result.success, result.returnValues[1], result.returnValues[2]
 end
 
 --[=[
-	A wrapper for GetAsync that retries with exponential backoff and prevents use of the throttle 'queue'
+	A wrapper for GetAsync that retries with exponential backoff and prevents
+	use of the throttle 'queue'.
 
 	@yields
 ]=]

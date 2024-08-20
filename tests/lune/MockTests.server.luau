@@ -1597,13 +1597,13 @@ Test("Opening a locked document will retry if session locked", function()
 	local result
 	task.spawn(function()
 		local document2 = session2:GetDocument("1")
-		-- This should initially fail, and then retry after 1 second and succeed
+		-- This should initially fail, and then retry and succeed
 		result = document2:Open()
 
 		task.defer(thread)
 	end)
 	task.spawn(function()
-		task.wait(0.1)
+		task.wait()
 		document1:Close()
 	end)
 
@@ -1649,13 +1649,17 @@ Test("Error if cache is mutated", function()
 	local openResult = document:Open()
 	assert(openResult.success)
 
-	shouldFail(function()
+	do
+		local success
 		document:Update(function(data: TestData)
-			data.Document = "Updated data!"
+			success = pcall(function()
+				data.Document = "Updated data!"
+			end)
 
 			return data
 		end)
-	end)
+		assert(not success)
+	end
 
 	shouldFail(function()
 		document:UpdateCache(function(data: TestData)
