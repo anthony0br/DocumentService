@@ -298,12 +298,6 @@ function Document.new<T>(props: {
 		_shouldSteal = false,
 	}, Document)
 
-	if _G.IS_ROBLOX then
-		game:BindToClose(function()
-			self._isClosing = true
-		end)
-	end
-
 	return self
 end
 
@@ -332,8 +326,8 @@ end
 	@yields
 ]=]
 function Document.Open<T>(self: Document<T>): OpenResult<T>
-	assert(not self._open, "Already open")
-	assert(not self._isClosing, "Document is closing")
+	assert(not self._open, "Document already open")
+	assert(not self._isClosing, "Document is closing, cannot open")
 
 	-- Error flags
 	local lockedByOther: boolean
