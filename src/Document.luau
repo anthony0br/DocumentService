@@ -452,10 +452,18 @@ function Document.Open<T>(self: Document<T>): OpenResult<T>
 
 	self._open = true
 
+	-- Reset shouldSteal in case Documents can be re-opened in the future
+	self._shouldSteal = false
+
 	self._autoSaveThread = task.defer(function()
 		while self._lockSessions and self._open do
 			task.wait(AUTOSAVE_INTERVAL)
-			self:Save()
+
+			local result = self:Save()
+
+			if not result.success then
+				warn(`Auto Save failed due to a {result.reason}`)
+			end
 		end
 	end)
 
@@ -568,10 +576,6 @@ end
 	If session locked, will save the document and remove the lock first.
 	If this fails, the document will not be destroyed.
 
-	After closing a Document, you will need to call 
-	DocumentStore:GetDocument() to retrieve a new one if you wish to access the
-	Document again.
-
 	@return WriteResult<T?>
 
 	@yields
@@ -601,11 +605,9 @@ function Document.Close<T>(self: Document<T>): WriteResult<T?>
 	end
 
 	self._open = false
+	self._isClosing = false
 
 	runHooks(self._postHooks.Close)
-
-	setmetatable(self :: any, nil)
-	table.clear(self :: any)
 
 	return if result
 		then result
@@ -622,6 +624,11 @@ end
 	:::warning
 	You can only use cache for session-locked data. See `Open` for how to
 	enable session locking.
+	:::
+
+	:::warning
+	Your cache should always pass your check function, otherwise autosaves
+	may error.
 	:::
 
 	:::info
@@ -704,10 +711,21 @@ end
 	:::
 
 	:::warning
-	The transform function must not yield, and shouldn't rely on any
-	from outside.
+	The transform function must not yield, and shouldn't rely on any data
+	from outside. It must follow the rules of what is storable in Data Stores.
 	:::
 
+	:::warning
+	Assumes the data that is already in Data Stores is valid since the last
+	`:Open`. If it isn't, and this is not corrected by the transform, this
+	method will throw a luau error.
+	:::
+
+	:::warning
+	If you are using session locking, your transform needs to use immutable
+	operations (in the same way updating cache does).
+	:::
+	
 	@param transform -- Transform function for the transaction.
 	@return WriteResult<T>
 
@@ -862,6 +880,8 @@ end
 
 	Satisfies compliance with GDPR right of erasure.
 
+	Does not run hooks.
+
 	@return Result<nil, RobloxAPIError>
 
 	@yields
@@ -888,10 +908,13 @@ end
 
 	Runs migrations and the check function, but does not save changes.
 
-	This may be called while the document is not open. However, a `SchemaError`
-	will be returned if document has never been opened before, so it is
-	strongly recommended to handle this case, and Open the document before
-	reading it if possible.
+	This may be called while the document is not open. 
+	
+	:::warning
+	A `SchemaError` will be returned if document has never been opened before,
+	so it is strongly recommended to handle this case, and Open the document
+	before reading it if possible. This includes when migrating from no library.
+	:::
 
 	Runs Read hooks.
 
