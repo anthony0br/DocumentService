@@ -571,12 +571,12 @@ function Document.IsOpen<T>(self: Document<T>): boolean
 end
 
 --[=[
-	Destroys the document instance.
+	Closes the document, so it cannot be edited.
 
 	The document must be open before using this method.
 
-	If session locked, will save the document and remove the lock first.
-	If this fails, the document will not be destroyed.
+	If session locked, will save the document, remove the lock, and
+	cancel autosaves first. If this fails, the document will not be closed.
 
 	@return WriteResult<T?>
 
