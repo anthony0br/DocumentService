@@ -452,7 +452,7 @@ function Document.Open<T>(self: Document<T>): OpenResult<T>
 
 	self._open = true
 
-	-- Reset shouldSteal in case Documents can be re-opened in the future
+	-- Reset shouldSteal in case Document is re-opened in the future
 	self._shouldSteal = false
 
 	self._autoSaveThread = task.defer(function()
