@@ -33,7 +33,7 @@ export type DocumentStore<T> = typeof(setmetatable(
 		_check: (unknown) -> (boolean, T),
 		_default: T & {},
 		_migrations: Types.Migrations<T>,
-		_documents: { [string]: Document<T> },
+		_documents: typeof(setmetatable({} :: { [string]: Document<T> }, { { __mode = "v" } })),
 		-- Ideally, we could avoid this boolean option, but this is better
 		-- than trying to do inheritance in Luau
 		_lockSessions: boolean,
@@ -67,7 +67,8 @@ type DataStoreInterface = Types.DataStoreInterface
 	This should only be called once per server for each DataStore in a live game.
 	If there are multiple instances of a DocumentStore for one key, any Documents
 	will be treated as if they are from different sessions. This is useful for
-	unit testing but can lead to weird bugs in production.
+	unit testing but can lead to weird bugs in production. DocumentStores should
+	persist through an entire server's lifespan and are not garbage collected.
 	:::
 
 	@param props DocumentStoreProps
@@ -86,7 +87,7 @@ function DocumentStore.new<T>(props: {
 		_check = props.check,
 		_default = deepFreeze(props.default),
 		_migrations = deepFreeze(props.migrations),
-		_documents = {},
+		_documents = setmetatable({}, { __mode = "v" }),
 		_lockSessions = props.lockSessions,
 		_openingDocuments = 0,
 		_openDocuments = 0,
@@ -140,7 +141,6 @@ function DocumentStore.GetDocument<T>(self: DocumentStore<T>, key: string): Docu
 
 	document:HookAfter("Close", function()
 		self._openDocuments -= 1
-		self._documents[key] = nil
 	end)
 
 	self._documents[key] = document
