@@ -62,14 +62,14 @@ function SaveUtil.assertStorable(data: unknown)
 
 	local dataType = type(data)
 
-	assert(dataType ~= "userdata", "userdata is not storable")
+	assert(dataType ~= "userdata", "Userdata is not storable in DataStore")
 
-	assert(dataType ~= "thread", "threads are not storable")
+	assert(dataType ~= "thread", "Threads are not storable in DataStore")
 
-	assert(dataType ~= "function", "functions are not storable")
+	assert(dataType ~= "function", "Functions are not storable in DataStore")
 
 	if dataType == "table" then
-		assert(getmetatable(data :: any) == nil)
+		assert(getmetatable(data :: any) == nil, "Metatables are not storables in DataStore")
 
 		local last
 		for i, v in data :: {} do
