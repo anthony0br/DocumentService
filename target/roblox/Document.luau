@@ -297,14 +297,8 @@ function Document.new<T>(props: {
 		_lockSessions = props.lockSessions,
 		_shouldSteal = false,
 	}, Document)
-do		
 
-game:BindToClose(function()
-			self._isClosing = true
-		end)
-end
-	
-return self
+	return self
 end
 
 --[=[
@@ -332,8 +326,8 @@ end
 	@yields
 ]=]
 function Document.Open<T>(self: Document<T>): OpenResult<T>
-	assert(not self._open, "Already open")
-	assert(not self._isClosing, "Document is closing")
+	assert(not self._open, "Document already open")
+	assert(not self._isClosing, "Document is closing, cannot open")
 
 	-- Error flags
 	local lockedByOther: boolean
@@ -457,6 +451,8 @@ function Document.Open<T>(self: Document<T>): OpenResult<T>
 	-- Reset shouldSteal in case Document is re-opened in the future
 	self._shouldSteal = false
 
+	-- This also creates a closure preventing garbage collection while a
+	-- document is open
 	self._autoSaveThread = task.defer(function()
 		while self._lockSessions and self._open do
 			task.wait(AUTOSAVE_INTERVAL)
@@ -482,7 +478,7 @@ end
 	locks.
 
 	:::info
-	Generally, it is recommended to call `:Steal` and then :Open` in the case
+	Generally, it is recommended to call `:Steal` and then `:Open` in the case
 	that the initial `:Open` fails due to `SessionLockedError`.
 	:::
 
@@ -571,12 +567,12 @@ function Document.IsOpen<T>(self: Document<T>): boolean
 end
 
 --[=[
-	Destroys the document instance.
+	Closes the document, so it cannot be edited.
 
 	The document must be open before using this method.
 
-	If session locked, will save the document and remove the lock first.
-	If this fails, the document will not be destroyed.
+	If session locked, will save the document, remove the lock, and
+	cancel autosaves first. If this fails, the document will not be closed.
 
 	@return WriteResult<T?>
 
