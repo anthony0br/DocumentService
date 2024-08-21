@@ -478,7 +478,7 @@ end
 	locks.
 
 	:::info
-	Generally, it is recommended to call `:Steal` and then :Open` in the case
+	Generally, it is recommended to call `:Steal` and then `:Open` in the case
 	that the initial `:Open` fails due to `SessionLockedError`.
 	:::
 
