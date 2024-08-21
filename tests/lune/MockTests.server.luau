@@ -172,6 +172,15 @@ Test("Can retrieve the same document by string", function()
 	assert(document1 == document1_2, "Documents not equal")
 end)
 
+Test("Can retrieve the same document if reference exists even if closed", function()
+	local documentStore = createTestDocumentStore()
+	local document1 = documentStore:GetDocument("1")
+	document1:Open()
+	document1:Close()
+	local document1_2 = documentStore:GetDocument("1")
+	assert(document1 == document1_2, "Documents not equal")
+end)
+
 Test("GetDocument returns a new document after an old document is closed", function()
 	local documentStore = createTestDocumentStore()
 	do
@@ -1739,19 +1748,24 @@ Test("Open Hooks run correctly", function()
 	local document = documentStore:GetDocument("1")
 	local hook1Ran = false
 	local hook2Ran = false
+
 	document:HookBefore("Open", function()
 		assert(not document:IsOpen(), "Hook ran too late")
 		assert(not hook2Ran)
 		hook1Ran = true
 	end)
+
 	document:HookAfter("Open", function()
 		assert(document:IsOpen(), "Hook ran early")
 		assert(hook1Ran)
 		hook2Ran = true
 	end)
+
 	local result = document:Open()
 	assert(hook2Ran, "Hook didn't run")
 	assert(result.success, "Open failed")
+
+	document:Close()
 end)
 
 Test("Close Hooks run correctly", function()
@@ -1777,42 +1791,55 @@ Test("Close Hooks run correctly", function()
 end)
 
 Test("Before Update Hooks run correctly", function()
-	local documentStore, mockDataStore = createTestDocumentStore()
+	local documentStore, mockDataStore = createTestDocumentStoreNotLocked()
 	local document = documentStore:GetDocument("1")
 	local hookRan = false
+
 	document:HookBefore("Update", function()
 		assert(mockDataStore:GetAsync("1").data.Document ~= "Updated")
 		hookRan = true
 	end)
+
 	local result = document:Open()
+
 	assert(result.success, "Open failed")
+
 	local updateResult = document:Update(function(data: TestData)
 		local newData = table.clone(data)
 		newData.Document = "Updated"
 
 		return newData
 	end)
+
 	assert(hookRan, "Hook didn't run")
 	assert(updateResult.success)
+
+	document:Close()
 end)
 
 Test("After Update Hooks run correctly", function()
-	local documentStore, mockDataStore = createTestDocumentStore()
+	local documentStore, mockDataStore = createTestDocumentStoreNotLocked()
 	local document = documentStore:GetDocument("1")
 	local hookRan = false
+
 	document:HookAfter("Update", function()
 		assert(mockDataStore:GetAsync("1").data.Document == "Updated")
 		hookRan = true
 	end)
+
 	local result = document:Open()
 	assert(result.success, "Open failed")
+
 	document:Update(function(data: TestData)
 		local newData = table.clone(data)
 		newData.Document = "Updated"
 
 		return newData
 	end)
+
 	assert(hookRan, "Hook didn't run")
+
+	document:Close()
 end)
 
 Test("Read Hooks run correctly", function()
@@ -1834,6 +1861,71 @@ Test("Read Hooks run correctly", function()
 	assert(resultRead.success, "Read failed")
 	assert(secondRan, "After hook didn't run")
 	assert(result.success, "Open failed")
+
+	document:Close()
+end)
+
+Test("Documents are garbage collected if closed - using memory metrics", function()
+	local documentStore = createTestDocumentStore()
+	local _ = (collectgarbage :: any)("collect")
+	local count1 = collectgarbage("count")
+	print(count1)
+
+	local upvalue = 0
+
+	local count2
+	do
+		local documents = {}
+		for i = 1, 50 do
+			local document = documentStore:GetDocument(tostring(i))
+			table.insert(documents, document)
+
+			document:HookAfter("Open", function()
+				upvalue += 1
+			end)
+
+			document:Open()
+			document:Close()
+		end
+		count2 = collectgarbage("count")
+		print(count2)
+	end
+
+	local _ = (collectgarbage :: any)("collect")
+	local count3 = collectgarbage("count")
+	print(count3)
+	assert(count2 - count3 > 200)
+	assert(count3 - count1 < 200)
+end)
+
+Test("Open documents are not garbage collected", function()
+	local documentStore = createTestDocumentStore()
+	do
+		local document = documentStore:GetDocument("1")
+		assert(document:Open().success)
+	end
+	local _ = (collectgarbage :: any)("collect")
+	local _document, newlyCreated = documentStore:GetDocument("1")
+	assert(not newlyCreated)
+end)
+
+Test("Documents are garbage collected if closed", function()
+	local documentStore = createTestDocumentStore()
+	local upvalue = 0
+	do
+		local document = documentStore:GetDocument("1")
+
+		document:HookAfter("Open", function()
+			document:GetCache()
+			upvalue += 1
+		end)
+
+		document:Open()
+		document:Close()
+	end
+	local _ = (collectgarbage :: any)("collect")
+	local _document, newlyCreated = documentStore:GetDocument("1")
+	assert(newlyCreated)
 end)
 
 print(`Tests complete. {Results.passed} passed, {Results.failed} failed`)

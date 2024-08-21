@@ -451,6 +451,8 @@ function Document.Open<T>(self: Document<T>): OpenResult<T>
 	-- Reset shouldSteal in case Document is re-opened in the future
 	self._shouldSteal = false
 
+	-- This also creates a closure preventing garbage collection while a
+	-- document is open
 	self._autoSaveThread = task.defer(function()
 		while self._lockSessions and self._open do
 			task.wait(AUTOSAVE_INTERVAL)

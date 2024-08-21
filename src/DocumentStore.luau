@@ -61,7 +61,7 @@ type DataStoreInterface = Types.DataStoreInterface
 	.sessionLock boolean -- Should the documents be session locked?
 ]=]
 --[=[
-	Creates a new DocumentStore
+	Creates a new DocumentStore.
 
 	:::warning
 	This should only be called once per server for each DataStore in a live game.
@@ -110,15 +110,22 @@ end
 --[=[
 	Gets the document for the key given, or creates one if it does not exist.
 
+	:::info
+	Documents are cached in a weak table, so once they are closed, they will
+	be marked for garbage collection if you have no references to them. Be
+	careful of references created by closures.
+	:::
+
 	@param key 
 
 	@return Document<T>
+	@return boolean -- whether a new document was created
 ]=]
-function DocumentStore.GetDocument<T>(self: DocumentStore<T>, key: string): Document<T>
+function DocumentStore.GetDocument<T>(self: DocumentStore<T>, key: string): (Document<T>, boolean)
 	assert(not gameClosing, "Cannot retrieve document, game closing")
 
 	if self._documents[key] then
-		return self._documents[key]
+		return self._documents[key], false
 	end
 
 	local document = Document.new({
@@ -145,7 +152,7 @@ function DocumentStore.GetDocument<T>(self: DocumentStore<T>, key: string): Docu
 
 	self._documents[key] = document
 
-	return document
+	return document, true
 end
 
 --[=[
