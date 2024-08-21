@@ -162,6 +162,6 @@ export type DataStoreInterface = {
 	) -> (any, DataStoreKeyInfo),
 	GetAsync: (DataStoreInterface, key: string, options: DataStoreGetOptions) -> (any, DataStoreKeyInfo),
 	RemoveAsync: (DataStoreInterface, key: string) -> (any, DataStoreKeyInfo)
-}
+} | DataStore
 
 return {}

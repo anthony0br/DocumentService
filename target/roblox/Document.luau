@@ -94,7 +94,7 @@ type Result<T, E> = Types.Result<T, E>
 type OpenResult<T> = Result<T, RobloxAPIError | BackwardsCompatibilityError | CheckError | SessionLockedError>
 
 --[=[
-	@type WriteResult<T> Result<T, RobloxAPIError | SessionLockedError>
+	@type WriteResult<T> Result<T, RobloxAPIError | SessionLockedError | SchemaError>
 
 	@within Document
 ]=]
@@ -617,12 +617,7 @@ end
 --[=[
 	Sets the cache.
 
-	The document must be open before using this method.
-
-	:::warning
-	You can only use cache for session-locked data. See `Open` for how to
-	enable session locking.
-	:::
+	The document must be open before using this method. You can only use cache for session-locked data.
 
 	:::warning
 	Your cache should always pass your check function, otherwise autosaves
@@ -648,12 +643,7 @@ end
 --[=[
 	Retrieves the cache.
 
-	The document must be open before using this method.
-
-	:::warning
-	You can only use cache for session-locked data. See `Open` for how to
-	enable session locking.
-	:::
+	The document must be open before using this method. You can only use cache for session-locked data.
 
 	:::info
 	You must use immutable operations on cache, i.e. clone any table you intend to edit.
@@ -671,12 +661,7 @@ end
 --[=[
 	Transforms the cache.
 
-	A document must be open before using this method.
-
-	:::warning
-	You can only use cache for session-locked data. See `Open` for how to
-	enable session locking.
-	:::
+	A document must be open before using this method. You can only use cache for session-locked data.
 
 	:::info
 	You must use immutable operations on cache, i.e. clone any table you intend to edit.
@@ -721,14 +706,17 @@ end
 
 	:::warning
 	If you are using session locking, your transform needs to use immutable
-	operations (in the same way updating cache does). Unlike `Open`, this
-	method will not retry if the lock is stolen, and will instead return a
-	`SessionLockedError` after the first attempt.
+	operations (in the same way updating cache does).
 	:::
 
 	:::warning
 	If your transform errors, the update will be aborted and the error
-	will be thrown in a new thread (Roblox behaviour).
+	will be thrown in a new thread (this is Roblox behaviour).
+	:::
+
+	:::info
+	Unlike `Open`, this method will not retry if the lock is stolen, and will
+	instead return a `SessionLockedError` after the first attempt.
 	:::
 	
 	@param transform -- Transform function for the transaction.
@@ -857,12 +845,7 @@ end
 	Saves a Document's cache to its DataStore. Equivalent to calling Update
 	without transforming the data.
 
-	The document must be open before using this method.
-
-	:::warning
-	You can only use cache for session-locked data. See `Open` for how to
-	enable session locking.
-	:::
+	The document must be open and locked to use this method.
 
 	@return WriteResult<T>
 
@@ -880,7 +863,7 @@ end
 --[=[
 	Erases all data associated with the key.
 
-	The document cannot be open. It is up to you to check if the document
+	The document must not be open. It is up to you to check if the document
 	is open elsewhere, e.g. via `IsOpenAvailable`.
 
 	Satisfies compliance with GDPR right of erasure.
