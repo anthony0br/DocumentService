@@ -152,6 +152,10 @@ export type Transform<T> = (data: T) -> T
 	An interface, implemented by DataStore in Roblox, to allow dependency injection
 	(e.g. MockDataStores).
 
+	There is currently an issue where passing `DataStore` will result in a type
+	error, even though `DataStore` currently implements `DataStoreInterface`.
+	You can typecast to to any (:: any) as a workaround.
+
 	@within DocumentService
 ]=]
 export type DataStoreInterface = {
@@ -162,6 +166,6 @@ export type DataStoreInterface = {
 	) -> (any, DataStoreKeyInfo),
 	GetAsync: (DataStoreInterface, key: string, options: DataStoreGetOptions) -> (any, DataStoreKeyInfo),
 	RemoveAsync: (DataStoreInterface, key: string) -> (any, DataStoreKeyInfo)
-} | DataStore
+}
 
 return {}
