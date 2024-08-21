@@ -15,6 +15,7 @@ export type PostHookEvent = Types.PostHookEvent
 export type Document<T> = Document.Document<T>
 export type Result<T, E> = Types.Result<T, E>
 export type Transform<T> = Types.Transform<T>
+export type DataStoreInterface = Types.DataStoreInterface
 
 --[=[
 	@class DocumentService
