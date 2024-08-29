@@ -1,17 +1,18 @@
 [package]
 name = "anthony0br/documentservice"
 description = "DataStores with full type checking, hooks, +more"
-version = "1.0.0-rc.6"
+version = "1.0.0-rc.7"
 registry = "https://github.com/UpliftGames/wally-index"
 realm = "shared"
 license = "MIT"
 exclude = ["**"]
 include = [
-	"target/roblox",
+	"target",
+	"target/*",
 	"target/roblox/*",
 	"default.project.json",
 	"wally.lock",
 	"wally.toml",
     "LICENSE",
-    "README.md",
+    "README.md"
 ]

@@ -26,6 +26,15 @@ with `:IsWriteAvailable` and `:Steal` methods if you need them.
 - Maintainable, strictly typed source code, that is actively maintained.
 - No dependencies (like Promise). Use whatever abstractions you like, and install easily.
 
+## Installation
+
+### Method 1: Wally
+Add `DocumentService = "anthony0br/documentservice@1.0.0-rc.7"` to your `wally.toml`.
+
+### Method 2: Manual
+DocumentService has no dependencies so you can just copy and paste the contents of
+`target/roblox` into your project.
+
 ## Long-term goals
 - ACID transactions involving multiple Documents. Please get in touch if you can help with this!
 
