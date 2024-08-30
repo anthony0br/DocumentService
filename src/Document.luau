@@ -212,7 +212,7 @@ end
 	@interface DocumentProps
 	@within Document
 	.key string -- The datastore key
-	.dataStore DataStore -- The object returned by DataStoreService:GetDataStore()
+	.dataStore DataStoreInterface -- The object returned by DataStoreService:GetDataStore()
 	.check (unknown) -> (boolean, T) -- A pure function that verifies your data schema
 	.default T -- Default values, which are set if keys are empty
 	.migrations Types.Migrations<T> -- Migrations
@@ -654,27 +654,6 @@ end
 function Document.GetCache<T>(self: Document<T>): T
 	assert(self._open, "Document not open")
 	assert(self._lockSessions, "Cache is only supported for session locked data")
-
-	return self._cache
-end
-
---[=[
-	Transforms the cache.
-
-	A document must be open before using this method. You can only use cache for session-locked data.
-
-	:::info
-	You must use immutable operations on cache, i.e. clone any table you intend to edit.
-	:::
-
-	@param transform
-	@return T
-]=]
-function Document.UpdateCache<T>(self: Document<T>, transform: Transform<T>): T
-	assert(self._open, "Document not open")
-	assert(self._lockSessions, "Cache is only supported for session locked data")
-
-	self._cache = deepFreeze(transform(self._cache))
 
 	return self._cache
 end
