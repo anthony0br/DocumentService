@@ -1,15 +1,13 @@
 --!strict
 -- Author: Anthony O'Brien
 
-local RunService
-do	
-RunService = game:GetService("RunService")
-end
-
 local Document = require(script.Parent:FindFirstChild('Document'))
 local Types = require(script.Parent:FindFirstChild('Types'))
 local Util = require(script.Parent:FindFirstChild('SaveUtil'))
 local deepFreeze = require(script.Parent:FindFirstChild('DeepFreeze'))
+
+local CLOSE_PASS_INTERVAL = 1
+
 --[=[
 	@class DocumentStore
 
@@ -23,7 +21,6 @@ local deepFreeze = require(script.Parent:FindFirstChild('DeepFreeze'))
 	with Actors or Parallel Luau.
 	:::
 ]=]
-
 local DocumentStore = {}
 DocumentStore.__index = DocumentStore
 
@@ -38,7 +35,7 @@ export type DocumentStore<T> = typeof(setmetatable(
 		-- than trying to do inheritance in Luau
 		_lockSessions: boolean,
 		_openingDocuments: number,
-		_openDocuments: number	
+		_documentsToClose: number	
 },
 	DocumentStore
 ))
@@ -90,7 +87,7 @@ function DocumentStore.new<T>(props: {
 		_documents = setmetatable({}, { __mode = "v" }),
 		_lockSessions = props.lockSessions,
 		_openingDocuments = 0,
-		_openDocuments = 0,
+		_documentsToClose = 0,
 	}, DocumentStore)
 do		
 
@@ -143,11 +140,7 @@ function DocumentStore.GetDocument<T>(self: DocumentStore<T>, key: string): (Doc
 
 	document:HookAfter("Open", function()
 		self._openingDocuments -= 1
-		self._openDocuments += 1
-	end)
-
-	document:HookAfter("Close", function()
-		self._openDocuments -= 1
+		self._documentsToClose += 1
 	end)
 
 	self._documents[key] = document
@@ -179,11 +172,11 @@ function DocumentStore.CloseAllDocuments<T>(self: DocumentStore<T>)
 	-- are closed as quickly as possilbe by minimising retries
 	-- 2. ensures documents that are opening and not yet opened when
 	-- this is called are closed.
-	while self._openDocuments > 0 or self._openingDocuments > 0 do
+	while self._documentsToClose > 0 or self._openingDocuments > 0 do
 		-- In each pass, we close the number of open documents recorded at the
 		-- start of the pass, or the size of the budget - whichever is smaller.
 		local budget = Util.getUpdateBudget()
-		local documentsToClose = math.min(self._openDocuments, budget)
+		local documentsToClose = math.min(self._documentsToClose, budget)
 		local requestCount = 0
 
 		for _, v: Document<T> in pairs(self._documents) do
@@ -195,15 +188,22 @@ function DocumentStore.CloseAllDocuments<T>(self: DocumentStore<T>)
 				break
 			end
 
+			requestCount += 1
+
 			task.spawn(function()
-				-- If Close fails, the After hook won't run and it will be
-				-- attempted again in the next while iteration
-				requestCount += 1
 				print("Closing", tostring(v))
 				v:Close()
+
+				-- We decrement these even if the .Close failed since otherwise
+				-- a failure would result in spamming DataStore requests
+				-- if our retries didn't work, it'll probably never work
+				self._documentsToClose -= 1
 				documentsToClose -= 1
 
 				if documentsToClose == 0 then
+					if coroutine.status(thread) ~= "suspended" then
+						return
+					end
 					-- Defer so that the coroutine.yield() always runs first
 					task.defer(thread)
 				end
@@ -219,7 +219,7 @@ function DocumentStore.CloseAllDocuments<T>(self: DocumentStore<T>)
 			print("Pass complete!")
 		end
 
-		task.wait()
+		task.wait(CLOSE_PASS_INTERVAL)
 	end
 end
 
