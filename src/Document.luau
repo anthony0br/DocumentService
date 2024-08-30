@@ -23,7 +23,7 @@ local AUTOSAVE_INTERVAL = 150
 	and ensures one server is finished with it before it is opened by another.
 
 	In DocumentService, session locking enables the use of the caching methods
-	`SetCache`, `GetCache`, and `UpdateCache`.
+	`SetCache` and `GetCache`.
 
 	This is ideal for player data, or any data that needs frequent updates
 	and does not need multi-server editing.
