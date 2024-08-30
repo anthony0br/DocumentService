@@ -15,7 +15,7 @@ Session locking prevents your data from being edited by mutliple servers,
 and ensures one server is finished with it before it is opened by another.
 
 In DocumentService, session locking enables the use of the caching methods
-`SetCache`, `GetCache`, and `UpdateCache`.
+`SetCache` and `GetCache`.
 
 This is ideal for player data, or any data that needs frequent updates
 and does not need multi-server editing.
@@ -43,7 +43,7 @@ Session locking prevents your data from being edited by mutliple servers,
 and ensures one server is finished with it before it is opened by another.
 
 In DocumentService, session locking enables the use of the caching methods
-`SetCache`, `GetCache`, and `UpdateCache`.
+`SetCache` and `GetCache`.
 
 This is ideal for player data, or any data that needs frequent updates
 and does not need multi-server editing.
@@ -60,8 +60,8 @@ Types for your data are provided under the assumption that once a document
 is opened, the underlying data held in Data Stores is not updated
 externally in a way that changes its type.
 :::"><link data-rh="true" rel="canonical" href="https://anthony0br.github.io/DocumentService/api/Document"><link data-rh="true" rel="alternate" href="https://anthony0br.github.io/DocumentService/api/Document" hreflang="en"><link data-rh="true" rel="alternate" href="https://anthony0br.github.io/DocumentService/api/Document" hreflang="x-default"><link rel="stylesheet" href="/DocumentService/assets/css/styles.3b7b3b57.css">
-<link rel="preload" href="/DocumentService/assets/js/runtime~main.5315bf10.js" as="script">
-<link rel="preload" href="/DocumentService/assets/js/main.9611ee7b.js" as="script">
+<link rel="preload" href="/DocumentService/assets/js/runtime~main.ab1b80ec.js" as="script">
+<link rel="preload" href="/DocumentService/assets/js/main.75105d2e.js" as="script">
 </head>
 <body class="navigation-with-keyboard">
 <script>!function(){function e(e){document.documentElement.setAttribute("data-theme",e)}var t=function(){var e=null;try{e=localStorage.getItem("theme")}catch(e){}return e}();null!==t?e(t):window.matchMedia("(prefers-color-scheme: dark)").matches?e("dark"):(window.matchMedia("(prefers-color-scheme: light)").matches,e("light"))}()</script><div id="__docusaurus">
@@ -86,7 +86,7 @@ externally in a way that changes its type.
     </p>
     <p>
       In DocumentService, session locking enables the use of the caching methods
-      <code>SetCache</code>, <code>GetCache</code>, and <code>UpdateCache</code>.
+      <code>SetCache</code> and <code>GetCache</code>.
     </p>
     <p>
       This is ideal for player data, or any data that needs frequent updates
@@ -840,13 +840,13 @@ externally in a way that changes its type.
         }
     ],
     &quot;name&quot;: &quot;Document&quot;,
-    &quot;desc&quot;: &quot;An abstraction over keys in a DataStore.\n\nDocuments are designed to contain information about an entity in a schema.\nThis schema is enforced by your check function, and should be changed\nthrough migrations. You may, of course, decide to not use a schema by\ndefining an empty check function, but this generally isn&#x27;t recommended.\n\n:::tip\nSession locking prevents your data from being edited by mutliple servers,\nand ensures one server is finished with it before it is opened by another.\n\nIn DocumentService, session locking enables the use of the caching methods\n`SetCache`, `GetCache`, and `UpdateCache`.\n\nThis is ideal for player data, or any data that needs frequent updates\nand does not need multi-server editing.\n:::\n\n:::warning\nYou are free to edit the contents of the table in the .data field with\na tool like DataStore Editor, but manually changing other fields could cause\ndata loss and errors.\n:::\n\n:::warning\nTypes for your data are provided under the assumption that once a document\nis opened, the underlying data held in Data Stores is not updated\nexternally in a way that changes its type.\n:::&quot;,
+    &quot;desc&quot;: &quot;An abstraction over keys in a DataStore.\n\nDocuments are designed to contain information about an entity in a schema.\nThis schema is enforced by your check function, and should be changed\nthrough migrations. You may, of course, decide to not use a schema by\ndefining an empty check function, but this generally isn&#x27;t recommended.\n\n:::tip\nSession locking prevents your data from being edited by mutliple servers,\nand ensures one server is finished with it before it is opened by another.\n\nIn DocumentService, session locking enables the use of the caching methods\n`SetCache` and `GetCache`.\n\nThis is ideal for player data, or any data that needs frequent updates\nand does not need multi-server editing.\n:::\n\n:::warning\nYou are free to edit the contents of the table in the .data field with\na tool like DataStore Editor, but manually changing other fields could cause\ndata loss and errors.\n:::\n\n:::warning\nTypes for your data are provided under the assumption that once a document\nis opened, the underlying data held in Data Stores is not updated\nexternally in a way that changes its type.\n:::&quot;,
     &quot;source&quot;: {
         &quot;line&quot;: 44,
         &quot;path&quot;: &quot;src/Document.luau&quot;
     }
 }</pre></details></div><div class="col col--3"><div class="tableOfContents_bqdL thin-scrollbar"><ul class="table-of-contents table-of-contents__left-border"><li><a href="#types" class="table-of-contents__link toc-highlight">Types</a><ul><li><a href="#OpenResult&lt;T&gt;" class="table-of-contents__link toc-highlight">OpenResult<t></t></a></li><li><a href="#WriteResult&lt;T&gt;" class="table-of-contents__link toc-highlight">WriteResult<t></t></a></li></ul></li><li><a href="#properties" class="table-of-contents__link toc-highlight">Properties</a></li><li><a href="#functions" class="table-of-contents__link toc-highlight">Functions</a><ul><li><a href="#Close" class="table-of-contents__link toc-highlight">.Close</a></li><li><a href="#Erase" class="table-of-contents__link toc-highlight">.Erase</a></li><li><a href="#GetCache" class="table-of-contents__link toc-highlight">.GetCache</a></li><li><a href="#HookAfter" class="table-of-contents__link toc-highlight">.HookAfter</a></li><li><a href="#HookBefore" class="table-of-contents__link toc-highlight">.HookBefore</a></li><li><a href="#isDocument" class="table-of-contents__link toc-highlight">.isDocument</a></li><li><a href="#IsOpen" class="table-of-contents__link toc-highlight">.IsOpen</a></li><li><a href="#IsOpenAvailable" class="table-of-contents__link toc-highlight">.IsOpenAvailable</a></li><li><a href="#Open" class="table-of-contents__link toc-highlight">.Open</a></li><li><a href="#Read" class="table-of-contents__link toc-highlight">.Read</a></li><li><a href="#Save" class="table-of-contents__link toc-highlight">.Save</a></li><li><a href="#SetCache" class="table-of-contents__link toc-highlight">.SetCache</a></li><li><a href="#Steal" class="table-of-contents__link toc-highlight">.Steal</a></li><li><a href="#Update" class="table-of-contents__link toc-highlight">.Update</a></li></ul></li></ul></div></div></div></div></main></div></div><footer class="footer footer--dark"><div class="container container-fluid"><div class="footer__bottom text--center"><div class="footer__copyright">Copyright © 2024 anthony0br. Built with Moonwave and Docusaurus.</div></div></div></footer></div>
-<script src="/DocumentService/assets/js/runtime~main.5315bf10.js"></script>
-<script src="/DocumentService/assets/js/main.9611ee7b.js"></script>
+<script src="/DocumentService/assets/js/runtime~main.ab1b80ec.js"></script>
+<script src="/DocumentService/assets/js/main.75105d2e.js"></script>
 </body>
 </html>
