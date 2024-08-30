@@ -199,6 +199,9 @@ function DocumentStore.CloseAllDocuments<T>(self: DocumentStore<T>)
 				documentsToClose -= 1
 
 				if documentsToClose == 0 then
+					if coroutine.status(thread) ~= "suspended" then
+						return
+					end
 					-- Defer so that the coroutine.yield() always runs first
 					task.defer(thread)
 				end
