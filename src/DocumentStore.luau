@@ -87,7 +87,6 @@ function DocumentStore.new<T>(props: {
 		_documents = setmetatable({}, { __mode = "v" }),
 		_lockSessions = props.lockSessions,
 		_openingDocuments = 0,
-		_openDocuments = 0,
 		_documentsToClose = 0,
 	}, DocumentStore)
 
