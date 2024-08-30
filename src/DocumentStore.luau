@@ -1,11 +1,6 @@
 --!strict
 -- Author: Anthony O'Brien
 
-local RunService
-if _G.IS_ROBLOX then
-	RunService = game:GetService("RunService")
-end
-
 local Document = require("./Document")
 local Types = require("./Types")
 local Util = require("./SaveUtil")
