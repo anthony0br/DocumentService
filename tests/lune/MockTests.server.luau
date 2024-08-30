@@ -264,17 +264,6 @@ Test("SetCache fails if not open", function()
 	end)
 end)
 
-Test("UpdateCache fails if not open", function()
-	local documentStore = createTestDocumentStore()
-	local document = documentStore:GetDocument("1")
-	shouldFail(function()
-		document:UpdateCache(function(data: TestData)
-			data.Document = "newString"
-			return data
-		end)
-	end)
-end)
-
 Test("Save fails if not open", function()
 	local documentStore = createTestDocumentStore()
 	local document = documentStore:GetDocument("1")
@@ -299,17 +288,6 @@ Test("SetCache fails if not session locked", function()
 	local document = documentStore:GetDocument("1")
 	shouldFail(function()
 		document:GetCache()
-	end)
-end)
-
-Test("UpdateCache fails if not session locked", function()
-	local documentStore = createTestDocumentStoreNotLocked()
-	local document = documentStore:GetDocument("1")
-	shouldFail(function()
-		document:UpdateCache(function(data: TestData)
-			data.Document = "newString"
-			return data
-		end)
 	end)
 end)
 
@@ -1671,14 +1649,6 @@ Test("Error if cache is mutated", function()
 	end
 
 	shouldFail(function()
-		document:UpdateCache(function(data: TestData)
-			data.Document = "Updated data!"
-
-			return data
-		end)
-	end)
-
-	shouldFail(function()
 		local newCache = {
 			Document = "Set Cache",
 			Service = 4,
@@ -1693,7 +1663,7 @@ Test("Error if cache is mutated", function()
 	end)
 end)
 
-Test(":SetCache, :GetCache, :UpdateCache work correctly in the same session", function()
+Test(":SetCache, :GetCache work correctly in the same session", function()
 	local documentStore = createTestDocumentStore()
 
 	local document = documentStore:GetDocument("1")
@@ -1707,15 +1677,6 @@ Test(":SetCache, :GetCache, :UpdateCache work correctly in the same session", fu
 	document:SetCache(newCache)
 
 	assert(tableEquals(document:GetCache(), newCache))
-
-	document:UpdateCache(function(data: TestData)
-		local newData = table.clone(data)
-		newData.Document = "Updated cache!"
-
-		return newData
-	end)
-
-	assert(document:GetCache().Document == "Updated cache!")
 end)
 
 Test("Cache updates persist between sessions (are saved on close)", function()
