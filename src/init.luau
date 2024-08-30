@@ -31,5 +31,6 @@ export type Migrations<T> = Types.Migrations<T>
 ]=]
 return {
 	DocumentStore = DocumentStore,
+	Document = Document,
 	SaveUtil = SaveUtil,
 }
