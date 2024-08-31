@@ -216,7 +216,7 @@ end
 	.check (unknown) -> (boolean, T) -- A pure function that verifies your data schema
 	.default T -- Default values, which are set if keys are empty
 	.migrations Types.Migrations -- Migrations
-	.sessionLock boolean -- Should the document be session locked?
+	.lockSessions boolean -- Should the document be session locked?
 
 	:::info
 	Your check function should return true if the provided table contains all of
@@ -614,7 +614,14 @@ function Document.Close<T>(self: Document<T>): WriteResult<T?>
 		}
 end
 
-function Document.IsClosing(self: Document<T>): boolean end
+--[=[
+	Returns true if `:Close` has been called and is incomplete.
+
+	@return boolean
+]=]
+function Document.IsClosing<T>(self: Document<T>): boolean
+	return self._isClosing
+end
 
 --[=[
 	Sets the cache.
