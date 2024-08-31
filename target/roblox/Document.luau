@@ -66,7 +66,7 @@ export type Document<T> = typeof(setmetatable(
 			Read: { () -> () },
 			Update: { () -> () }		
 },
-		_migrations: Migrations<T>,
+		_migrations: Migrations,
 		_cache: T,
 		_isClosing: boolean,
 		_lockSessions: boolean,
@@ -76,7 +76,7 @@ export type Document<T> = typeof(setmetatable(
 	Document
 ))
 
-export type Migrations<T> = Types.Migrations<T>
+export type Migrations = Types.Migrations
 
 export type PreHookEvent = Types.PreHookEvent
 
@@ -125,7 +125,7 @@ local function runHooks(hooks: { () -> () })
 end
 
 -- Based off of Lapis by nezuo's backwards compatibility checking
-local function getLastCompatibleVersion<T>(migrations: Migrations<T>): number
+local function getLastCompatibleVersion<T>(migrations: Migrations): number
 	for version = #migrations, 1, -1 do
 		local migration = migrations[version]
 
@@ -137,7 +137,7 @@ local function getLastCompatibleVersion<T>(migrations: Migrations<T>): number
 	return 0
 end
 
-local function runMigrations<T>(migrations: Migrations<T>, initialData: unknown, initialVersion: number): unknown
+local function runMigrations(migrations: Migrations, initialData: unknown, initialVersion: number): unknown
 	local data = initialData
 	local dataVersion = initialVersion
 
@@ -215,8 +215,8 @@ end
 	.dataStore DataStoreInterface -- The object returned by DataStoreService:GetDataStore()
 	.check (unknown) -> (boolean, T) -- A pure function that verifies your data schema
 	.default T -- Default values, which are set if keys are empty
-	.migrations Types.Migrations<T> -- Migrations
-	.sessionLock boolean -- Should the document be session locked?
+	.migrations Types.Migrations -- Migrations
+	.lockSessions boolean -- Should the document be session locked?
 
 	:::info
 	Your check function should return true if the provided table contains all of
@@ -264,7 +264,7 @@ function Document.new<T>(props: {
 	dataStore: DataStoreInterface,
 	check: (unknown) -> (boolean, T),
 	default: T,
-	migrations: Types.Migrations<T>,
+	migrations: Types.Migrations,
 	lockSessions: boolean
 }): Document<T>
 	assert(props.check(props.default), "Default must pass type check")
@@ -612,6 +612,15 @@ function Document.Close<T>(self: Document<T>): WriteResult<T?>
 		else {
 			success = true,
 		}
+end
+
+--[=[
+	Returns true if `:Close` has been called and is incomplete.
+
+	@return boolean
+]=]
+function Document.IsClosing<T>(self: Document<T>): boolean
+	return self._isClosing
 end
 
 --[=[

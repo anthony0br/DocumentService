@@ -111,7 +111,7 @@ export type BackwardsCompatibilityError = "BackwardsCompatibilityError"
 export type SchemaError = "SchemaError"
 
 --[=[
-	@type Migrations<T> { { backwardsCompatible: boolean, migrate: (data: any) -> any, } }
+	@type Migrations { { backwardsCompatible: boolean, migrate: (data: any) -> any, } }
 
 	Data format versions start at 0. The first migration should migrate from 0 to 1.
 
@@ -129,7 +129,7 @@ export type SchemaError = "SchemaError"
 	@within DocumentService
 
 ]=]
-export type Migrations<T> = {
+export type Migrations = {
 	{
 		backwardsCompatible: boolean,
 		migrate: (data: any) -> any	

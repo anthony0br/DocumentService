@@ -29,7 +29,7 @@ export type DocumentStore<T> = typeof(setmetatable(
 		_dataStore: DataStoreInterface,
 		_check: (unknown) -> (boolean, T),
 		_default: T & {},
-		_migrations: Types.Migrations<T>,
+		_migrations: Types.Migrations,
 		_documents: typeof(setmetatable({} :: { [string]: Document<T> }, { { __mode = "v" } })),
 		-- Ideally, we could avoid this boolean option, but this is better
 		-- than trying to do inheritance in Luau
@@ -44,7 +44,7 @@ local gameClosing = false
 
 type Document<T> = Document.Document<T>
 
-type Migrations<T> = Types.Migrations<T>
+type Migrations = Types.Migrations
 
 type DataStoreInterface = Types.DataStoreInterface
 
@@ -54,8 +54,8 @@ type DataStoreInterface = Types.DataStoreInterface
 	.dataStore DataStore -- The object returned by DataStoreService:GetDataStore()
 	.check (unknown) -> (boolean, T) -- A type check function for your data, errors if types are invalid
 	.default T & {} -- Default values, which are set if keys are empty
-	.migrations Migrations<T> -- Migrations
-	.sessionLock boolean -- Should the documents be session locked?
+	.migrations Migrations -- Migrations
+	.lockSessions boolean -- Should the documents be session locked?
 ]=]
 --[=[
 	Creates a new DocumentStore.
@@ -76,7 +76,7 @@ function DocumentStore.new<T>(props: {
 	dataStore: DataStoreInterface,
 	check: (unknown) -> (boolean, T),
 	default: T & {},
-	migrations: Migrations<T>,
+	migrations: Migrations,
 	lockSessions: boolean
 }): DocumentStore<T>
 	local self = setmetatable({
@@ -192,11 +192,20 @@ function DocumentStore.CloseAllDocuments<T>(self: DocumentStore<T>)
 
 			task.spawn(function()
 				print("Closing", tostring(v))
-				v:Close()
+
+				if v:IsOpen() and not v:IsClosing() then
+					v:Close()
+				end
+
+				if v:IsClosing() then
+					repeat
+						task.wait()
+					until not v:IsOpen()
+				end
 
 				-- We decrement these even if the .Close failed since otherwise
-				-- a failure would result in spamming DataStore requests
-				-- if our retries didn't work, it'll probably never work
+				-- a failure would result in spamming DataStore requests for
+				-- the full 30s.
 				self._documentsToClose -= 1
 				documentsToClose -= 1
 
