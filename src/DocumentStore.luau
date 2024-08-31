@@ -55,7 +55,7 @@ type DataStoreInterface = Types.DataStoreInterface
 	.check (unknown) -> (boolean, T) -- A type check function for your data, errors if types are invalid
 	.default T & {} -- Default values, which are set if keys are empty
 	.migrations Migrations -- Migrations
-	.sessionLock boolean -- Should the documents be session locked?
+	.lockSessions boolean -- Should the documents be session locked?
 ]=]
 --[=[
 	Creates a new DocumentStore.
