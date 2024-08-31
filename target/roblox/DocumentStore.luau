@@ -111,6 +111,9 @@ end
 	Documents are cached in a weak table, so once they are closed, they will
 	be marked for garbage collection if you have no references to them. Be
 	careful of references created by closures.
+
+	Documents that are not session locked will be garbage collected once there
+	are no other references to them.
 	:::
 
 	@param key 

@@ -452,7 +452,7 @@ function Document.Open<T>(self: Document<T>): OpenResult<T>
 	self._shouldSteal = false
 
 	-- This also creates a closure preventing garbage collection while a
-	-- document is open
+	-- document is open and locked
 	self._autoSaveThread = task.defer(function()
 		while self._lockSessions and self._open do
 			task.wait(AUTOSAVE_INTERVAL)
