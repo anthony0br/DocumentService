@@ -192,11 +192,20 @@ function DocumentStore.CloseAllDocuments<T>(self: DocumentStore<T>)
 
 			task.spawn(function()
 				print("Closing", tostring(v))
-				v:Close()
+
+				if v:IsOpen() and not v:IsClosing() then
+					v:Close()
+				end
+
+				if v:IsClosing() then
+					repeat
+						task.wait()
+					until not v:IsOpen()
+				end
 
 				-- We decrement these even if the .Close failed since otherwise
-				-- a failure would result in spamming DataStore requests
-				-- if our retries didn't work, it'll probably never work
+				-- a failure would result in spamming DataStore requests for
+				-- the full 30s.
 				self._documentsToClose -= 1
 				documentsToClose -= 1
 
