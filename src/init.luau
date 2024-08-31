@@ -14,7 +14,7 @@ export type Err<T> = Types.Err<T>
 export type Ok<T> = Types.Ok<T>
 export type Transform<T> = Types.Transform<T>
 export type DataStoreInterface = Types.DataStoreInterface
-export type Migrations<T> = Types.Migrations<T>
+export type Migrations = Types.Migrations
 
 --[=[
 	@class DocumentService
