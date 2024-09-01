@@ -146,6 +146,10 @@ function DocumentStore.GetDocument<T>(self: DocumentStore<T>, key: string): (Doc
 		self._documentsToClose += 1
 	end)
 
+	document:HookAfter("Close", function()
+		self._documentsToClose -= 1
+	end)
+
 	self._documents[key] = document
 
 	return document, true
@@ -203,13 +207,11 @@ function DocumentStore.CloseAllDocuments<T>(self: DocumentStore<T>)
 				if v:IsClosing() then
 					repeat
 						task.wait()
-					until not v:IsOpen()
+					until not v:IsClosing()
 				end
 
-				-- We decrement these even if the .Close failed since otherwise
-				-- a failure would result in spamming DataStore requests for
-				-- the full 30s.
-				self._documentsToClose -= 1
+				-- We decrement this even if the .Close failed so the pass
+				-- doesn't hang forever
 				documentsToClose -= 1
 
 				if documentsToClose == 0 then
