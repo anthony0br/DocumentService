@@ -1218,6 +1218,7 @@ Test("DocumentStore:CloseAllDocuments yields until all documents are closed", fu
 	do
 		local document = store:GetDocument("4")
 		local result = document:Open()
+		document:Close()
 	end
 	do
 		local document = store:GetDocument("5")
@@ -1232,7 +1233,7 @@ Test("DocumentStore:CloseAllDocuments yields until all documents are closed", fu
 	assert(store:GetDocument("1"):IsOpen() == true)
 	assert(store:GetDocument("2"):IsOpen() == true)
 	assert(store:GetDocument("3"):IsOpen() == true)
-	assert(store:GetDocument("4"):IsOpen() == true)
+	assert(store:GetDocument("4"):IsOpen() == false)
 	assert(store:GetDocument("5"):IsOpen() == false)
 	store:CloseAllDocuments()
 	assert(store:GetDocument("1"):IsOpen() == false)
