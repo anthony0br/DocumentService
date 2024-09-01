@@ -4,6 +4,43 @@ sidebar_position: 3
  
  # Examples
 
+ ## Creating a DocumentStore
+ ```lua
+    type DataSchema = {
+        points: number,
+    }
+
+    local DataInterface = {
+        coins = Guard.Integer,
+    }
+
+    local function dataCheck(value: unknown): DataSchema
+        assert(type(value) == "table", "Data must be a table")
+        local Value: any = value
+
+        return {
+            coins = DataInterface.coins(Value.coins),
+        }
+    end
+
+    local store = DocumentStore.new({
+        dataStore = DataStoreService:GetDataStore("Test") :: any,
+        -- For mockDataStores use below!
+        --dataStore = MockDataStore:GetDataStore("Mock"),
+        check = Guard.Check(dataCheck),
+        default = {
+            coins = 100,
+        },
+        migrations = {},
+        lockSessions = true,
+    })
+```
+
+This example uses [Guard](https://util.redblox.dev/guard.html).
+
+You need to cast DataStore to any currently - while this library does dependency inversion
+properly - Roblox's Luau types don't work well with it!
+
  ## Opening a document for a player with error handling & lock stealing
  ```lua
     local document = store:GetDocument(tostring(player.UserId))
