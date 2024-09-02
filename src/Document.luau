@@ -326,8 +326,8 @@ end
 	@yields
 ]=]
 function Document.Open<T>(self: Document<T>): OpenResult<T>
-	assert(not self._open, "Document already open")
-	assert(not self._isClosing, "Document is closing, cannot open")
+	assert(not self._open, `{self} already open`)
+	assert(not self._isClosing, `{self} is closing, cannot open`)
 
 	-- Error flags
 	local lockedByOther: boolean
