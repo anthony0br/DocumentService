@@ -386,7 +386,7 @@ function Document.Open<T>(self: Document<T>): OpenResult<T>
 
 			if locked and not lockedByUs and not self._shouldSteal then
 				lockedByOther = true
-				abortAttempt("Session lock held by another session.")
+				abortAttempt(`Session lock held by another session for {self}.`)
 				return
 			end
 		end
