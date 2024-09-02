@@ -2,10 +2,10 @@
 sidebar_position: 4
 ---
  
- # Opening a player document
+# Opening a player document
 
- This is an example of how to open a document for a DocumentStore that deals with player data.
- The following code should run on `Players.PlayerAdded`:
+This is an example of how to open a document for a DocumentStore that deals with player data.
+The following code should run on `Players.PlayerAdded`:
 
  ```lua
 local document = store:GetDocument(tostring(player.UserId))

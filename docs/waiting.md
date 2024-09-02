@@ -9,15 +9,15 @@ thread to the one which called `:Open`)
 This is how I do that currently:
 
 ```lua
-	local thread = coroutine.running()
+local thread = coroutine.running()
 
-	if not document:IsOpen() then
-		document:HookAfter("Open", function()
-			if coroutine.status(thread) ~= "suspended" then
-				return
-			end
-			task.defer(thread)
-		end)
-		coroutine.yield()
-	end
+if not document:IsOpen() then
+    document:HookAfter("Open", function()
+        if coroutine.status(thread) ~= "suspended" then
+            return
+        end
+        task.defer(thread)
+    end)
+    coroutine.yield()
+end
 ```
