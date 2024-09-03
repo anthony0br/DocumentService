@@ -1016,8 +1016,8 @@ end
 local function hookOnce(hooks: { () -> () }, hook: () -> ())
 	local index = #hooks
 	local function func()
-		hook()
 		table.remove(hooks, table.find(hooks, func))
+		hook()
 	end
 	table.insert(hooks, index, func)
 end
