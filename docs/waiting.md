@@ -18,3 +18,6 @@ if not document:IsOpen() then
     coroutine.yield()
 end
 ```
+
+Warning: this implementation could yield indefinitely. You could use `OnceFail`
+to prevent this.
