@@ -12,10 +12,7 @@ This is how I do that currently:
 local thread = coroutine.running()
 
 if not document:IsOpen() then
-    document:HookAfter("Open", function()
-        if coroutine.status(thread) ~= "suspended" then
-            return
-        end
+    document:OnceAfter("Open", function()
         task.defer(thread)
     end)
     coroutine.yield()
