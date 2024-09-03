@@ -82,7 +82,7 @@ function SaveUtil.assertStorable(data: unknown)
 			end
 
 			if indexDataType and type(i) ~= indexDataType then
-				error("Tables with multiple index types are not storable")
+				error("Mixed tables are not storable")
 			end
 
 			if type(i) == "number" and last then

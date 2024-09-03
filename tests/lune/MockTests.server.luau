@@ -12,9 +12,11 @@ local Results = {
 }
 
 local function shouldFail(func: (...any) -> ())
-	local success = pcall(func)
+	local success, err = pcall(func :: any)
 	if success then
 		error(debug.traceback("Should fail", 2))
+	else
+		print(`shouldFail passed with {err}`)
 	end
 end
 
@@ -241,6 +243,32 @@ Test("Update fails if not open", function()
 		document:Update(function(data: TestData)
 			data.Document = "newString"
 			return data
+		end)
+	end)
+end)
+
+Test("Update fails with invalid transform", function()
+	local documentStore = createTestDocumentStore()
+	local document = documentStore:GetDocument("1")
+
+	document:Open()
+
+	shouldFail(function()
+		document:Update(function(data)
+			return {} :: any
+		end)
+	end)
+end)
+
+Test("Update fails with unsavable data", function()
+	local documentStore = createTestDocumentStore()
+	local document = documentStore:GetDocument("1")
+
+	document:Open()
+
+	shouldFail(function()
+		document:Update(function(data: TestData)
+			return { Document = "test", Service = 3, 5 }
 		end)
 	end)
 end)
@@ -2125,6 +2153,50 @@ Test("Documents are garbage collected if closed", function()
 	local _ = (collectgarbage :: any)("collect")
 	local _document, newlyCreated = documentStore:GetDocument("1")
 	assert(newlyCreated)
+end)
+
+Test("OpenAndUpdate fails with invalid transform", function()
+	local documentStore = createTestDocumentStore()
+	local document = documentStore:GetDocument("1")
+
+	shouldFail(function()
+		document:OpenAndUpdate(function(data)
+			return {} :: any
+		end)
+	end)
+end)
+
+Test("OpenAndUpdate fails with unsavable data", function()
+	local documentStore = createTestDocumentStore()
+	local document = documentStore:GetDocument("1")
+
+	shouldFail(function()
+		document:OpenAndUpdate(function(data: TestData)
+			return { Document = "test", Service = 3, 5 }
+		end)
+	end)
+end)
+
+Test("OpenAndUpdate mutates data correctly", function()
+	local documentStore = createTestDocumentStore()
+	local document = documentStore:GetDocument("1")
+
+	document:OpenAndUpdate(function(data: TestData)
+		data = table.clone(data)
+		data.Service = 10000
+		data.Document = "hi!"
+
+		return data
+	end)
+
+	document:Close()
+	local result2 = document:Open()
+	if not result2.success then
+		error(result2.reason)
+	end
+
+	assert(result2.data.Service == 10000)
+	assert(result2.data.Document == "hi!")
 end)
 
 print(`Tests complete. {Results.passed} passed, {Results.failed} failed`)

@@ -78,6 +78,7 @@ export type Document<T> = typeof(setmetatable(
 		_lockSessions: boolean,
 		_autoSaveThread: thread?,
 		_shouldSteal: boolean,
+		_onOpenTransform: Transform<T>?,
 	},
 	Document
 ))
@@ -343,6 +344,9 @@ function Document.Open<T>(self: Document<T>): OpenResult<T>
 	local lockedByOther: boolean
 	local incompatibleVersion: boolean
 	local failedCheck: boolean
+	local notStorable: boolean
+	local notStorableErr: string
+	local transformInvalid: boolean
 
 	runHooks(self._preHooks.Open)
 
@@ -410,6 +414,28 @@ function Document.Open<T>(self: Document<T>): OpenResult<T>
 
 		local data = migratedData :: T
 
+		if self._onOpenTransform then
+			data = self._onOpenTransform(data)
+		end
+
+		local newDataIsValid = self._check(data)
+		newDataIsValid = newDataIsValid and typeof(data) == "table"
+
+		local isStorable, err = pcall(function()
+			SaveUtil.assertStorable(data)
+		end)
+
+		if not isStorable then
+			notStorable = true
+			notStorableErr = err
+			return
+		end
+
+		if not newDataIsValid then
+			transformInvalid = true
+			return
+		end
+
 		self._cache = deepFreeze(data)
 
 		return {
@@ -425,6 +451,14 @@ function Document.Open<T>(self: Document<T>): OpenResult<T>
 			data = data,
 		}
 	end, self._dataStore, self._key)
+
+	if transformInvalid then
+		error("Invalid transform function - must return a table that passes the check function.")
+	end
+
+	if notStorable then
+		error("Not storable: " .. notStorableErr)
+	end
 
 	-- We need to check this first, since updateOk will be false in
 	-- the case of a SessionLockedError
@@ -485,6 +519,40 @@ function Document.Open<T>(self: Document<T>): OpenResult<T>
 		success = true,
 		data = (updatedKeyData :: KeyData<T>).data,
 	}
+end
+
+--[=[
+	Opens, and also runs a transform function on the data. Useful for
+	non-session-locked data for shared entities, where one-off updates might
+	be needed.
+
+	Will throw a Luau error if the transform produces invalid or unsavable data.
+
+	Runs both Open and Update hooks, including fail hooks.
+
+	@return OpenResult<T>
+
+	@yields
+]=]
+function Document.OpenAndUpdate<T>(self: Document<T>, transform: Transform<T>): OpenResult<T>
+	assert(not self._open, `{self} already open`)
+	assert(not self._isClosing, `{self} is closing, cannot open`)
+
+	runHooks(self._preHooks.Update)
+
+	self._onOpenTransform = transform
+
+	local result = self:Open()
+
+	self._onOpenTransform = nil
+
+	if result.success then
+		runHooks(self._postHooks.Update)
+		return result
+	else
+		runHooks(self._failHooks.Update)
+		return result
+	end
 end
 
 --[=[
