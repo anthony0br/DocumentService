@@ -123,7 +123,7 @@ type SchemaError = Types.SchemaError
 local INTERNAL_SCHEMA_VERSION = 0
 
 local function runHooks(hooks: { () -> () })
-	for _, hook in ipairs(hooks) do
+	for _, hook in hooks do
 		hook()
 	end
 end
@@ -1014,12 +1014,11 @@ function Document.HookFail<T>(self: Document<T>, event: HookEvent, hook: () -> (
 end
 
 local function hookOnce(hooks: { () -> () }, hook: () -> ())
-	local index = #hooks
 	local function func()
 		table.remove(hooks, table.find(hooks, func))
 		hook()
 	end
-	table.insert(hooks, index, func)
+	table.insert(hooks, func)
 end
 
 --[=[

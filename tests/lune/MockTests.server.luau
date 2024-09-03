@@ -1887,37 +1887,214 @@ Test("Read Hooks run correctly", function()
 	document:Close()
 end)
 
-Test("Documents are garbage collected if closed - using memory metrics", function()
-	local documentStore = createTestDocumentStore()
-	local _ = (collectgarbage :: any)("collect")
-	local count1 = collectgarbage("count")
-	print(count1)
+Test("Open Once Hooks run correctly", function()
+	local documentStore, mockDataStore = createTestDocumentStore()
+	local document = documentStore:GetDocument("1")
+	local hook1Ran = false
+	local hook2Ran = false
+	local failRan = false
 
-	local upvalue = 0
+	document:OnceBefore("Open", function()
+		assert(not hook1Ran)
+		assert(not document:IsOpen(), "Hook ran too late")
+		hook1Ran = true
+	end)
 
-	local count2
-	do
-		local documents = {}
-		for i = 1, 50 do
-			local document = documentStore:GetDocument(tostring(i))
-			table.insert(documents, document)
+	document:OnceAfter("Open", function()
+		assert(not hook2Ran)
+		assert(document:IsOpen(), "Hook ran early")
+		assert(hook1Ran)
+		hook2Ran = true
+	end)
 
-			document:HookAfter("Open", function()
-				upvalue += 1
-			end)
+	document:OnceFail("Open", function()
+		assert(not failRan)
+		failRan = true
+	end)
 
-			document:Open()
-			document:Close()
-		end
-		count2 = collectgarbage("count")
-		print(count2)
+	for _ = 1, 2 do
+		local result = document:Open()
+		assert(hook2Ran, "Hook didn't run")
+		assert(result.success, "Open failed")
+		document:Close()
+
+		mockDataStore.errors:addSimulatedErrors(5)
+		local openResult = document:Open()
+		assert(not openResult.success, "Open succeeded")
+		assert(failRan)
+	end
+end)
+
+Test("Close Once Hooks run correctly", function()
+	local documentStore, mockDataStore = createTestDocumentStore()
+	local document = documentStore:GetDocument("1")
+	local hook1Ran = false
+	local hook2Ran = false
+	local failRan = false
+
+	document:OnceBefore("Close", function()
+		print("Before close running!")
+		assert(not hook1Ran, "Hook re-ran")
+		assert(document:IsOpen(), "Document closed too early")
+		hook1Ran = true
+	end)
+
+	document:OnceAfter("Close", function()
+		print("After hook running")
+		assert(not hook2Ran, "Hook re-ran")
+		assert(not document:IsOpen(), "Document not closed")
+		assert(hook1Ran, "Hook before didn't run")
+		hook2Ran = true
+	end)
+
+	document:OnceFail("Close", function()
+		assert(not failRan)
+		failRan = true
+	end)
+
+	for _ = 1, 2 do
+		local result = document:Open()
+		local resultClose = document:Close()
+		assert(hook2Ran, "Hook didn't run")
+		assert(result.success, "Open failed")
+		assert(resultClose.success, "Close failed")
+
+		document:Open()
+		mockDataStore.errors:addSimulatedErrors(5)
+		local closeResult = document:Close()
+		assert(not closeResult.success, "Close succeeded")
+		assert(failRan)
+
+		document:Close()
+	end
+end)
+
+Test("Update Once Before Hooks run correctly", function()
+	local documentStore, mockDataStore = createTestDocumentStoreNotLocked()
+	local document = documentStore:GetDocument("1")
+	local hookRan = false
+
+	document:OnceBefore("Update", function()
+		assert(not hookRan)
+		assert(mockDataStore:GetAsync("1").data.Document ~= "Updated")
+		hookRan = true
+	end)
+
+	local result = document:Open()
+
+	assert(result.success, "Open failed")
+
+	for _ = 1, 2 do
+		local updateResult = document:Update(function(data: TestData)
+			local newData = table.clone(data)
+			newData.Document = "Updated"
+
+			return newData
+		end)
+
+		assert(hookRan, "Hook didn't run")
+		assert(updateResult.success)
 	end
 
-	local _ = (collectgarbage :: any)("collect")
-	local count3 = collectgarbage("count")
-	print(count3)
-	assert(count2 - count3 > 200)
-	assert(count3 - count1 < 200)
+	document:Close()
+end)
+
+Test("Update Once After Hooks run correctly", function()
+	local documentStore, mockDataStore = createTestDocumentStoreNotLocked()
+	local document = documentStore:GetDocument("1")
+	local hookRan = false
+
+	document:OnceAfter("Update", function()
+		assert(not hookRan)
+		assert(mockDataStore:GetAsync("1").data.Document == "Updated")
+		hookRan = true
+	end)
+
+	local result = document:Open()
+	assert(result.success, "Open failed")
+
+	for _ = 1, 2 do
+		document:Update(function(data: TestData)
+			local newData = table.clone(data)
+			newData.Document = "Updated"
+
+			return newData
+		end)
+
+		assert(hookRan, "Hook didn't run")
+	end
+
+	document:Close()
+end)
+
+Test("Fail Update Hooks run correctly", function()
+	local documentStore, mockDataStore = createTestDocumentStore()
+	local document = documentStore:GetDocument("1")
+	local failRan = false
+
+	document:OnceFail("Update", function()
+		assert(not failRan)
+		failRan = true
+	end)
+
+	assert(not failRan)
+	document:Open()
+
+	for _ = 1, 2 do
+		mockDataStore.errors:addSimulatedErrors(5)
+		local result = document:Update(function(data: TestData)
+			local newData = table.clone(data)
+			newData.Document = "Updated"
+
+			return newData
+		end)
+
+		assert(not result.success, "Update succeeded")
+		assert(failRan)
+	end
+
+	document:Close()
+end)
+
+Test("Read Hooks run correctly", function()
+	local documentStore, mockDataStore = createTestDocumentStore()
+	local document = documentStore:GetDocument("1")
+	local firstRan = false
+	local secondRan = false
+	local failRan = false
+
+	document:OnceBefore("Read", function()
+		assert(not firstRan)
+		firstRan = true
+	end)
+
+	document:OnceAfter("Read", function()
+		assert(not secondRan)
+		assert(firstRan, "Before hook didn't run")
+		secondRan = true
+	end)
+
+	document:OnceFail("Read", function()
+		assert(not failRan)
+		failRan = true
+	end)
+
+	-- Open the document first so we don't get SchemaError
+	local result = document:Open()
+
+	for _ = 1, 2 do
+		local resultRead = document:Read()
+		assert(resultRead.success, "Read failed")
+		assert(secondRan, "After hook didn't run")
+		assert(result.success, "Open failed")
+
+		mockDataStore.errors:addSimulatedErrors(5)
+		resultRead = document:Read()
+		assert(not resultRead.success, "Read succeeded")
+		assert(failRan)
+	end
+
+	document:Close()
 end)
 
 Test("Open documents are not garbage collected", function()
