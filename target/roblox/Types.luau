@@ -1,9 +1,7 @@
 --!strict
 
 --[=[
-	@type PreHookEvent "Open" | "Close" | "Update" | "Read"
-
-	Runs before the operation.
+	@type HookEvent "Open" | "Close" | "Update" | "Read"
 
 	Update hooks will run on any operation that writes to Data Stores e.g. :Save().
 
@@ -11,20 +9,7 @@
 
 	@within DocumentService
 ]=]
-export type PreHookEvent = "Open" | "Close" | "Update" | "Read"
-
---[=[
-	@type PostHookEvent "Open" | "Close" | "Update" | "Read"
-
-	Runs after the operation.
-
-	Update hooks will run on any operation that writes to Data Stores e.g. :Save().
-
-	Read hooks will run on any operation that reads from Data Stores e.g. :Peek()
-
-	@within DocumentService
-]=]
-export type PostHookEvent = "Open" | "Close" | "Update" | "Read"
+export type HookEvent = "Open" | "Close" | "Update" | "Read"
 
 --[=[
 	@type Ok<T> { success: true, data: T }
