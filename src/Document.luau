@@ -66,6 +66,12 @@ export type Document<T> = typeof(setmetatable(
 			Read: { () -> () },
 			Update: { () -> () },
 		},
+		_failHooks: {
+			Open: { () -> () },
+			Close: { () -> () },
+			Read: { () -> () },
+			Update: { () -> () },
+		},
 		_migrations: Migrations,
 		_cache: T,
 		_isClosing: boolean,
@@ -78,9 +84,7 @@ export type Document<T> = typeof(setmetatable(
 
 export type Migrations = Types.Migrations
 
-export type PreHookEvent = Types.PreHookEvent
-
-export type PostHookEvent = Types.PostHookEvent
+export type HookEvent = Types.HookEvent
 
 export type Transform<T> = Types.Transform<T>
 
@@ -291,6 +295,12 @@ function Document.new<T>(props: {
 			Update = {},
 			Read = {},
 		},
+		_failHooks = {
+			Open = {},
+			Close = {},
+			Update = {},
+			Read = {},
+		},
 		_migrations = deepFreeze(props.migrations),
 		_isClosing = false,
 		_cache = props.default,
@@ -419,6 +429,7 @@ function Document.Open<T>(self: Document<T>): OpenResult<T>
 	-- We need to check this first, since updateOk will be false in
 	-- the case of a SessionLockedError
 	if lockedByOther then
+		runHooks(self._failHooks.Open)
 		return {
 			success = false,
 			reason = "SessionLockedError",
@@ -426,6 +437,7 @@ function Document.Open<T>(self: Document<T>): OpenResult<T>
 	end
 
 	if not updateOk then
+		runHooks(self._failHooks.Open)
 		return {
 			success = false,
 			reason = "RobloxAPIError",
@@ -433,6 +445,7 @@ function Document.Open<T>(self: Document<T>): OpenResult<T>
 	end
 
 	if incompatibleVersion then
+		runHooks(self._failHooks.Open)
 		return {
 			success = false,
 			reason = "BackwardsCompatibilityError",
@@ -440,6 +453,7 @@ function Document.Open<T>(self: Document<T>): OpenResult<T>
 	end
 
 	if failedCheck then
+		runHooks(self._failHooks.Open)
 		return {
 			success = false,
 			reason = "CheckError",
@@ -593,6 +607,8 @@ function Document.Close<T>(self: Document<T>): WriteResult<T?>
 
 		if not result.success then
 			self._isClosing = false
+
+			runHooks(self._failHooks.Close)
 
 			return result
 		end
@@ -793,6 +809,7 @@ function Document.Update<T>(self: Document<T>, transform: Transform<T>): WriteRe
 	end
 
 	if not success then
+		runHooks(self._failHooks.Update)
 		return {
 			success = false,
 			reason = "RobloxAPIError",
@@ -800,6 +817,7 @@ function Document.Update<T>(self: Document<T>, transform: Transform<T>): WriteRe
 	end
 
 	if lockedByOther then
+		runHooks(self._failHooks.Update)
 		return {
 			success = false,
 			reason = "SessionLockedError",
@@ -807,6 +825,7 @@ function Document.Update<T>(self: Document<T>, transform: Transform<T>): WriteRe
 	end
 
 	if schemaError then
+		runHooks(self._failHooks.Update)
 		return {
 			success = false,
 			reason = "SchemaError",
@@ -906,6 +925,7 @@ function Document.Read<T>(
 	local success, getValue: any = SaveUtil.getAsync(self._dataStore, self._key)
 
 	if not success then
+		runHooks(self._failHooks.Read)
 		return {
 			success = false,
 			reason = "RobloxAPIError",
@@ -915,6 +935,7 @@ function Document.Read<T>(
 	local keyData = checkKeyData(getValue)
 
 	if not keyData then
+		runHooks(self._failHooks.Read)
 		return {
 			success = false,
 			reason = "SchemaError",
@@ -926,6 +947,7 @@ function Document.Read<T>(
 	local checkOk = self._check(migratedData)
 
 	if not checkOk then
+		runHooks(self._failHooks.Read)
 		return {
 			success = false,
 			reason = "CheckError",
@@ -935,6 +957,7 @@ function Document.Read<T>(
 	local data = migratedData :: T
 
 	if #self._migrations < keyData.lastCompatibleVersion then
+		runHooks(self._failHooks.Read)
 		return {
 			success = false,
 			reason = "BackwardsCompatibilityError",
@@ -960,7 +983,7 @@ end
 	@param event -- the operation to call the hook before
 	@param hook -- a hook function that receives the arguments passed in to the operation
 ]=]
-function Document.HookBefore<T, S...>(self: Document<T>, event: PreHookEvent, hook: () -> ())
+function Document.HookBefore<T, S...>(self: Document<T>, event: HookEvent, hook: () -> ())
 	table.insert(self._preHooks[event], hook)
 end
 
@@ -976,8 +999,18 @@ end
 	@param event -- the operation to call the hook after
 	@param hook -- a hook function that receives the arguments passed in to the operation
 ]=]
-function Document.HookAfter<T>(self: Document<T>, event: PostHookEvent, hook: () -> ())
+function Document.HookAfter<T>(self: Document<T>, event: HookEvent, hook: () -> ())
 	table.insert(self._postHooks[event], hook)
+end
+
+--[=[
+	Attaches a hook which occurs after an event fails
+
+	@param event -- the operation to call the hook after
+	@param hook -- a hook function that receives the arguments passed in to the operation
+]=]
+function Document.HookFail<T>(self: Document<T>, event: HookEvent, hook: () -> ())
+	table.insert(self._failHooks[event], hook)
 end
 
 --[=[

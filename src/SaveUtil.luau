@@ -201,7 +201,9 @@ function SaveUtil.getAsync<T>(dataStore: DataStoreInterface, key: string): (bool
 
 		assert(SaveUtil.getGetBudget() > 0, "Ran out of budget")
 
-		return dataStore:GetAsync(key, options)
+		local resultData, resultKeyInfo = dataStore:GetAsync(key, options)
+
+		return resultData, resultKeyInfo
 	end)
 
 	return result.success, result.returnValues[1], result.returnValues[2]

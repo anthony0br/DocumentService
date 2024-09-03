@@ -6,8 +6,7 @@ local DocumentStore = require("./DocumentStore")
 local Types = require("./Types")
 local SaveUtil = require("./SaveUtil")
 
-export type PreHookEvent = Types.PreHookEvent
-export type PostHookEvent = Types.PostHookEvent
+export type HookEvent = Types.HookEvent
 export type Document<T> = Document.Document<T>
 export type Result<T, E> = Types.Result<T, E>
 export type Err<T> = Types.Err<T>
