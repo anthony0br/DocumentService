@@ -60,8 +60,8 @@ Types for your data are provided under the assumption that once a document
 is opened, the underlying data held in Data Stores is not updated
 externally in a way that changes its type.
 :::"><link data-rh="true" rel="canonical" href="https://anthony0br.github.io/DocumentService/api/Document"><link data-rh="true" rel="alternate" href="https://anthony0br.github.io/DocumentService/api/Document" hreflang="en"><link data-rh="true" rel="alternate" href="https://anthony0br.github.io/DocumentService/api/Document" hreflang="x-default"><link rel="stylesheet" href="/DocumentService/assets/css/styles.3b7b3b57.css">
-<link rel="preload" href="/DocumentService/assets/js/runtime~main.eb69758c.js" as="script">
-<link rel="preload" href="/DocumentService/assets/js/main.e1de6cc4.js" as="script">
+<link rel="preload" href="/DocumentService/assets/js/runtime~main.42593fb7.js" as="script">
+<link rel="preload" href="/DocumentService/assets/js/main.348e244f.js" as="script">
 </head>
 <body class="navigation-with-keyboard">
 <script>!function(){function e(e){document.documentElement.setAttribute("data-theme",e)}var t=function(){var e=null;try{e=localStorage.getItem("theme")}catch(e){}return e}();null!==t?e(t):window.matchMedia("(prefers-color-scheme: dark)").matches?e("dark"):(window.matchMedia("(prefers-color-scheme: light)").matches,e("light"))}()</script><div id="__docusaurus">
@@ -122,7 +122,7 @@ externally in a way that changes its type.
     </p>
   </div>
 </div>
-</div></header><h2 class="anchor anchorWithStickyNavbar_LWe7" id="types">Types<a href="#types" class="hash-link" aria-label="Direct link to Types" title="Direct link to Types">​</a></h2><div class="divider_rE5g"></div><h3 class="anchor anchorWithStickyNavbar_LWe7" id="WriteResult&lt;T&gt;"><code style="text-decoration:none">WriteResult&lt;T&gt;</code><a href="#WriteResult&lt;T&gt;" class="hash-link" aria-label="Direct link to WriteResult&lt;T&gt;" title="Direct link to WriteResult&lt;T&gt;">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/anthony0br/DocumentService/blob/main/src/Document.luau#L105"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code class="purple_ieR2">type</code> <code>WriteResult&lt;T&gt;<!-- --> = </code> <code class="blue_P4bS">Result</code><code class="op_lSLc">&lt;</code><code class="blue_P4bS">T,</code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/DocumentService/api/DocumentService#RobloxAPIError">RobloxAPIError</a></code><code class="op_lSLc"> | </code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/DocumentService/api/DocumentService#SessionLockedError">SessionLockedError</a></code><code class="op_lSLc"> | </code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/DocumentService/api/DocumentService#SchemaError">SchemaError</a></code><code class="op_lSLc">&gt;</code></div><div></div><h2 class="anchor anchorWithStickyNavbar_LWe7" id="functions">Functions<a href="#functions" class="hash-link" aria-label="Direct link to Functions" title="Direct link to Functions">​</a></h2><div class="divider_rE5g"></div><h3 class="anchor anchorWithStickyNavbar_LWe7" id="Open"><code style="text-decoration:none">Open</code><a href="#Open" class="hash-link" aria-label="Direct link to Open" title="Direct link to Open">​</a></h3><span class="badge_Ba2I" style="color:#f1c40f"><span class="badgeTooltip_cWXP">This is a yielding function. When called, it will pause the Lua thread that called the function until a result is ready to be returned, without interrupting other scripts.</span><span class="badgeToolTipTail_H9D_"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="#f1c40f" role="img" aria-label="This is a yielding function. When called, it will pause the Lua thread that called the function until a result is ready to be returned, without interrupting other scripts."><path d="M96.4 11.9c-1.4-2.5-4-4-6.9-4H10.8c-2.9 0-5.4 1.5-6.9 4-1.4 2.5-1.4 5.5 0 7.9L43.3 88c1.4 2.5 4 4 6.9 4 2.9 0 5.4-1.5 6.9-4l39.3-68.2c1.4-2.4 1.4-5.4 0-7.9zM46.3 54.5c1.1-1.1 2.3-1.6 3.8-1.6s2.8.5 3.8 1.6c1.1 1.1 1.6 2.3 1.6 3.8s-.5 2.8-1.6 3.8c-1.1 1.1-2.3 1.6-3.8 1.6s-2.8-.5-3.8-1.6c-1.1-1.1-1.6-2.3-1.6-3.8.1-1.5.6-2.8 1.6-3.8zm-.5-4.9V21.8h8.8v27.8h-8.8z"></path></svg> <!-- -->Yields</span></span><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/anthony0br/DocumentService/blob/main/src/Document.luau#L338"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>Document<!-- -->.</code><code class="green_DgR4">Open</code><code>(</code><code>self<!-- -->: </code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/DocumentService/api/Document">Document</a></code><code class="op_lSLc">&lt;</code><code class="blue_P4bS">T</code><code class="op_lSLc">&gt;</code><code>) → </code><code class="blue_P4bS">OpenResult</code><code class="op_lSLc">&lt;</code><code class="blue_P4bS">T</code><code class="op_lSLc">&gt;</code></div><h3>Types</h3><h3 class="anchor anchorWithStickyNavbar_LWe7" id="OpenResult&lt;T&gt;"><a href="#OpenResult&lt;T&gt;" class="hash-link" aria-label="Direct link to OpenResult&lt;T&gt;" title="Direct link to OpenResult&lt;T&gt;">​</a></h3><div class="memberString_GwaU"><code class="purple_ieR2">type</code> <code>OpenResult&lt;T&gt;<!-- --> = </code> <code class="blue_P4bS">Result</code><code class="op_lSLc">&lt;</code><code class="blue_P4bS">T,</code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/DocumentService/api/DocumentService#RobloxAPIError">RobloxAPIError</a></code><code class="op_lSLc"> | </code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/DocumentService/api/DocumentService#BackwardsCompatibilityError">BackwardsCompatibilityError</a></code><code class="op_lSLc"> | </code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/DocumentService/api/DocumentService#CheckError">CheckError</a></code><code class="op_lSLc"> | </code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/DocumentService/api/DocumentService#SessionLockedError">SessionLockedError</a></code><code class="op_lSLc">&gt;</code></div><div></div><div>
+</div></header><h2 class="anchor anchorWithStickyNavbar_LWe7" id="types">Types<a href="#types" class="hash-link" aria-label="Direct link to Types" title="Direct link to Types">​</a></h2><div class="divider_rE5g"></div><h3 class="anchor anchorWithStickyNavbar_LWe7" id="OpenResult&lt;T&gt;"><code style="text-decoration:none">OpenResult&lt;T&gt;</code><a href="#OpenResult&lt;T&gt;" class="hash-link" aria-label="Direct link to OpenResult&lt;T&gt;" title="Direct link to OpenResult&lt;T&gt;">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/anthony0br/DocumentService/blob/main/src/Document.luau#L99"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code class="purple_ieR2">type</code> <code>OpenResult&lt;T&gt;<!-- --> = </code> <code class="blue_P4bS">Result</code><code class="op_lSLc">&lt;</code><code class="blue_P4bS">T,</code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/DocumentService/api/DocumentService#RobloxAPIError">RobloxAPIError</a></code><code class="op_lSLc"> | </code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/DocumentService/api/DocumentService#BackwardsCompatibilityError">BackwardsCompatibilityError</a></code><code class="op_lSLc"> | </code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/DocumentService/api/DocumentService#CheckError">CheckError</a></code><code class="op_lSLc"> | </code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/DocumentService/api/DocumentService#SessionLockedError">SessionLockedError</a></code><code class="op_lSLc">&gt;</code></div><div></div><div class="divider_rE5g"></div><h3 class="anchor anchorWithStickyNavbar_LWe7" id="WriteResult&lt;T&gt;"><code style="text-decoration:none">WriteResult&lt;T&gt;</code><a href="#WriteResult&lt;T&gt;" class="hash-link" aria-label="Direct link to WriteResult&lt;T&gt;" title="Direct link to WriteResult&lt;T&gt;">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/anthony0br/DocumentService/blob/main/src/Document.luau#L106"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code class="purple_ieR2">type</code> <code>WriteResult&lt;T&gt;<!-- --> = </code> <code class="blue_P4bS">Result</code><code class="op_lSLc">&lt;</code><code class="blue_P4bS">T,</code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/DocumentService/api/DocumentService#RobloxAPIError">RobloxAPIError</a></code><code class="op_lSLc"> | </code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/DocumentService/api/DocumentService#SessionLockedError">SessionLockedError</a></code><code class="op_lSLc"> | </code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/DocumentService/api/DocumentService#SchemaError">SchemaError</a></code><code class="op_lSLc">&gt;</code></div><div></div><h2 class="anchor anchorWithStickyNavbar_LWe7" id="functions">Functions<a href="#functions" class="hash-link" aria-label="Direct link to Functions" title="Direct link to Functions">​</a></h2><div class="divider_rE5g"></div><h3 class="anchor anchorWithStickyNavbar_LWe7" id="Open"><code style="text-decoration:none">Open</code><a href="#Open" class="hash-link" aria-label="Direct link to Open" title="Direct link to Open">​</a></h3><span class="badge_Ba2I" style="color:#f1c40f"><span class="badgeTooltip_cWXP">This is a yielding function. When called, it will pause the Lua thread that called the function until a result is ready to be returned, without interrupting other scripts.</span><span class="badgeToolTipTail_H9D_"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="#f1c40f" role="img" aria-label="This is a yielding function. When called, it will pause the Lua thread that called the function until a result is ready to be returned, without interrupting other scripts."><path d="M96.4 11.9c-1.4-2.5-4-4-6.9-4H10.8c-2.9 0-5.4 1.5-6.9 4-1.4 2.5-1.4 5.5 0 7.9L43.3 88c1.4 2.5 4 4 6.9 4 2.9 0 5.4-1.5 6.9-4l39.3-68.2c1.4-2.4 1.4-5.4 0-7.9zM46.3 54.5c1.1-1.1 2.3-1.6 3.8-1.6s2.8.5 3.8 1.6c1.1 1.1 1.6 2.3 1.6 3.8s-.5 2.8-1.6 3.8c-1.1 1.1-2.3 1.6-3.8 1.6s-2.8-.5-3.8-1.6c-1.1-1.1-1.6-2.3-1.6-3.8.1-1.5.6-2.8 1.6-3.8zm-.5-4.9V21.8h8.8v27.8h-8.8z"></path></svg> <!-- -->Yields</span></span><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/anthony0br/DocumentService/blob/main/src/Document.luau#L339"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>Document<!-- -->.</code><code class="green_DgR4">Open</code><code>(</code><code>self<!-- -->: </code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/DocumentService/api/Document">Document</a></code><code class="op_lSLc">&lt;</code><code class="blue_P4bS">T</code><code class="op_lSLc">&gt;</code><code>) → </code><code class="blue_P4bS">OpenResult</code><code class="op_lSLc">&lt;</code><code class="blue_P4bS">T</code><code class="op_lSLc">&gt;</code></div><div>
 <p>
   Validates the document if one exists, creates a default document if no
   document exists, or creates a document with the data that is in the given
@@ -158,7 +158,15 @@ externally in a way that changes its type.
     </p>
   </div>
 </div>
-</div><div class="divider_rE5g"></div><h3 class="anchor anchorWithStickyNavbar_LWe7" id="Steal"><code style="text-decoration:none">Steal</code><a href="#Steal" class="hash-link" aria-label="Direct link to Steal" title="Direct link to Steal">​</a></h3><span class="badge_Ba2I" style="color:#f1c40f"><span class="badgeTooltip_cWXP">This is a yielding function. When called, it will pause the Lua thread that called the function until a result is ready to be returned, without interrupting other scripts.</span><span class="badgeToolTipTail_H9D_"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="#f1c40f" role="img" aria-label="This is a yielding function. When called, it will pause the Lua thread that called the function until a result is ready to be returned, without interrupting other scripts."><path d="M96.4 11.9c-1.4-2.5-4-4-6.9-4H10.8c-2.9 0-5.4 1.5-6.9 4-1.4 2.5-1.4 5.5 0 7.9L43.3 88c1.4 2.5 4 4 6.9 4 2.9 0 5.4-1.5 6.9-4l39.3-68.2c1.4-2.4 1.4-5.4 0-7.9zM46.3 54.5c1.1-1.1 2.3-1.6 3.8-1.6s2.8.5 3.8 1.6c1.1 1.1 1.6 2.3 1.6 3.8s-.5 2.8-1.6 3.8c-1.1 1.1-2.3 1.6-3.8 1.6s-2.8-.5-3.8-1.6c-1.1-1.1-1.6-2.3-1.6-3.8.1-1.5.6-2.8 1.6-3.8zm-.5-4.9V21.8h8.8v27.8h-8.8z"></path></svg> <!-- -->Yields</span></span><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/anthony0br/DocumentService/blob/main/src/Document.luau#L506"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>Document<!-- -->.</code><code class="green_DgR4">Steal</code><code>(</code><code>self<!-- -->: </code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/DocumentService/api/Document">Document</a></code><code class="op_lSLc">&lt;</code><code class="blue_P4bS">T</code><code class="op_lSLc">&gt;</code><code>) → </code><code>(</code><code>)</code></div><div>
+</div><div class="divider_rE5g"></div><h3 class="anchor anchorWithStickyNavbar_LWe7" id="OpenAndUpdate"><code style="text-decoration:none">OpenAndUpdate</code><a href="#OpenAndUpdate" class="hash-link" aria-label="Direct link to OpenAndUpdate" title="Direct link to OpenAndUpdate">​</a></h3><span class="badge_Ba2I" style="color:#f1c40f"><span class="badgeTooltip_cWXP">This is a yielding function. When called, it will pause the Lua thread that called the function until a result is ready to be returned, without interrupting other scripts.</span><span class="badgeToolTipTail_H9D_"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="#f1c40f" role="img" aria-label="This is a yielding function. When called, it will pause the Lua thread that called the function until a result is ready to be returned, without interrupting other scripts."><path d="M96.4 11.9c-1.4-2.5-4-4-6.9-4H10.8c-2.9 0-5.4 1.5-6.9 4-1.4 2.5-1.4 5.5 0 7.9L43.3 88c1.4 2.5 4 4 6.9 4 2.9 0 5.4-1.5 6.9-4l39.3-68.2c1.4-2.4 1.4-5.4 0-7.9zM46.3 54.5c1.1-1.1 2.3-1.6 3.8-1.6s2.8.5 3.8 1.6c1.1 1.1 1.6 2.3 1.6 3.8s-.5 2.8-1.6 3.8c-1.1 1.1-2.3 1.6-3.8 1.6s-2.8-.5-3.8-1.6c-1.1-1.1-1.6-2.3-1.6-3.8.1-1.5.6-2.8 1.6-3.8zm-.5-4.9V21.8h8.8v27.8h-8.8z"></path></svg> <!-- -->Yields</span></span><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/anthony0br/DocumentService/blob/main/src/Document.luau#L537"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>Document<!-- -->.</code><code class="green_DgR4">OpenAndUpdate</code><code>(</code><div class="inset_uKQm"><div><code>self<!-- -->: </code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/DocumentService/api/Document">Document</a></code><code class="op_lSLc">&lt;</code><code class="blue_P4bS">T</code><code class="op_lSLc">&gt;</code><code>,</code></div><div><code>transform<!-- -->: </code><code class="blue_P4bS">Transform</code><code class="op_lSLc">&lt;</code><code class="blue_P4bS">T</code><code class="op_lSLc">&gt;</code></div></div><code>) → </code><code class="blue_P4bS">OpenResult</code><code class="op_lSLc">&lt;</code><code class="blue_P4bS">T</code><code class="op_lSLc">&gt;</code></div><div>
+<p>
+  Opens, and also runs a transform function on the data. Useful for
+  non-session-locked data for shared entities, where one-off updates might
+  be needed.
+</p>
+<p>Will throw a Luau error if the transform produces invalid or unsavable data.</p>
+<p>Runs both Open and Update hooks, including fail hooks.</p>
+</div><div class="divider_rE5g"></div><h3 class="anchor anchorWithStickyNavbar_LWe7" id="Steal"><code style="text-decoration:none">Steal</code><a href="#Steal" class="hash-link" aria-label="Direct link to Steal" title="Direct link to Steal">​</a></h3><span class="badge_Ba2I" style="color:#f1c40f"><span class="badgeTooltip_cWXP">This is a yielding function. When called, it will pause the Lua thread that called the function until a result is ready to be returned, without interrupting other scripts.</span><span class="badgeToolTipTail_H9D_"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="#f1c40f" role="img" aria-label="This is a yielding function. When called, it will pause the Lua thread that called the function until a result is ready to be returned, without interrupting other scripts."><path d="M96.4 11.9c-1.4-2.5-4-4-6.9-4H10.8c-2.9 0-5.4 1.5-6.9 4-1.4 2.5-1.4 5.5 0 7.9L43.3 88c1.4 2.5 4 4 6.9 4 2.9 0 5.4-1.5 6.9-4l39.3-68.2c1.4-2.4 1.4-5.4 0-7.9zM46.3 54.5c1.1-1.1 2.3-1.6 3.8-1.6s2.8.5 3.8 1.6c1.1 1.1 1.6 2.3 1.6 3.8s-.5 2.8-1.6 3.8c-1.1 1.1-2.3 1.6-3.8 1.6s-2.8-.5-3.8-1.6c-1.1-1.1-1.6-2.3-1.6-3.8.1-1.5.6-2.8 1.6-3.8zm-.5-4.9V21.8h8.8v27.8h-8.8z"></path></svg> <!-- -->Yields</span></span><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/anthony0br/DocumentService/blob/main/src/Document.luau#L574"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>Document<!-- -->.</code><code class="green_DgR4">Steal</code><code>(</code><code>self<!-- -->: </code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/DocumentService/api/Document">Document</a></code><code class="op_lSLc">&lt;</code><code class="blue_P4bS">T</code><code class="op_lSLc">&gt;</code><code>) → </code><code>(</code><code>)</code></div><div>
 <p>
   Marks the lock as stolen. The next <code>:Open</code> call will ignore any existing
   locks.
@@ -189,7 +197,7 @@ externally in a way that changes its type.
     </p>
   </div>
 </div>
-</div><div class="divider_rE5g"></div><h3 class="anchor anchorWithStickyNavbar_LWe7" id="IsOpenAvailable"><code style="text-decoration:none">IsOpenAvailable</code><a href="#IsOpenAvailable" class="hash-link" aria-label="Direct link to IsOpenAvailable" title="Direct link to IsOpenAvailable">​</a></h3><span class="badge_Ba2I" style="color:#f1c40f"><span class="badgeTooltip_cWXP">This is a yielding function. When called, it will pause the Lua thread that called the function until a result is ready to be returned, without interrupting other scripts.</span><span class="badgeToolTipTail_H9D_"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="#f1c40f" role="img" aria-label="This is a yielding function. When called, it will pause the Lua thread that called the function until a result is ready to be returned, without interrupting other scripts."><path d="M96.4 11.9c-1.4-2.5-4-4-6.9-4H10.8c-2.9 0-5.4 1.5-6.9 4-1.4 2.5-1.4 5.5 0 7.9L43.3 88c1.4 2.5 4 4 6.9 4 2.9 0 5.4-1.5 6.9-4l39.3-68.2c1.4-2.4 1.4-5.4 0-7.9zM46.3 54.5c1.1-1.1 2.3-1.6 3.8-1.6s2.8.5 3.8 1.6c1.1 1.1 1.6 2.3 1.6 3.8s-.5 2.8-1.6 3.8c-1.1 1.1-2.3 1.6-3.8 1.6s-2.8-.5-3.8-1.6c-1.1-1.1-1.6-2.3-1.6-3.8.1-1.5.6-2.8 1.6-3.8zm-.5-4.9V21.8h8.8v27.8h-8.8z"></path></svg> <!-- -->Yields</span></span><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/anthony0br/DocumentService/blob/main/src/Document.luau#L528"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>Document<!-- -->.</code><code class="green_DgR4">IsOpenAvailable</code><code>(</code><code>self<!-- -->: </code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/DocumentService/api/Document">Document</a></code><code class="op_lSLc">&lt;</code><code class="blue_P4bS">T</code><code class="op_lSLc">&gt;</code><code>) → </code><code class="blue_P4bS">Result</code><code class="op_lSLc">&lt;</code><code class="blue_P4bS">boolean,</code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/DocumentService/api/DocumentService#RobloxAPIError">RobloxAPIError</a></code><code class="op_lSLc">&gt;</code></div><div>
+</div><div class="divider_rE5g"></div><h3 class="anchor anchorWithStickyNavbar_LWe7" id="IsOpenAvailable"><code style="text-decoration:none">IsOpenAvailable</code><a href="#IsOpenAvailable" class="hash-link" aria-label="Direct link to IsOpenAvailable" title="Direct link to IsOpenAvailable">​</a></h3><span class="badge_Ba2I" style="color:#f1c40f"><span class="badgeTooltip_cWXP">This is a yielding function. When called, it will pause the Lua thread that called the function until a result is ready to be returned, without interrupting other scripts.</span><span class="badgeToolTipTail_H9D_"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="#f1c40f" role="img" aria-label="This is a yielding function. When called, it will pause the Lua thread that called the function until a result is ready to be returned, without interrupting other scripts."><path d="M96.4 11.9c-1.4-2.5-4-4-6.9-4H10.8c-2.9 0-5.4 1.5-6.9 4-1.4 2.5-1.4 5.5 0 7.9L43.3 88c1.4 2.5 4 4 6.9 4 2.9 0 5.4-1.5 6.9-4l39.3-68.2c1.4-2.4 1.4-5.4 0-7.9zM46.3 54.5c1.1-1.1 2.3-1.6 3.8-1.6s2.8.5 3.8 1.6c1.1 1.1 1.6 2.3 1.6 3.8s-.5 2.8-1.6 3.8c-1.1 1.1-2.3 1.6-3.8 1.6s-2.8-.5-3.8-1.6c-1.1-1.1-1.6-2.3-1.6-3.8.1-1.5.6-2.8 1.6-3.8zm-.5-4.9V21.8h8.8v27.8h-8.8z"></path></svg> <!-- -->Yields</span></span><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/anthony0br/DocumentService/blob/main/src/Document.luau#L596"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>Document<!-- -->.</code><code class="green_DgR4">IsOpenAvailable</code><code>(</code><code>self<!-- -->: </code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/DocumentService/api/Document">Document</a></code><code class="op_lSLc">&lt;</code><code class="blue_P4bS">T</code><code class="op_lSLc">&gt;</code><code>) → </code><code class="blue_P4bS">Result</code><code class="op_lSLc">&lt;</code><code class="blue_P4bS">boolean,</code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/DocumentService/api/DocumentService#RobloxAPIError">RobloxAPIError</a></code><code class="op_lSLc">&gt;</code></div><div>
 <p>
   Returns a false Result if Document is currently open, locked by another
   session, otherwise returns a true Result.
@@ -208,18 +216,18 @@ externally in a way that changes its type.
     </p>
   </div>
 </div>
-</div><div class="divider_rE5g"></div><h3 class="anchor anchorWithStickyNavbar_LWe7" id="IsOpen"><code style="text-decoration:none">IsOpen</code><a href="#IsOpen" class="hash-link" aria-label="Direct link to IsOpen" title="Direct link to IsOpen">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/anthony0br/DocumentService/blob/main/src/Document.luau#L579"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>Document<!-- -->.</code><code class="green_DgR4">IsOpen</code><code>(</code><code>self<!-- -->: </code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/DocumentService/api/Document">Document</a></code><code class="op_lSLc">&lt;</code><code class="blue_P4bS">T</code><code class="op_lSLc">&gt;</code><code>) → </code><code class="blue_P4bS">boolean</code></div><div>
+</div><div class="divider_rE5g"></div><h3 class="anchor anchorWithStickyNavbar_LWe7" id="IsOpen"><code style="text-decoration:none">IsOpen</code><a href="#IsOpen" class="hash-link" aria-label="Direct link to IsOpen" title="Direct link to IsOpen">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/anthony0br/DocumentService/blob/main/src/Document.luau#L647"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>Document<!-- -->.</code><code class="green_DgR4">IsOpen</code><code>(</code><code>self<!-- -->: </code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/DocumentService/api/Document">Document</a></code><code class="op_lSLc">&lt;</code><code class="blue_P4bS">T</code><code class="op_lSLc">&gt;</code><code>) → </code><code class="blue_P4bS">boolean</code></div><div>
 <p>Returns whether the document is open or not</p>
-</div><div class="divider_rE5g"></div><h3 class="anchor anchorWithStickyNavbar_LWe7" id="Close"><code style="text-decoration:none">Close</code><a href="#Close" class="hash-link" aria-label="Direct link to Close" title="Direct link to Close">​</a></h3><span class="badge_Ba2I" style="color:#f1c40f"><span class="badgeTooltip_cWXP">This is a yielding function. When called, it will pause the Lua thread that called the function until a result is ready to be returned, without interrupting other scripts.</span><span class="badgeToolTipTail_H9D_"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="#f1c40f" role="img" aria-label="This is a yielding function. When called, it will pause the Lua thread that called the function until a result is ready to be returned, without interrupting other scripts."><path d="M96.4 11.9c-1.4-2.5-4-4-6.9-4H10.8c-2.9 0-5.4 1.5-6.9 4-1.4 2.5-1.4 5.5 0 7.9L43.3 88c1.4 2.5 4 4 6.9 4 2.9 0 5.4-1.5 6.9-4l39.3-68.2c1.4-2.4 1.4-5.4 0-7.9zM46.3 54.5c1.1-1.1 2.3-1.6 3.8-1.6s2.8.5 3.8 1.6c1.1 1.1 1.6 2.3 1.6 3.8s-.5 2.8-1.6 3.8c-1.1 1.1-2.3 1.6-3.8 1.6s-2.8-.5-3.8-1.6c-1.1-1.1-1.6-2.3-1.6-3.8.1-1.5.6-2.8 1.6-3.8zm-.5-4.9V21.8h8.8v27.8h-8.8z"></path></svg> <!-- -->Yields</span></span><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/anthony0br/DocumentService/blob/main/src/Document.luau#L595"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>Document<!-- -->.</code><code class="green_DgR4">Close</code><code>(</code><code>self<!-- -->: </code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/DocumentService/api/Document">Document</a></code><code class="op_lSLc">&lt;</code><code class="blue_P4bS">T</code><code class="op_lSLc">&gt;</code><code>) → </code><code class="blue_P4bS">WriteResult</code><code class="op_lSLc">&lt;</code><code class="blue_P4bS">T?</code><code class="op_lSLc">&gt;</code></div><div>
+</div><div class="divider_rE5g"></div><h3 class="anchor anchorWithStickyNavbar_LWe7" id="Close"><code style="text-decoration:none">Close</code><a href="#Close" class="hash-link" aria-label="Direct link to Close" title="Direct link to Close">​</a></h3><span class="badge_Ba2I" style="color:#f1c40f"><span class="badgeTooltip_cWXP">This is a yielding function. When called, it will pause the Lua thread that called the function until a result is ready to be returned, without interrupting other scripts.</span><span class="badgeToolTipTail_H9D_"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="#f1c40f" role="img" aria-label="This is a yielding function. When called, it will pause the Lua thread that called the function until a result is ready to be returned, without interrupting other scripts."><path d="M96.4 11.9c-1.4-2.5-4-4-6.9-4H10.8c-2.9 0-5.4 1.5-6.9 4-1.4 2.5-1.4 5.5 0 7.9L43.3 88c1.4 2.5 4 4 6.9 4 2.9 0 5.4-1.5 6.9-4l39.3-68.2c1.4-2.4 1.4-5.4 0-7.9zM46.3 54.5c1.1-1.1 2.3-1.6 3.8-1.6s2.8.5 3.8 1.6c1.1 1.1 1.6 2.3 1.6 3.8s-.5 2.8-1.6 3.8c-1.1 1.1-2.3 1.6-3.8 1.6s-2.8-.5-3.8-1.6c-1.1-1.1-1.6-2.3-1.6-3.8.1-1.5.6-2.8 1.6-3.8zm-.5-4.9V21.8h8.8v27.8h-8.8z"></path></svg> <!-- -->Yields</span></span><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/anthony0br/DocumentService/blob/main/src/Document.luau#L663"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>Document<!-- -->.</code><code class="green_DgR4">Close</code><code>(</code><code>self<!-- -->: </code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/DocumentService/api/Document">Document</a></code><code class="op_lSLc">&lt;</code><code class="blue_P4bS">T</code><code class="op_lSLc">&gt;</code><code>) → </code><code class="blue_P4bS">WriteResult</code><code class="op_lSLc">&lt;</code><code class="blue_P4bS">T?</code><code class="op_lSLc">&gt;</code></div><div>
 <p>Closes the document, so it cannot be edited.</p>
 <p>The document must be open before using this method.</p>
 <p>
   If session locked, will save the document, remove the lock, and
   cancel autosaves first. If this fails, the document will not be closed.
 </p>
-</div><div class="divider_rE5g"></div><h3 class="anchor anchorWithStickyNavbar_LWe7" id="IsClosing"><code style="text-decoration:none">IsClosing</code><a href="#IsClosing" class="hash-link" aria-label="Direct link to IsClosing" title="Direct link to IsClosing">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/anthony0br/DocumentService/blob/main/src/Document.luau#L638"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>Document<!-- -->.</code><code class="green_DgR4">IsClosing</code><code>(</code><code>self<!-- -->: </code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/DocumentService/api/Document">Document</a></code><code class="op_lSLc">&lt;</code><code class="blue_P4bS">T</code><code class="op_lSLc">&gt;</code><code>) → </code><code class="blue_P4bS">boolean</code></div><div>
+</div><div class="divider_rE5g"></div><h3 class="anchor anchorWithStickyNavbar_LWe7" id="IsClosing"><code style="text-decoration:none">IsClosing</code><a href="#IsClosing" class="hash-link" aria-label="Direct link to IsClosing" title="Direct link to IsClosing">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/anthony0br/DocumentService/blob/main/src/Document.luau#L706"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>Document<!-- -->.</code><code class="green_DgR4">IsClosing</code><code>(</code><code>self<!-- -->: </code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/DocumentService/api/Document">Document</a></code><code class="op_lSLc">&lt;</code><code class="blue_P4bS">T</code><code class="op_lSLc">&gt;</code><code>) → </code><code class="blue_P4bS">boolean</code></div><div>
 <p>Returns true if <code>:Close</code> has been called and is incomplete.</p>
-</div><div class="divider_rE5g"></div><h3 class="anchor anchorWithStickyNavbar_LWe7" id="SetCache"><code style="text-decoration:none">SetCache</code><a href="#SetCache" class="hash-link" aria-label="Direct link to SetCache" title="Direct link to SetCache">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/anthony0br/DocumentService/blob/main/src/Document.luau#L659"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>Document<!-- -->.</code><code class="green_DgR4">SetCache</code><code>(</code><div class="inset_uKQm"><div><code>self<!-- -->: </code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/DocumentService/api/Document">Document</a></code><code class="op_lSLc">&lt;</code><code class="blue_P4bS">T</code><code class="op_lSLc">&gt;</code><code>,</code></div><div><code>newCache<!-- -->: </code><code class="blue_P4bS">T</code></div></div><code>) → </code><code class="blue_P4bS">T</code></div><div>
+</div><div class="divider_rE5g"></div><h3 class="anchor anchorWithStickyNavbar_LWe7" id="SetCache"><code style="text-decoration:none">SetCache</code><a href="#SetCache" class="hash-link" aria-label="Direct link to SetCache" title="Direct link to SetCache">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/anthony0br/DocumentService/blob/main/src/Document.luau#L727"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>Document<!-- -->.</code><code class="green_DgR4">SetCache</code><code>(</code><div class="inset_uKQm"><div><code>self<!-- -->: </code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/DocumentService/api/Document">Document</a></code><code class="op_lSLc">&lt;</code><code class="blue_P4bS">T</code><code class="op_lSLc">&gt;</code><code>,</code></div><div><code>newCache<!-- -->: </code><code class="blue_P4bS">T</code></div></div><code>) → </code><code class="blue_P4bS">T</code></div><div>
 <p>Sets the cache.</p>
 <p>The document must be open before using this method. You can only use cache for session-locked data.</p>
 <div class="admonition admonition-warning alert alert--danger">
@@ -245,7 +253,7 @@ externally in a way that changes its type.
     <p>You must use immutable operations on cache, i.e. clone any table you intend to edit.</p>
   </div>
 </div>
-</div><div class="divider_rE5g"></div><h3 class="anchor anchorWithStickyNavbar_LWe7" id="GetCache"><code style="text-decoration:none">GetCache</code><a href="#GetCache" class="hash-link" aria-label="Direct link to GetCache" title="Direct link to GetCache">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/anthony0br/DocumentService/blob/main/src/Document.luau#L679"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>Document<!-- -->.</code><code class="green_DgR4">GetCache</code><code>(</code><code>self<!-- -->: </code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/DocumentService/api/Document">Document</a></code><code class="op_lSLc">&lt;</code><code class="blue_P4bS">T</code><code class="op_lSLc">&gt;</code><code>) → </code><code class="blue_P4bS">T</code></div><div>
+</div><div class="divider_rE5g"></div><h3 class="anchor anchorWithStickyNavbar_LWe7" id="GetCache"><code style="text-decoration:none">GetCache</code><a href="#GetCache" class="hash-link" aria-label="Direct link to GetCache" title="Direct link to GetCache">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/anthony0br/DocumentService/blob/main/src/Document.luau#L747"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>Document<!-- -->.</code><code class="green_DgR4">GetCache</code><code>(</code><code>self<!-- -->: </code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/DocumentService/api/Document">Document</a></code><code class="op_lSLc">&lt;</code><code class="blue_P4bS">T</code><code class="op_lSLc">&gt;</code><code>) → </code><code class="blue_P4bS">T</code></div><div>
 <p>Retrieves the cache.</p>
 <p>The document must be open before using this method. You can only use cache for session-locked data.</p>
 <div class="admonition admonition-info alert alert--info">
@@ -258,7 +266,7 @@ externally in a way that changes its type.
     <p>You must use immutable operations on cache, i.e. clone any table you intend to edit.</p>
   </div>
 </div>
-</div><div class="divider_rE5g"></div><h3 class="anchor anchorWithStickyNavbar_LWe7" id="Update"><code style="text-decoration:none">Update</code><a href="#Update" class="hash-link" aria-label="Direct link to Update" title="Direct link to Update">​</a></h3><span class="badge_Ba2I" style="color:#f1c40f"><span class="badgeTooltip_cWXP">This is a yielding function. When called, it will pause the Lua thread that called the function until a result is ready to be returned, without interrupting other scripts.</span><span class="badgeToolTipTail_H9D_"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="#f1c40f" role="img" aria-label="This is a yielding function. When called, it will pause the Lua thread that called the function until a result is ready to be returned, without interrupting other scripts."><path d="M96.4 11.9c-1.4-2.5-4-4-6.9-4H10.8c-2.9 0-5.4 1.5-6.9 4-1.4 2.5-1.4 5.5 0 7.9L43.3 88c1.4 2.5 4 4 6.9 4 2.9 0 5.4-1.5 6.9-4l39.3-68.2c1.4-2.4 1.4-5.4 0-7.9zM46.3 54.5c1.1-1.1 2.3-1.6 3.8-1.6s2.8.5 3.8 1.6c1.1 1.1 1.6 2.3 1.6 3.8s-.5 2.8-1.6 3.8c-1.1 1.1-2.3 1.6-3.8 1.6s-2.8-.5-3.8-1.6c-1.1-1.1-1.6-2.3-1.6-3.8.1-1.5.6-2.8 1.6-3.8zm-.5-4.9V21.8h8.8v27.8h-8.8z"></path></svg> <!-- -->Yields</span></span><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/anthony0br/DocumentService/blob/main/src/Document.luau#L731"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>Document<!-- -->.</code><code class="green_DgR4">Update</code><code>(</code><div class="inset_uKQm"><div><code>self<!-- -->: </code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/DocumentService/api/Document">Document</a></code><code class="op_lSLc">&lt;</code><code class="blue_P4bS">T</code><code class="op_lSLc">&gt;</code><code>,</code></div><div><code>transform<!-- -->: </code><code class="blue_P4bS">Transform</code><code class="op_lSLc">&lt;</code><code class="blue_P4bS">T</code><code class="op_lSLc">&gt;</code><span class="inlineDescription_G7Er">-- <span>
+</div><div class="divider_rE5g"></div><h3 class="anchor anchorWithStickyNavbar_LWe7" id="Update"><code style="text-decoration:none">Update</code><a href="#Update" class="hash-link" aria-label="Direct link to Update" title="Direct link to Update">​</a></h3><span class="badge_Ba2I" style="color:#f1c40f"><span class="badgeTooltip_cWXP">This is a yielding function. When called, it will pause the Lua thread that called the function until a result is ready to be returned, without interrupting other scripts.</span><span class="badgeToolTipTail_H9D_"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="#f1c40f" role="img" aria-label="This is a yielding function. When called, it will pause the Lua thread that called the function until a result is ready to be returned, without interrupting other scripts."><path d="M96.4 11.9c-1.4-2.5-4-4-6.9-4H10.8c-2.9 0-5.4 1.5-6.9 4-1.4 2.5-1.4 5.5 0 7.9L43.3 88c1.4 2.5 4 4 6.9 4 2.9 0 5.4-1.5 6.9-4l39.3-68.2c1.4-2.4 1.4-5.4 0-7.9zM46.3 54.5c1.1-1.1 2.3-1.6 3.8-1.6s2.8.5 3.8 1.6c1.1 1.1 1.6 2.3 1.6 3.8s-.5 2.8-1.6 3.8c-1.1 1.1-2.3 1.6-3.8 1.6s-2.8-.5-3.8-1.6c-1.1-1.1-1.6-2.3-1.6-3.8.1-1.5.6-2.8 1.6-3.8zm-.5-4.9V21.8h8.8v27.8h-8.8z"></path></svg> <!-- -->Yields</span></span><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/anthony0br/DocumentService/blob/main/src/Document.luau#L799"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>Document<!-- -->.</code><code class="green_DgR4">Update</code><code>(</code><div class="inset_uKQm"><div><code>self<!-- -->: </code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/DocumentService/api/Document">Document</a></code><code class="op_lSLc">&lt;</code><code class="blue_P4bS">T</code><code class="op_lSLc">&gt;</code><code>,</code></div><div><code>transform<!-- -->: </code><code class="blue_P4bS">Transform</code><code class="op_lSLc">&lt;</code><code class="blue_P4bS">T</code><code class="op_lSLc">&gt;</code><span class="inlineDescription_G7Er">-- <span>
 <p>Transform function for the transaction.</p>
 </span></span></div></div><code>) → </code><code class="blue_P4bS">WriteResult</code><code class="op_lSLc">&lt;</code><code class="blue_P4bS">T</code><code class="op_lSLc">&gt;</code></div><div>
 <p>Performs an atomic transaction on the Document, writing to the DataStore.</p>
@@ -344,13 +352,13 @@ externally in a way that changes its type.
     </p>
   </div>
 </div>
-</div><div class="divider_rE5g"></div><h3 class="anchor anchorWithStickyNavbar_LWe7" id="Save"><code style="text-decoration:none">Save</code><a href="#Save" class="hash-link" aria-label="Direct link to Save" title="Direct link to Save">​</a></h3><span class="badge_Ba2I" style="color:#f1c40f"><span class="badgeTooltip_cWXP">This is a yielding function. When called, it will pause the Lua thread that called the function until a result is ready to be returned, without interrupting other scripts.</span><span class="badgeToolTipTail_H9D_"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="#f1c40f" role="img" aria-label="This is a yielding function. When called, it will pause the Lua thread that called the function until a result is ready to be returned, without interrupting other scripts."><path d="M96.4 11.9c-1.4-2.5-4-4-6.9-4H10.8c-2.9 0-5.4 1.5-6.9 4-1.4 2.5-1.4 5.5 0 7.9L43.3 88c1.4 2.5 4 4 6.9 4 2.9 0 5.4-1.5 6.9-4l39.3-68.2c1.4-2.4 1.4-5.4 0-7.9zM46.3 54.5c1.1-1.1 2.3-1.6 3.8-1.6s2.8.5 3.8 1.6c1.1 1.1 1.6 2.3 1.6 3.8s-.5 2.8-1.6 3.8c-1.1 1.1-2.3 1.6-3.8 1.6s-2.8-.5-3.8-1.6c-1.1-1.1-1.6-2.3-1.6-3.8.1-1.5.6-2.8 1.6-3.8zm-.5-4.9V21.8h8.8v27.8h-8.8z"></path></svg> <!-- -->Yields</span></span><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/anthony0br/DocumentService/blob/main/src/Document.luau#L861"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>Document<!-- -->.</code><code class="green_DgR4">Save</code><code>(</code><code>self<!-- -->: </code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/DocumentService/api/Document">Document</a></code><code class="op_lSLc">&lt;</code><code class="blue_P4bS">T</code><code class="op_lSLc">&gt;</code><code>) → </code><code class="blue_P4bS">WriteResult</code><code class="op_lSLc">&lt;</code><code class="blue_P4bS">T</code><code class="op_lSLc">&gt;</code></div><div>
+</div><div class="divider_rE5g"></div><h3 class="anchor anchorWithStickyNavbar_LWe7" id="Save"><code style="text-decoration:none">Save</code><a href="#Save" class="hash-link" aria-label="Direct link to Save" title="Direct link to Save">​</a></h3><span class="badge_Ba2I" style="color:#f1c40f"><span class="badgeTooltip_cWXP">This is a yielding function. When called, it will pause the Lua thread that called the function until a result is ready to be returned, without interrupting other scripts.</span><span class="badgeToolTipTail_H9D_"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="#f1c40f" role="img" aria-label="This is a yielding function. When called, it will pause the Lua thread that called the function until a result is ready to be returned, without interrupting other scripts."><path d="M96.4 11.9c-1.4-2.5-4-4-6.9-4H10.8c-2.9 0-5.4 1.5-6.9 4-1.4 2.5-1.4 5.5 0 7.9L43.3 88c1.4 2.5 4 4 6.9 4 2.9 0 5.4-1.5 6.9-4l39.3-68.2c1.4-2.4 1.4-5.4 0-7.9zM46.3 54.5c1.1-1.1 2.3-1.6 3.8-1.6s2.8.5 3.8 1.6c1.1 1.1 1.6 2.3 1.6 3.8s-.5 2.8-1.6 3.8c-1.1 1.1-2.3 1.6-3.8 1.6s-2.8-.5-3.8-1.6c-1.1-1.1-1.6-2.3-1.6-3.8.1-1.5.6-2.8 1.6-3.8zm-.5-4.9V21.8h8.8v27.8h-8.8z"></path></svg> <!-- -->Yields</span></span><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/anthony0br/DocumentService/blob/main/src/Document.luau#L929"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>Document<!-- -->.</code><code class="green_DgR4">Save</code><code>(</code><code>self<!-- -->: </code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/DocumentService/api/Document">Document</a></code><code class="op_lSLc">&lt;</code><code class="blue_P4bS">T</code><code class="op_lSLc">&gt;</code><code>) → </code><code class="blue_P4bS">WriteResult</code><code class="op_lSLc">&lt;</code><code class="blue_P4bS">T</code><code class="op_lSLc">&gt;</code></div><div>
 <p>
   Saves a Document's cache to its DataStore. Equivalent to calling Update
   without transforming the data.
 </p>
 <p>The document must be open and locked to use this method.</p>
-</div><div class="divider_rE5g"></div><h3 class="anchor anchorWithStickyNavbar_LWe7" id="Erase"><code style="text-decoration:none">Erase</code><a href="#Erase" class="hash-link" aria-label="Direct link to Erase" title="Direct link to Erase">​</a></h3><span class="badge_Ba2I" style="color:#f1c40f"><span class="badgeTooltip_cWXP">This is a yielding function. When called, it will pause the Lua thread that called the function until a result is ready to be returned, without interrupting other scripts.</span><span class="badgeToolTipTail_H9D_"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="#f1c40f" role="img" aria-label="This is a yielding function. When called, it will pause the Lua thread that called the function until a result is ready to be returned, without interrupting other scripts."><path d="M96.4 11.9c-1.4-2.5-4-4-6.9-4H10.8c-2.9 0-5.4 1.5-6.9 4-1.4 2.5-1.4 5.5 0 7.9L43.3 88c1.4 2.5 4 4 6.9 4 2.9 0 5.4-1.5 6.9-4l39.3-68.2c1.4-2.4 1.4-5.4 0-7.9zM46.3 54.5c1.1-1.1 2.3-1.6 3.8-1.6s2.8.5 3.8 1.6c1.1 1.1 1.6 2.3 1.6 3.8s-.5 2.8-1.6 3.8c-1.1 1.1-2.3 1.6-3.8 1.6s-2.8-.5-3.8-1.6c-1.1-1.1-1.6-2.3-1.6-3.8.1-1.5.6-2.8 1.6-3.8zm-.5-4.9V21.8h8.8v27.8h-8.8z"></path></svg> <!-- -->Yields</span></span><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/anthony0br/DocumentService/blob/main/src/Document.luau#L884"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>Document<!-- -->.</code><code class="green_DgR4">Erase</code><code>(</code><code>self<!-- -->: </code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/DocumentService/api/Document">Document</a></code><code class="op_lSLc">&lt;</code><code class="blue_P4bS">T</code><code class="op_lSLc">&gt;</code><code>) → </code><code class="blue_P4bS">Result</code><code class="op_lSLc">&lt;</code><code class="blue_P4bS">nil,</code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/DocumentService/api/DocumentService#RobloxAPIError">RobloxAPIError</a></code><code class="op_lSLc">&gt;</code></div><div>
+</div><div class="divider_rE5g"></div><h3 class="anchor anchorWithStickyNavbar_LWe7" id="Erase"><code style="text-decoration:none">Erase</code><a href="#Erase" class="hash-link" aria-label="Direct link to Erase" title="Direct link to Erase">​</a></h3><span class="badge_Ba2I" style="color:#f1c40f"><span class="badgeTooltip_cWXP">This is a yielding function. When called, it will pause the Lua thread that called the function until a result is ready to be returned, without interrupting other scripts.</span><span class="badgeToolTipTail_H9D_"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="#f1c40f" role="img" aria-label="This is a yielding function. When called, it will pause the Lua thread that called the function until a result is ready to be returned, without interrupting other scripts."><path d="M96.4 11.9c-1.4-2.5-4-4-6.9-4H10.8c-2.9 0-5.4 1.5-6.9 4-1.4 2.5-1.4 5.5 0 7.9L43.3 88c1.4 2.5 4 4 6.9 4 2.9 0 5.4-1.5 6.9-4l39.3-68.2c1.4-2.4 1.4-5.4 0-7.9zM46.3 54.5c1.1-1.1 2.3-1.6 3.8-1.6s2.8.5 3.8 1.6c1.1 1.1 1.6 2.3 1.6 3.8s-.5 2.8-1.6 3.8c-1.1 1.1-2.3 1.6-3.8 1.6s-2.8-.5-3.8-1.6c-1.1-1.1-1.6-2.3-1.6-3.8.1-1.5.6-2.8 1.6-3.8zm-.5-4.9V21.8h8.8v27.8h-8.8z"></path></svg> <!-- -->Yields</span></span><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/anthony0br/DocumentService/blob/main/src/Document.luau#L952"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>Document<!-- -->.</code><code class="green_DgR4">Erase</code><code>(</code><code>self<!-- -->: </code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/DocumentService/api/Document">Document</a></code><code class="op_lSLc">&lt;</code><code class="blue_P4bS">T</code><code class="op_lSLc">&gt;</code><code>) → </code><code class="blue_P4bS">Result</code><code class="op_lSLc">&lt;</code><code class="blue_P4bS">nil,</code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/DocumentService/api/DocumentService#RobloxAPIError">RobloxAPIError</a></code><code class="op_lSLc">&gt;</code></div><div>
 <p>Erases all data associated with the key.</p>
 <p>
   The document must not be open. It is up to you to check if the document
@@ -358,7 +366,7 @@ externally in a way that changes its type.
 </p>
 <p>Satisfies compliance with GDPR right of erasure.</p>
 <p>Does not run hooks.</p>
-</div><div class="divider_rE5g"></div><h3 class="anchor anchorWithStickyNavbar_LWe7" id="Read"><code style="text-decoration:none">Read</code><a href="#Read" class="hash-link" aria-label="Direct link to Read" title="Direct link to Read">​</a></h3><span class="badge_Ba2I" style="color:#f1c40f"><span class="badgeTooltip_cWXP">This is a yielding function. When called, it will pause the Lua thread that called the function until a result is ready to be returned, without interrupting other scripts.</span><span class="badgeToolTipTail_H9D_"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="#f1c40f" role="img" aria-label="This is a yielding function. When called, it will pause the Lua thread that called the function until a result is ready to be returned, without interrupting other scripts."><path d="M96.4 11.9c-1.4-2.5-4-4-6.9-4H10.8c-2.9 0-5.4 1.5-6.9 4-1.4 2.5-1.4 5.5 0 7.9L43.3 88c1.4 2.5 4 4 6.9 4 2.9 0 5.4-1.5 6.9-4l39.3-68.2c1.4-2.4 1.4-5.4 0-7.9zM46.3 54.5c1.1-1.1 2.3-1.6 3.8-1.6s2.8.5 3.8 1.6c1.1 1.1 1.6 2.3 1.6 3.8s-.5 2.8-1.6 3.8c-1.1 1.1-2.3 1.6-3.8 1.6s-2.8-.5-3.8-1.6c-1.1-1.1-1.6-2.3-1.6-3.8.1-1.5.6-2.8 1.6-3.8zm-.5-4.9V21.8h8.8v27.8h-8.8z"></path></svg> <!-- -->Yields</span></span><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/anthony0br/DocumentService/blob/main/src/Document.luau#L920"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>Document<!-- -->.</code><code class="green_DgR4">Read</code><code>(</code><code>self<!-- -->: </code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/DocumentService/api/Document">Document</a></code><code class="op_lSLc">&lt;</code><code class="blue_P4bS">T</code><code class="op_lSLc">&gt;</code><code>) → </code><code class="blue_P4bS">Result</code><code class="op_lSLc">&lt;</code><code class="blue_P4bS">any,</code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/DocumentService/api/DocumentService#RobloxAPIError">RobloxAPIError</a></code><code class="op_lSLc"> | </code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/DocumentService/api/DocumentService#SchemaError">SchemaError</a></code><code class="op_lSLc"> | </code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/DocumentService/api/DocumentService#CheckError">CheckError</a></code><code class="op_lSLc"> | </code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/DocumentService/api/DocumentService#BackwardsCompatibilityError">BackwardsCompatibilityError</a></code><code class="op_lSLc">&gt;</code></div><div>
+</div><div class="divider_rE5g"></div><h3 class="anchor anchorWithStickyNavbar_LWe7" id="Read"><code style="text-decoration:none">Read</code><a href="#Read" class="hash-link" aria-label="Direct link to Read" title="Direct link to Read">​</a></h3><span class="badge_Ba2I" style="color:#f1c40f"><span class="badgeTooltip_cWXP">This is a yielding function. When called, it will pause the Lua thread that called the function until a result is ready to be returned, without interrupting other scripts.</span><span class="badgeToolTipTail_H9D_"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="#f1c40f" role="img" aria-label="This is a yielding function. When called, it will pause the Lua thread that called the function until a result is ready to be returned, without interrupting other scripts."><path d="M96.4 11.9c-1.4-2.5-4-4-6.9-4H10.8c-2.9 0-5.4 1.5-6.9 4-1.4 2.5-1.4 5.5 0 7.9L43.3 88c1.4 2.5 4 4 6.9 4 2.9 0 5.4-1.5 6.9-4l39.3-68.2c1.4-2.4 1.4-5.4 0-7.9zM46.3 54.5c1.1-1.1 2.3-1.6 3.8-1.6s2.8.5 3.8 1.6c1.1 1.1 1.6 2.3 1.6 3.8s-.5 2.8-1.6 3.8c-1.1 1.1-2.3 1.6-3.8 1.6s-2.8-.5-3.8-1.6c-1.1-1.1-1.6-2.3-1.6-3.8.1-1.5.6-2.8 1.6-3.8zm-.5-4.9V21.8h8.8v27.8h-8.8z"></path></svg> <!-- -->Yields</span></span><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/anthony0br/DocumentService/blob/main/src/Document.luau#L988"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>Document<!-- -->.</code><code class="green_DgR4">Read</code><code>(</code><code>self<!-- -->: </code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/DocumentService/api/Document">Document</a></code><code class="op_lSLc">&lt;</code><code class="blue_P4bS">T</code><code class="op_lSLc">&gt;</code><code>) → </code><code class="blue_P4bS">Result</code><code class="op_lSLc">&lt;</code><code class="blue_P4bS">any,</code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/DocumentService/api/DocumentService#RobloxAPIError">RobloxAPIError</a></code><code class="op_lSLc"> | </code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/DocumentService/api/DocumentService#SchemaError">SchemaError</a></code><code class="op_lSLc"> | </code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/DocumentService/api/DocumentService#CheckError">CheckError</a></code><code class="op_lSLc"> | </code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/DocumentService/api/DocumentService#BackwardsCompatibilityError">BackwardsCompatibilityError</a></code><code class="op_lSLc">&gt;</code></div><div>
 <p>Reads the latest data stored in Data Stores.</p>
 <p>Runs migrations and the check function, but does not save changes.</p>
 <p>This may be called while the document is not open.</p>
@@ -377,7 +385,7 @@ externally in a way that changes its type.
   </div>
 </div>
 <p>Runs Read hooks.</p>
-</div><div class="divider_rE5g"></div><h3 class="anchor anchorWithStickyNavbar_LWe7" id="HookBefore"><code style="text-decoration:none">HookBefore</code><a href="#HookBefore" class="hash-link" aria-label="Direct link to HookBefore" title="Direct link to HookBefore">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/anthony0br/DocumentService/blob/main/src/Document.luau#L986"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>Document<!-- -->.</code><code class="green_DgR4">HookBefore</code><code>(</code><div class="inset_uKQm"><div><code>self<!-- -->: </code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/DocumentService/api/Document">Document</a></code><code class="op_lSLc">&lt;</code><code class="blue_P4bS">T</code><code class="op_lSLc">&gt;</code><code>,</code></div><div><code>event<!-- -->: </code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/DocumentService/api/DocumentService#HookEvent">HookEvent</a></code><code>,</code><span class="inlineDescription_G7Er">-- <span>
+</div><div class="divider_rE5g"></div><h3 class="anchor anchorWithStickyNavbar_LWe7" id="HookBefore"><code style="text-decoration:none">HookBefore</code><a href="#HookBefore" class="hash-link" aria-label="Direct link to HookBefore" title="Direct link to HookBefore">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/anthony0br/DocumentService/blob/main/src/Document.luau#L1054"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>Document<!-- -->.</code><code class="green_DgR4">HookBefore</code><code>(</code><div class="inset_uKQm"><div><code>self<!-- -->: </code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/DocumentService/api/Document">Document</a></code><code class="op_lSLc">&lt;</code><code class="blue_P4bS">T</code><code class="op_lSLc">&gt;</code><code>,</code></div><div><code>event<!-- -->: </code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/DocumentService/api/DocumentService#HookEvent">HookEvent</a></code><code>,</code><span class="inlineDescription_G7Er">-- <span>
 <p>the operation to call the hook before</p>
 </span></span></div><div><code>hook<!-- -->: </code><code class="purple_ieR2">(</code><code class="purple_ieR2">)</code><code class="purple_ieR2"> → </code><code class="purple_ieR2">(</code><code class="purple_ieR2">)</code><span class="inlineDescription_G7Er">-- <span>
 <p>a hook function that receives the arguments passed in to the operation</p>
@@ -388,7 +396,7 @@ externally in a way that changes its type.
   are called in the order they are added.
 </p>
 <p>Hooks cannot currently mutate arguments.</p>
-</div><div class="divider_rE5g"></div><h3 class="anchor anchorWithStickyNavbar_LWe7" id="HookAfter"><code style="text-decoration:none">HookAfter</code><a href="#HookAfter" class="hash-link" aria-label="Direct link to HookAfter" title="Direct link to HookAfter">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/anthony0br/DocumentService/blob/main/src/Document.luau#L1002"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>Document<!-- -->.</code><code class="green_DgR4">HookAfter</code><code>(</code><div class="inset_uKQm"><div><code>self<!-- -->: </code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/DocumentService/api/Document">Document</a></code><code class="op_lSLc">&lt;</code><code class="blue_P4bS">T</code><code class="op_lSLc">&gt;</code><code>,</code></div><div><code>event<!-- -->: </code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/DocumentService/api/DocumentService#HookEvent">HookEvent</a></code><code>,</code><span class="inlineDescription_G7Er">-- <span>
+</div><div class="divider_rE5g"></div><h3 class="anchor anchorWithStickyNavbar_LWe7" id="HookAfter"><code style="text-decoration:none">HookAfter</code><a href="#HookAfter" class="hash-link" aria-label="Direct link to HookAfter" title="Direct link to HookAfter">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/anthony0br/DocumentService/blob/main/src/Document.luau#L1070"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>Document<!-- -->.</code><code class="green_DgR4">HookAfter</code><code>(</code><div class="inset_uKQm"><div><code>self<!-- -->: </code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/DocumentService/api/Document">Document</a></code><code class="op_lSLc">&lt;</code><code class="blue_P4bS">T</code><code class="op_lSLc">&gt;</code><code>,</code></div><div><code>event<!-- -->: </code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/DocumentService/api/DocumentService#HookEvent">HookEvent</a></code><code>,</code><span class="inlineDescription_G7Er">-- <span>
 <p>the operation to call the hook after</p>
 </span></span></div><div><code>hook<!-- -->: </code><code class="purple_ieR2">(</code><code class="purple_ieR2">)</code><code class="purple_ieR2"> → </code><code class="purple_ieR2">(</code><code class="purple_ieR2">)</code><span class="inlineDescription_G7Er">-- <span>
 <p>a hook function that receives the arguments passed in to the operation</p>
@@ -402,13 +410,31 @@ externally in a way that changes its type.
   Hooks added with HookAfter only run if the operation is successful, and
   cannot mutate the result.
 </p>
-</div><div class="divider_rE5g"></div><h3 class="anchor anchorWithStickyNavbar_LWe7" id="HookFail"><code style="text-decoration:none">HookFail</code><a href="#HookFail" class="hash-link" aria-label="Direct link to HookFail" title="Direct link to HookFail">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/anthony0br/DocumentService/blob/main/src/Document.luau#L1012"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>Document<!-- -->.</code><code class="green_DgR4">HookFail</code><code>(</code><div class="inset_uKQm"><div><code>self<!-- -->: </code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/DocumentService/api/Document">Document</a></code><code class="op_lSLc">&lt;</code><code class="blue_P4bS">T</code><code class="op_lSLc">&gt;</code><code>,</code></div><div><code>event<!-- -->: </code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/DocumentService/api/DocumentService#HookEvent">HookEvent</a></code><code>,</code><span class="inlineDescription_G7Er">-- <span>
+</div><div class="divider_rE5g"></div><h3 class="anchor anchorWithStickyNavbar_LWe7" id="HookFail"><code style="text-decoration:none">HookFail</code><a href="#HookFail" class="hash-link" aria-label="Direct link to HookFail" title="Direct link to HookFail">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/anthony0br/DocumentService/blob/main/src/Document.luau#L1080"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>Document<!-- -->.</code><code class="green_DgR4">HookFail</code><code>(</code><div class="inset_uKQm"><div><code>self<!-- -->: </code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/DocumentService/api/Document">Document</a></code><code class="op_lSLc">&lt;</code><code class="blue_P4bS">T</code><code class="op_lSLc">&gt;</code><code>,</code></div><div><code>event<!-- -->: </code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/DocumentService/api/DocumentService#HookEvent">HookEvent</a></code><code>,</code><span class="inlineDescription_G7Er">-- <span>
 <p>the operation to call the hook after</p>
 </span></span></div><div><code>hook<!-- -->: </code><code class="purple_ieR2">(</code><code class="purple_ieR2">)</code><code class="purple_ieR2"> → </code><code class="purple_ieR2">(</code><code class="purple_ieR2">)</code><span class="inlineDescription_G7Er">-- <span>
 <p>a hook function that receives the arguments passed in to the operation</p>
 </span></span></div></div><code>) → </code><code>(</code><code>)</code></div><div>
 <p>Attaches a hook which occurs after an event fails</p>
-</div><div class="divider_rE5g"></div><h3 class="anchor anchorWithStickyNavbar_LWe7" id="isDocument"><code style="text-decoration:none">isDocument</code><a href="#isDocument" class="hash-link" aria-label="Direct link to isDocument" title="Direct link to isDocument">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/anthony0br/DocumentService/blob/main/src/Document.luau#L1029"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>Document<!-- -->.</code><code class="green_DgR4">isDocument</code><code>(</code><code>instance<!-- -->: </code><code class="blue_P4bS">metatable</code><code>) → </code><code class="blue_P4bS">boolean</code></div><div>
+</div><div class="divider_rE5g"></div><h3 class="anchor anchorWithStickyNavbar_LWe7" id="OnceBefore"><code style="text-decoration:none">OnceBefore</code><a href="#OnceBefore" class="hash-link" aria-label="Direct link to OnceBefore" title="Direct link to OnceBefore">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/anthony0br/DocumentService/blob/main/src/Document.luau#L1098"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>Document<!-- -->.</code><code class="green_DgR4">OnceBefore</code><code>(</code><div class="inset_uKQm"><div><code>self<!-- -->: </code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/DocumentService/api/Document">Document</a></code><code class="op_lSLc">&lt;</code><code class="blue_P4bS">T</code><code class="op_lSLc">&gt;</code><code>,</code></div><div><code>event<!-- -->: </code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/DocumentService/api/DocumentService#HookEvent">HookEvent</a></code><code>,</code><span class="inlineDescription_G7Er">-- <span>
+<p>the operation to call the hook before</p>
+</span></span></div><div><code>hook<!-- -->: </code><code class="purple_ieR2">(</code><code class="purple_ieR2">)</code><code class="purple_ieR2"> → </code><code class="purple_ieR2">(</code><code class="purple_ieR2">)</code><span class="inlineDescription_G7Er">-- <span>
+<p>a hook function that receives the arguments passed in to the operation</p>
+</span></span></div></div><code>) → </code><code>(</code><code>)</code></div><div>
+<p>Attaches a single-use hook which occurs before the event.</p>
+</div><div class="divider_rE5g"></div><h3 class="anchor anchorWithStickyNavbar_LWe7" id="OnceAfter"><code style="text-decoration:none">OnceAfter</code><a href="#OnceAfter" class="hash-link" aria-label="Direct link to OnceAfter" title="Direct link to OnceAfter">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/anthony0br/DocumentService/blob/main/src/Document.luau#L1108"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>Document<!-- -->.</code><code class="green_DgR4">OnceAfter</code><code>(</code><div class="inset_uKQm"><div><code>self<!-- -->: </code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/DocumentService/api/Document">Document</a></code><code class="op_lSLc">&lt;</code><code class="blue_P4bS">T</code><code class="op_lSLc">&gt;</code><code>,</code></div><div><code>event<!-- -->: </code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/DocumentService/api/DocumentService#HookEvent">HookEvent</a></code><code>,</code><span class="inlineDescription_G7Er">-- <span>
+<p>the operation to call the hook after</p>
+</span></span></div><div><code>hook<!-- -->: </code><code class="purple_ieR2">(</code><code class="purple_ieR2">)</code><code class="purple_ieR2"> → </code><code class="purple_ieR2">(</code><code class="purple_ieR2">)</code><span class="inlineDescription_G7Er">-- <span>
+<p>a hook function that receives the arguments passed in to the operation</p>
+</span></span></div></div><code>) → </code><code>(</code><code>)</code></div><div>
+<p>Attaches a single-use hook which occurs after the event, before the method returns.</p>
+</div><div class="divider_rE5g"></div><h3 class="anchor anchorWithStickyNavbar_LWe7" id="OnceFail"><code style="text-decoration:none">OnceFail</code><a href="#OnceFail" class="hash-link" aria-label="Direct link to OnceFail" title="Direct link to OnceFail">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/anthony0br/DocumentService/blob/main/src/Document.luau#L1118"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>Document<!-- -->.</code><code class="green_DgR4">OnceFail</code><code>(</code><div class="inset_uKQm"><div><code>self<!-- -->: </code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/DocumentService/api/Document">Document</a></code><code class="op_lSLc">&lt;</code><code class="blue_P4bS">T</code><code class="op_lSLc">&gt;</code><code>,</code></div><div><code>event<!-- -->: </code><code class="blue_P4bS"><a style="text-decoration:underline;color:inherit" href="/DocumentService/api/DocumentService#HookEvent">HookEvent</a></code><code>,</code><span class="inlineDescription_G7Er">-- <span>
+<p>the operation to call the hook after</p>
+</span></span></div><div><code>hook<!-- -->: </code><code class="purple_ieR2">(</code><code class="purple_ieR2">)</code><code class="purple_ieR2"> → </code><code class="purple_ieR2">(</code><code class="purple_ieR2">)</code><span class="inlineDescription_G7Er">-- <span>
+<p>a hook function that receives the arguments passed in to the operation</p>
+</span></span></div></div><code>) → </code><code>(</code><code>)</code></div><div>
+<p>Attaches a single-use hook which occurs after an event fails.</p>
+</div><div class="divider_rE5g"></div><h3 class="anchor anchorWithStickyNavbar_LWe7" id="isDocument"><code style="text-decoration:none">isDocument</code><a href="#isDocument" class="hash-link" aria-label="Direct link to isDocument" title="Direct link to isDocument">​</a></h3><div class="repositoryDetailsContainer_BPdw"><a class="sourceButton_sEho" href="https://github.com/anthony0br/DocumentService/blob/main/src/Document.luau#L1135"><div class="sourceButtonText_Vh0m">&lt;/&gt;</div></a></div><div class="memberString_GwaU"><code>Document<!-- -->.</code><code class="green_DgR4">isDocument</code><code>(</code><code>instance<!-- -->: </code><code class="blue_P4bS">metatable</code><code>) → </code><code class="blue_P4bS">boolean</code></div><div>
 <p>Checks if a metatable passed is a Document.</p>
 </div></div></article></div><details><summary>Show raw api</summary><pre style="max-width:100%;white-space:pre-wrap">{
     &quot;functions&quot;: [
@@ -431,7 +457,7 @@ externally in a way that changes its type.
             &quot;function_type&quot;: &quot;static&quot;,
             &quot;private&quot;: true,
             &quot;source&quot;: {
-                &quot;line&quot;: 266,
+                &quot;line&quot;: 267,
                 &quot;path&quot;: &quot;src/Document.luau&quot;
             }
         },
@@ -454,7 +480,35 @@ externally in a way that changes its type.
             &quot;function_type&quot;: &quot;static&quot;,
             &quot;yields&quot;: true,
             &quot;source&quot;: {
-                &quot;line&quot;: 338,
+                &quot;line&quot;: 339,
+                &quot;path&quot;: &quot;src/Document.luau&quot;
+            }
+        },
+        {
+            &quot;name&quot;: &quot;OpenAndUpdate&quot;,
+            &quot;desc&quot;: &quot;Opens, and also runs a transform function on the data. Useful for\nnon-session-locked data for shared entities, where one-off updates might\nbe needed.\n\nWill throw a Luau error if the transform produces invalid or unsavable data.\n\nRuns both Open and Update hooks, including fail hooks.&quot;,
+            &quot;params&quot;: [
+                {
+                    &quot;name&quot;: &quot;self&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;Document&lt;T&gt;&quot;
+                },
+                {
+                    &quot;name&quot;: &quot;transform&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;Transform&lt;T&gt;&quot;
+                }
+            ],
+            &quot;returns&quot;: [
+                {
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;OpenResult&lt;T&gt;&quot;
+                }
+            ],
+            &quot;function_type&quot;: &quot;static&quot;,
+            &quot;yields&quot;: true,
+            &quot;source&quot;: {
+                &quot;line&quot;: 537,
                 &quot;path&quot;: &quot;src/Document.luau&quot;
             }
         },
@@ -472,7 +526,7 @@ externally in a way that changes its type.
             &quot;function_type&quot;: &quot;static&quot;,
             &quot;yields&quot;: true,
             &quot;source&quot;: {
-                &quot;line&quot;: 506,
+                &quot;line&quot;: 574,
                 &quot;path&quot;: &quot;src/Document.luau&quot;
             }
         },
@@ -495,7 +549,7 @@ externally in a way that changes its type.
             &quot;function_type&quot;: &quot;static&quot;,
             &quot;yields&quot;: true,
             &quot;source&quot;: {
-                &quot;line&quot;: 528,
+                &quot;line&quot;: 596,
                 &quot;path&quot;: &quot;src/Document.luau&quot;
             }
         },
@@ -517,7 +571,7 @@ externally in a way that changes its type.
             ],
             &quot;function_type&quot;: &quot;static&quot;,
             &quot;source&quot;: {
-                &quot;line&quot;: 579,
+                &quot;line&quot;: 647,
                 &quot;path&quot;: &quot;src/Document.luau&quot;
             }
         },
@@ -540,7 +594,7 @@ externally in a way that changes its type.
             &quot;function_type&quot;: &quot;static&quot;,
             &quot;yields&quot;: true,
             &quot;source&quot;: {
-                &quot;line&quot;: 595,
+                &quot;line&quot;: 663,
                 &quot;path&quot;: &quot;src/Document.luau&quot;
             }
         },
@@ -562,7 +616,7 @@ externally in a way that changes its type.
             ],
             &quot;function_type&quot;: &quot;static&quot;,
             &quot;source&quot;: {
-                &quot;line&quot;: 638,
+                &quot;line&quot;: 706,
                 &quot;path&quot;: &quot;src/Document.luau&quot;
             }
         },
@@ -589,7 +643,7 @@ externally in a way that changes its type.
             ],
             &quot;function_type&quot;: &quot;static&quot;,
             &quot;source&quot;: {
-                &quot;line&quot;: 659,
+                &quot;line&quot;: 727,
                 &quot;path&quot;: &quot;src/Document.luau&quot;
             }
         },
@@ -611,7 +665,7 @@ externally in a way that changes its type.
             ],
             &quot;function_type&quot;: &quot;static&quot;,
             &quot;source&quot;: {
-                &quot;line&quot;: 679,
+                &quot;line&quot;: 747,
                 &quot;path&quot;: &quot;src/Document.luau&quot;
             }
         },
@@ -639,7 +693,7 @@ externally in a way that changes its type.
             &quot;function_type&quot;: &quot;static&quot;,
             &quot;yields&quot;: true,
             &quot;source&quot;: {
-                &quot;line&quot;: 731,
+                &quot;line&quot;: 799,
                 &quot;path&quot;: &quot;src/Document.luau&quot;
             }
         },
@@ -662,7 +716,7 @@ externally in a way that changes its type.
             &quot;function_type&quot;: &quot;static&quot;,
             &quot;yields&quot;: true,
             &quot;source&quot;: {
-                &quot;line&quot;: 861,
+                &quot;line&quot;: 929,
                 &quot;path&quot;: &quot;src/Document.luau&quot;
             }
         },
@@ -685,7 +739,7 @@ externally in a way that changes its type.
             &quot;function_type&quot;: &quot;static&quot;,
             &quot;yields&quot;: true,
             &quot;source&quot;: {
-                &quot;line&quot;: 884,
+                &quot;line&quot;: 952,
                 &quot;path&quot;: &quot;src/Document.luau&quot;
             }
         },
@@ -708,7 +762,7 @@ externally in a way that changes its type.
             &quot;function_type&quot;: &quot;static&quot;,
             &quot;yields&quot;: true,
             &quot;source&quot;: {
-                &quot;line&quot;: 920,
+                &quot;line&quot;: 988,
                 &quot;path&quot;: &quot;src/Document.luau&quot;
             }
         },
@@ -735,7 +789,7 @@ externally in a way that changes its type.
             &quot;returns&quot;: [],
             &quot;function_type&quot;: &quot;static&quot;,
             &quot;source&quot;: {
-                &quot;line&quot;: 986,
+                &quot;line&quot;: 1054,
                 &quot;path&quot;: &quot;src/Document.luau&quot;
             }
         },
@@ -762,7 +816,7 @@ externally in a way that changes its type.
             &quot;returns&quot;: [],
             &quot;function_type&quot;: &quot;static&quot;,
             &quot;source&quot;: {
-                &quot;line&quot;: 1002,
+                &quot;line&quot;: 1070,
                 &quot;path&quot;: &quot;src/Document.luau&quot;
             }
         },
@@ -789,7 +843,88 @@ externally in a way that changes its type.
             &quot;returns&quot;: [],
             &quot;function_type&quot;: &quot;static&quot;,
             &quot;source&quot;: {
-                &quot;line&quot;: 1012,
+                &quot;line&quot;: 1080,
+                &quot;path&quot;: &quot;src/Document.luau&quot;
+            }
+        },
+        {
+            &quot;name&quot;: &quot;OnceBefore&quot;,
+            &quot;desc&quot;: &quot;Attaches a single-use hook which occurs before the event.&quot;,
+            &quot;params&quot;: [
+                {
+                    &quot;name&quot;: &quot;self&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;Document&lt;T&gt;&quot;
+                },
+                {
+                    &quot;name&quot;: &quot;event&quot;,
+                    &quot;desc&quot;: &quot;the operation to call the hook before&quot;,
+                    &quot;lua_type&quot;: &quot;HookEvent&quot;
+                },
+                {
+                    &quot;name&quot;: &quot;hook&quot;,
+                    &quot;desc&quot;: &quot;a hook function that receives the arguments passed in to the operation&quot;,
+                    &quot;lua_type&quot;: &quot;() -&gt; ()&quot;
+                }
+            ],
+            &quot;returns&quot;: [],
+            &quot;function_type&quot;: &quot;static&quot;,
+            &quot;source&quot;: {
+                &quot;line&quot;: 1098,
+                &quot;path&quot;: &quot;src/Document.luau&quot;
+            }
+        },
+        {
+            &quot;name&quot;: &quot;OnceAfter&quot;,
+            &quot;desc&quot;: &quot;Attaches a single-use hook which occurs after the event, before the method returns.&quot;,
+            &quot;params&quot;: [
+                {
+                    &quot;name&quot;: &quot;self&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;Document&lt;T&gt;&quot;
+                },
+                {
+                    &quot;name&quot;: &quot;event&quot;,
+                    &quot;desc&quot;: &quot;the operation to call the hook after&quot;,
+                    &quot;lua_type&quot;: &quot;HookEvent&quot;
+                },
+                {
+                    &quot;name&quot;: &quot;hook&quot;,
+                    &quot;desc&quot;: &quot;a hook function that receives the arguments passed in to the operation&quot;,
+                    &quot;lua_type&quot;: &quot;() -&gt; ()&quot;
+                }
+            ],
+            &quot;returns&quot;: [],
+            &quot;function_type&quot;: &quot;static&quot;,
+            &quot;source&quot;: {
+                &quot;line&quot;: 1108,
+                &quot;path&quot;: &quot;src/Document.luau&quot;
+            }
+        },
+        {
+            &quot;name&quot;: &quot;OnceFail&quot;,
+            &quot;desc&quot;: &quot;Attaches a single-use hook which occurs after an event fails.&quot;,
+            &quot;params&quot;: [
+                {
+                    &quot;name&quot;: &quot;self&quot;,
+                    &quot;desc&quot;: &quot;&quot;,
+                    &quot;lua_type&quot;: &quot;Document&lt;T&gt;&quot;
+                },
+                {
+                    &quot;name&quot;: &quot;event&quot;,
+                    &quot;desc&quot;: &quot;the operation to call the hook after&quot;,
+                    &quot;lua_type&quot;: &quot;HookEvent&quot;
+                },
+                {
+                    &quot;name&quot;: &quot;hook&quot;,
+                    &quot;desc&quot;: &quot;a hook function that receives the arguments passed in to the operation&quot;,
+                    &quot;lua_type&quot;: &quot;() -&gt; ()&quot;
+                }
+            ],
+            &quot;returns&quot;: [],
+            &quot;function_type&quot;: &quot;static&quot;,
+            &quot;source&quot;: {
+                &quot;line&quot;: 1118,
                 &quot;path&quot;: &quot;src/Document.luau&quot;
             }
         },
@@ -807,7 +942,7 @@ externally in a way that changes its type.
             &quot;function_type&quot;: &quot;static&quot;,
             &quot;ignore&quot;: true,
             &quot;source&quot;: {
-                &quot;line&quot;: 1019,
+                &quot;line&quot;: 1125,
                 &quot;path&quot;: &quot;src/Document.luau&quot;
             }
         },
@@ -829,7 +964,7 @@ externally in a way that changes its type.
             ],
             &quot;function_type&quot;: &quot;static&quot;,
             &quot;source&quot;: {
-                &quot;line&quot;: 1029,
+                &quot;line&quot;: 1135,
                 &quot;path&quot;: &quot;src/Document.luau&quot;
             }
         }
@@ -841,7 +976,7 @@ externally in a way that changes its type.
             &quot;desc&quot;: &quot;&quot;,
             &quot;lua_type&quot;: &quot;Result&lt;T, RobloxAPIError | BackwardsCompatibilityError | CheckError | SessionLockedError&gt;&quot;,
             &quot;source&quot;: {
-                &quot;line&quot;: 98,
+                &quot;line&quot;: 99,
                 &quot;path&quot;: &quot;src/Document.luau&quot;
             }
         },
@@ -850,7 +985,7 @@ externally in a way that changes its type.
             &quot;desc&quot;: &quot;&quot;,
             &quot;lua_type&quot;: &quot;Result&lt;T, RobloxAPIError | SessionLockedError | SchemaError&gt;&quot;,
             &quot;source&quot;: {
-                &quot;line&quot;: 105,
+                &quot;line&quot;: 106,
                 &quot;path&quot;: &quot;src/Document.luau&quot;
             }
         },
@@ -891,7 +1026,7 @@ externally in a way that changes its type.
             ],
             &quot;private&quot;: true,
             &quot;source&quot;: {
-                &quot;line&quot;: 257,
+                &quot;line&quot;: 258,
                 &quot;path&quot;: &quot;src/Document.luau&quot;
             }
         }
@@ -902,8 +1037,8 @@ externally in a way that changes its type.
         &quot;line&quot;: 44,
         &quot;path&quot;: &quot;src/Document.luau&quot;
     }
-}</pre></details></div><div class="col col--3"><div class="tableOfContents_bqdL thin-scrollbar"><ul class="table-of-contents table-of-contents__left-border"><li><a href="#types" class="table-of-contents__link toc-highlight">Types</a><ul><li><a href="#OpenResult&lt;T&gt;" class="table-of-contents__link toc-highlight">OpenResult<t></t></a></li><li><a href="#WriteResult&lt;T&gt;" class="table-of-contents__link toc-highlight">WriteResult<t></t></a></li></ul></li><li><a href="#properties" class="table-of-contents__link toc-highlight">Properties</a></li><li><a href="#functions" class="table-of-contents__link toc-highlight">Functions</a><ul><li><a href="#Close" class="table-of-contents__link toc-highlight">.Close</a></li><li><a href="#Erase" class="table-of-contents__link toc-highlight">.Erase</a></li><li><a href="#GetCache" class="table-of-contents__link toc-highlight">.GetCache</a></li><li><a href="#HookAfter" class="table-of-contents__link toc-highlight">.HookAfter</a></li><li><a href="#HookBefore" class="table-of-contents__link toc-highlight">.HookBefore</a></li><li><a href="#HookFail" class="table-of-contents__link toc-highlight">.HookFail</a></li><li><a href="#IsClosing" class="table-of-contents__link toc-highlight">.IsClosing</a></li><li><a href="#isDocument" class="table-of-contents__link toc-highlight">.isDocument</a></li><li><a href="#IsOpen" class="table-of-contents__link toc-highlight">.IsOpen</a></li><li><a href="#IsOpenAvailable" class="table-of-contents__link toc-highlight">.IsOpenAvailable</a></li><li><a href="#Open" class="table-of-contents__link toc-highlight">.Open</a></li><li><a href="#Read" class="table-of-contents__link toc-highlight">.Read</a></li><li><a href="#Save" class="table-of-contents__link toc-highlight">.Save</a></li><li><a href="#SetCache" class="table-of-contents__link toc-highlight">.SetCache</a></li><li><a href="#Steal" class="table-of-contents__link toc-highlight">.Steal</a></li><li><a href="#Update" class="table-of-contents__link toc-highlight">.Update</a></li></ul></li></ul></div></div></div></div></main></div></div><footer class="footer footer--dark"><div class="container container-fluid"><div class="footer__bottom text--center"><div class="footer__copyright">Copyright © 2024 anthony0br. Built with Moonwave and Docusaurus.</div></div></div></footer></div>
-<script src="/DocumentService/assets/js/runtime~main.eb69758c.js"></script>
-<script src="/DocumentService/assets/js/main.e1de6cc4.js"></script>
+}</pre></details></div><div class="col col--3"><div class="tableOfContents_bqdL thin-scrollbar"><ul class="table-of-contents table-of-contents__left-border"><li><a href="#types" class="table-of-contents__link toc-highlight">Types</a><ul><li><a href="#OpenResult&lt;T&gt;" class="table-of-contents__link toc-highlight">OpenResult<t></t></a></li><li><a href="#WriteResult&lt;T&gt;" class="table-of-contents__link toc-highlight">WriteResult<t></t></a></li></ul></li><li><a href="#properties" class="table-of-contents__link toc-highlight">Properties</a></li><li><a href="#functions" class="table-of-contents__link toc-highlight">Functions</a><ul><li><a href="#Close" class="table-of-contents__link toc-highlight">.Close</a></li><li><a href="#Erase" class="table-of-contents__link toc-highlight">.Erase</a></li><li><a href="#GetCache" class="table-of-contents__link toc-highlight">.GetCache</a></li><li><a href="#HookAfter" class="table-of-contents__link toc-highlight">.HookAfter</a></li><li><a href="#HookBefore" class="table-of-contents__link toc-highlight">.HookBefore</a></li><li><a href="#HookFail" class="table-of-contents__link toc-highlight">.HookFail</a></li><li><a href="#IsClosing" class="table-of-contents__link toc-highlight">.IsClosing</a></li><li><a href="#isDocument" class="table-of-contents__link toc-highlight">.isDocument</a></li><li><a href="#IsOpen" class="table-of-contents__link toc-highlight">.IsOpen</a></li><li><a href="#IsOpenAvailable" class="table-of-contents__link toc-highlight">.IsOpenAvailable</a></li><li><a href="#OnceAfter" class="table-of-contents__link toc-highlight">.OnceAfter</a></li><li><a href="#OnceBefore" class="table-of-contents__link toc-highlight">.OnceBefore</a></li><li><a href="#OnceFail" class="table-of-contents__link toc-highlight">.OnceFail</a></li><li><a href="#Open" class="table-of-contents__link toc-highlight">.Open</a></li><li><a href="#OpenAndUpdate" class="table-of-contents__link toc-highlight">.OpenAndUpdate</a></li><li><a href="#Read" class="table-of-contents__link toc-highlight">.Read</a></li><li><a href="#Save" class="table-of-contents__link toc-highlight">.Save</a></li><li><a href="#SetCache" class="table-of-contents__link toc-highlight">.SetCache</a></li><li><a href="#Steal" class="table-of-contents__link toc-highlight">.Steal</a></li><li><a href="#Update" class="table-of-contents__link toc-highlight">.Update</a></li></ul></li></ul></div></div></div></div></main></div></div><footer class="footer footer--dark"><div class="container container-fluid"><div class="footer__bottom text--center"><div class="footer__copyright">Copyright © 2024 anthony0br. Built with Moonwave and Docusaurus.</div></div></div></footer></div>
+<script src="/DocumentService/assets/js/runtime~main.42593fb7.js"></script>
+<script src="/DocumentService/assets/js/main.348e244f.js"></script>
 </body>
 </html>
