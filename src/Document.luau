@@ -1013,6 +1013,15 @@ function Document.HookFail<T>(self: Document<T>, event: HookEvent, hook: () -> (
 	table.insert(self._failHooks[event], hook)
 end
 
+local function hookOnce(hooks: { () -> () }, hook: () -> ())
+	local index = #hooks
+	local function func()
+		hook()
+		table.remove(hooks, table.find(hooks, func))
+	end
+	table.insert(hooks, index, func)
+end
+
 --[=[
 	Attaches a single-use hook which occurs before the event.
 
@@ -1020,13 +1029,7 @@ end
 	@param hook -- a hook function that receives the arguments passed in to the operation
 ]=]
 function Document.OnceBefore<T, S...>(self: Document<T>, event: HookEvent, hook: () -> ())
-	local hooks = self._preHooks[event]
-	local index = #hooks
-	local function func()
-		hook()
-		table.remove(hooks, table.find(hooks, func))
-	end
-	table.insert(hooks, index, func)
+	hookOnce(self._preHooks[event], hook)
 end
 
 --[=[
@@ -1036,13 +1039,7 @@ end
 	@param hook -- a hook function that receives the arguments passed in to the operation
 ]=]
 function Document.OnceAfter<T>(self: Document<T>, event: HookEvent, hook: () -> ())
-	local hooks = self._postHooks[event]
-	local index = #hooks
-	local function func()
-		hook()
-		table.remove(hooks, table.find(hooks, func))
-	end
-	table.insert(hooks, index, func)
+	hookOnce(self._postHooks[event], hook)
 end
 
 --[=[
@@ -1052,13 +1049,7 @@ end
 	@param hook -- a hook function that receives the arguments passed in to the operation
 ]=]
 function Document.OnceFail<T>(self: Document<T>, event: HookEvent, hook: () -> ())
-	local hooks = self._failHooks[event]
-	local index = #hooks
-	local function func()
-		hook()
-		table.remove(hooks, table.find(hooks, func))
-	end
-	table.insert(hooks, index, func)
+	hookOnce(self._failHooks[event], hook)
 end
 
 --[=[
