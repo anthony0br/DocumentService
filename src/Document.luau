@@ -1014,6 +1014,48 @@ function Document.HookFail<T>(self: Document<T>, event: HookEvent, hook: () -> (
 end
 
 --[=[
+	Attaches a single-use hook which occurs before the event.
+
+	@param event -- the operation to call the hook before
+	@param hook -- a hook function that receives the arguments passed in to the operation
+]=]
+function Document.OnceBefore<T, S...>(self: Document<T>, event: HookEvent, hook: () -> ())
+	local index = #self._preHooks[event]
+	table.insert(self._preHooks[event], index, function()
+		hook()
+		table.remove(self._preHooks[event], index)
+	end)
+end
+
+--[=[
+	Attaches a single-use hook which occurs after the event, before the method returns.
+
+	@param event -- the operation to call the hook after
+	@param hook -- a hook function that receives the arguments passed in to the operation
+]=]
+function Document.OnceAfter<T>(self: Document<T>, event: HookEvent, hook: () -> ())
+	local index = #self._postHooks[event]
+	table.insert(self._postHooks[event], index, function()
+		hook()
+		table.remove(self._postHooks[event], index)
+	end)
+end
+
+--[=[
+	Attaches a single-use hook which occurs after an event fails.
+
+	@param event -- the operation to call the hook after
+	@param hook -- a hook function that receives the arguments passed in to the operation
+]=]
+function Document.OnceFail<T>(self: Document<T>, event: HookEvent, hook: () -> ())
+	local index = #self._failHooks[event]
+	table.insert(self._failHooks[event], index, function()
+		hook()
+		table.remove(self._failHooks[event], index)
+	end)
+end
+
+--[=[
 	@ignore
 ]=]
 function Document.__tostring<T>(self: Document<T>)
