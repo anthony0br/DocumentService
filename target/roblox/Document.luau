@@ -77,7 +77,8 @@ export type Document<T> = typeof(setmetatable(
 		_isClosing: boolean,
 		_lockSessions: boolean,
 		_autoSaveThread: thread?,
-		_shouldSteal: boolean	
+		_shouldSteal: boolean,
+		_onOpenTransform: Transform<T>?	
 },
 	Document
 ))
@@ -123,7 +124,7 @@ type SchemaError = Types.SchemaError
 local INTERNAL_SCHEMA_VERSION = 0
 
 local function runHooks(hooks: { () -> () })
-	for _, hook in ipairs(hooks) do
+	for _, hook in hooks do
 		hook()
 	end
 end
@@ -343,6 +344,9 @@ function Document.Open<T>(self: Document<T>): OpenResult<T>
 	local lockedByOther: boolean
 	local incompatibleVersion: boolean
 	local failedCheck: boolean
+	local notStorable: boolean
+	local notStorableErr: string
+	local transformInvalid: boolean
 
 	runHooks(self._preHooks.Open)
 
@@ -410,6 +414,28 @@ function Document.Open<T>(self: Document<T>): OpenResult<T>
 
 		local data = migratedData :: T
 
+		if self._onOpenTransform then
+			data = self._onOpenTransform(data)
+		end
+
+		local newDataIsValid = self._check(data)
+		newDataIsValid = newDataIsValid and typeof(data) == "table"
+
+		local isStorable, err = pcall(function()
+			SaveUtil.assertStorable(data)
+		end)
+
+		if not isStorable then
+			notStorable = true
+			notStorableErr = err
+			return
+		end
+
+		if not newDataIsValid then
+			transformInvalid = true
+			return
+		end
+
 		self._cache = deepFreeze(data)
 
 		return {
@@ -425,6 +451,14 @@ function Document.Open<T>(self: Document<T>): OpenResult<T>
 			data = data,
 		}
 	end, self._dataStore, self._key)
+
+	if transformInvalid then
+		error("Invalid transform function - must return a table that passes the check function.")
+	end
+
+	if notStorable then
+		error("Not storable: " .. notStorableErr)
+	end
 
 	-- We need to check this first, since updateOk will be false in
 	-- the case of a SessionLockedError
@@ -485,6 +519,40 @@ function Document.Open<T>(self: Document<T>): OpenResult<T>
 		success = true,
 		data = (updatedKeyData :: KeyData<T>).data,
 	}
+end
+
+--[=[
+	Opens, and also runs a transform function on the data. Useful for
+	non-session-locked data for shared entities, where one-off updates might
+	be needed.
+
+	Will throw a Luau error if the transform produces invalid or unsavable data.
+
+	Runs both Open and Update hooks, including fail hooks.
+
+	@return OpenResult<T>
+
+	@yields
+]=]
+function Document.OpenAndUpdate<T>(self: Document<T>, transform: Transform<T>): OpenResult<T>
+	assert(not self._open, `{self} already open`)
+	assert(not self._isClosing, `{self} is closing, cannot open`)
+
+	runHooks(self._preHooks.Update)
+
+	self._onOpenTransform = transform
+
+	local result = self:Open()
+
+	self._onOpenTransform = nil
+
+	if result.success then
+		runHooks(self._postHooks.Update)
+		return result
+	else
+		runHooks(self._failHooks.Update)
+		return result
+	end
 end
 
 --[=[
@@ -1011,6 +1079,44 @@ end
 ]=]
 function Document.HookFail<T>(self: Document<T>, event: HookEvent, hook: () -> ())
 	table.insert(self._failHooks[event], hook)
+end
+
+local function hookOnce(hooks: { () -> () }, hook: () -> ())
+	local function func()
+		table.remove(hooks, table.find(hooks, func))
+		hook()
+	end
+	table.insert(hooks, func)
+end
+
+--[=[
+	Attaches a single-use hook which occurs before the event.
+
+	@param event -- the operation to call the hook before
+	@param hook -- a hook function that receives the arguments passed in to the operation
+]=]
+function Document.OnceBefore<T, S...>(self: Document<T>, event: HookEvent, hook: () -> ())
+	hookOnce(self._preHooks[event], hook)
+end
+
+--[=[
+	Attaches a single-use hook which occurs after the event, before the method returns.
+
+	@param event -- the operation to call the hook after
+	@param hook -- a hook function that receives the arguments passed in to the operation
+]=]
+function Document.OnceAfter<T>(self: Document<T>, event: HookEvent, hook: () -> ())
+	hookOnce(self._postHooks[event], hook)
+end
+
+--[=[
+	Attaches a single-use hook which occurs after an event fails.
+
+	@param event -- the operation to call the hook after
+	@param hook -- a hook function that receives the arguments passed in to the operation
+]=]
+function Document.OnceFail<T>(self: Document<T>, event: HookEvent, hook: () -> ())
+	hookOnce(self._failHooks[event], hook)
 end
 
 --[=[

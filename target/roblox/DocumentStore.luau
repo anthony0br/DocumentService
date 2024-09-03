@@ -177,13 +177,15 @@ end
 function DocumentStore.CloseAllDocuments<T>(self: DocumentStore<T>)
 	local thread = coroutine.running()
 
+	local complete = self._documentsToClose == 0 and self._openingDocuments == 0
+
 	-- This while loop exists for two reasons:
 	-- 1. if budget is limited, we can wait for
 	-- more to be available before spawning future threads, so documents
 	-- are closed as quickly as possilbe by minimising retries
 	-- 2. ensures documents that are opening and not yet opened when
 	-- this is called are closed.
-	while self._documentsToClose > 0 or self._openingDocuments > 0 do
+	while not complete do
 		-- In each pass, we close the number of open documents recorded at the
 		-- start of the pass, or the size of the budget - whichever is smaller.
 		local budget = Util.getUpdateBudget()
@@ -237,7 +239,11 @@ function DocumentStore.CloseAllDocuments<T>(self: DocumentStore<T>)
 			print("Pass complete!")
 		end
 
-		task.wait(CLOSE_PASS_INTERVAL)
+		complete = self._documentsToClose == 0 and self._openingDocuments == 0
+
+		if not complete then
+			task.wait(CLOSE_PASS_INTERVAL)
+		end
 	end
 end
 
