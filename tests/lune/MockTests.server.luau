@@ -236,6 +236,25 @@ Test("Fails to open document with 5 simulated errors", function()
 	assert(result.success == false)
 end)
 
+Test("Open fails with CheckError if data corrupted", function()
+	local documentStore, mockDataStore = createTestDocumentStore()
+	local document = documentStore:GetDocument("1")
+	document:Open()
+	document:Close()
+
+	mockDataStore:UpdateAsync("1", function(value)
+		value.data = {
+			Document = "Document",
+			Service = "NotANumber",
+		}
+		return value
+	end)
+
+	local result = document:Open()
+	assert(not result.success, "Open didn't fail")
+	assert(result.reason == "CheckError")
+end)
+
 Test("Update fails if not open", function()
 	local documentStore = createTestDocumentStore()
 	local document = documentStore:GetDocument("1")
