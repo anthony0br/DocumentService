@@ -204,8 +204,6 @@ function DocumentStore.CloseAllDocuments<T>(self: DocumentStore<T>)
 			requestCount += 1
 
 			task.spawn(function()
-				print("Closing", tostring(v))
-
 				if v:IsOpen() and not v:IsClosing() then
 					v:Close()
 				end
@@ -234,9 +232,7 @@ function DocumentStore.CloseAllDocuments<T>(self: DocumentStore<T>)
 		-- will try to close the same documents lots of times, which would
 		-- waste request budget.
 		if documentsToClose > 0 then
-			print("Waiting for documents in pass to close")
 			coroutine.yield()
-			print("Pass complete!")
 		end
 
 		complete = self._documentsToClose == 0 and self._openingDocuments == 0
