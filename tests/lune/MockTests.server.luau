@@ -1788,6 +1788,41 @@ Test("Open Hooks run correctly", function()
 	assert(failRan)
 end)
 
+Test("Open Hooks cleanup run correctly", function()
+	local documentStore, mockDataStore = createTestDocumentStore()
+	local document = documentStore:GetDocument("1")
+	local hook1CleanupRan = false
+	local hook2CleanupRan = false
+	local failRan = false
+
+	local cleanup1 = document:HookBefore("Open", function()
+		assert(not document:IsOpen(), "Hook ran too late")
+	end)
+	hook1CleanupRan = cleanup1()
+
+	local cleanup2 = document:HookAfter("Open", function()
+		assert(document:IsOpen(), "Hook ran early")
+		assert(hook1CleanupRan)
+	end)
+	hook2CleanupRan = cleanup2()
+
+	local cleanupFail
+	cleanupFail = document:HookFail("Open", function()
+		failRan = cleanupFail()
+	end)
+
+	local result = document:Open()
+	assert(hook2CleanupRan, "Hook didn't run")
+	assert(result.success, "Open failed")
+	document:Close()
+
+	assert(not failRan)
+	mockDataStore.errors:addSimulatedErrors(5)
+	local openResult = document:Open()
+	assert(not openResult.success, "Open succeeded")
+	assert(failRan)
+end)
+
 Test("Close Hooks run correctly", function()
 	local documentStore, mockDataStore = createTestDocumentStore()
 	local document = documentStore:GetDocument("1")
@@ -1824,6 +1859,45 @@ Test("Close Hooks run correctly", function()
 	document:Close()
 end)
 
+Test("Close Hooks cleanup run correctly", function()
+	local documentStore, mockDataStore = createTestDocumentStore()
+	local document = documentStore:GetDocument("1")
+	local hook1CleanupRan = false
+	local hook2CleanupRan = false
+	local failRan = false
+
+	local cleanup1 = document:HookBefore("Close", function()
+		assert(not document:IsOpen(), "Hook ran too late")
+	end)
+	hook1CleanupRan = cleanup1()
+
+	local cleanup2 = document:HookAfter("Close", function()
+		assert(document:IsOpen(), "Hook ran early")
+		assert(hook1CleanupRan)
+	end)
+	hook2CleanupRan = cleanup2()
+
+	local cleanupFail
+	cleanupFail = document:HookFail("Close", function()
+		failRan = cleanupFail()
+	end)
+
+	local result = document:Open()
+	local resultClose = document:Close()
+	assert(hook2CleanupRan, "Hook didn't run")
+	assert(result.success, "Open failed")
+	assert(resultClose.success, "Close failed")
+
+	document:Open()
+	assert(not failRan)
+	mockDataStore.errors:addSimulatedErrors(5)
+	local closeResult = document:Close()
+	assert(not closeResult.success, "Close succeeded")
+	assert(failRan)
+
+	document:Close()
+end)
+
 Test("Before Update Hooks run correctly", function()
 	local documentStore, mockDataStore = createTestDocumentStoreNotLocked()
 	local document = documentStore:GetDocument("1")
@@ -1833,6 +1907,33 @@ Test("Before Update Hooks run correctly", function()
 		assert(mockDataStore:GetAsync("1").data.Document ~= "Updated")
 		hookRan = true
 	end)
+
+	local result = document:Open()
+
+	assert(result.success, "Open failed")
+
+	local updateResult = document:Update(function(data: TestData)
+		local newData = table.clone(data)
+		newData.Document = "Updated"
+
+		return newData
+	end)
+
+	assert(hookRan, "Hook didn't run")
+	assert(updateResult.success)
+
+	document:Close()
+end)
+
+Test("Before Update Hooks cleanup run correctly", function()
+	local documentStore, mockDataStore = createTestDocumentStoreNotLocked()
+	local document = documentStore:GetDocument("1")
+	local hookRan = false
+
+	local cleanup = document:HookBefore("Update", function()
+		assert(mockDataStore:GetAsync("1").data.Document ~= "Updated")
+	end)
+	hookRan = cleanup()
 
 	local result = document:Open()
 
@@ -1876,6 +1977,32 @@ Test("After Update Hooks run correctly", function()
 	document:Close()
 end)
 
+Test("After Update Hooks cleanup run correctly", function()
+	local documentStore, mockDataStore = createTestDocumentStoreNotLocked()
+	local document = documentStore:GetDocument("1")
+	local hookRan = false
+
+	local cleanup = document:HookAfter("Update", function()
+		assert(mockDataStore:GetAsync("1").data.Document == "Updated")
+		hookRan = true
+	end)
+	hookRan = cleanup()
+
+	local result = document:Open()
+	assert(result.success, "Open failed")
+
+	document:Update(function(data: TestData)
+		local newData = table.clone(data)
+		newData.Document = "Updated"
+
+		return newData
+	end)
+
+	assert(hookRan, "Hook didn't run")
+
+	document:Close()
+end)
+
 Test("Fail Update Hooks run correctly", function()
 	local documentStore, mockDataStore = createTestDocumentStore()
 	local document = documentStore:GetDocument("1")
@@ -1902,6 +2029,72 @@ Test("Fail Update Hooks run correctly", function()
 	document:Close()
 end)
 
+Test("Fail Update Hooks cleanup run correctly", function()
+	local documentStore, mockDataStore = createTestDocumentStore()
+	local document = documentStore:GetDocument("1")
+	local failRan = false
+
+	local cleanup
+	cleanup = document:HookFail("Update", function()
+		failRan = cleanup()
+	end)
+
+	assert(not failRan)
+	document:Open()
+	mockDataStore.errors:addSimulatedErrors(5)
+
+	local result = document:Update(function(data: TestData)
+		local newData = table.clone(data)
+		newData.Document = "Updated"
+
+		return newData
+	end)
+
+	assert(not result.success, "Update succeeded")
+	assert(failRan)
+
+	document:Close()
+end)
+
+Test("Read Hooks run correctly", function()
+	local documentStore, mockDataStore = createTestDocumentStore()
+	local document = documentStore:GetDocument("1")
+	local firstCleanupRan = false
+	local secondCleanupRan = false
+	local failRan = false
+
+	local cleanupFirst = document:HookBefore("Read", function()
+
+	end)
+	firstCleanupRan = cleanupFirst()
+
+	local cleanupSecond = document:HookAfter("Read", function()
+		assert(firstCleanupRan, "Before hook didn't run")
+	end)
+	secondCleanupRan = cleanupSecond()
+
+
+	local cleanup
+	cleanup = document:HookFail("Read", function()
+		failRan = cleanup()
+	end)
+
+	-- Open the document first so we don't get SchemaError
+	local result = document:Open()
+	local resultRead = document:Read()
+	assert(resultRead.success, "Read failed")
+	assert(secondCleanupRan, "After hook didn't run")
+	assert(result.success, "Open failed")
+
+	assert(not failRan)
+	mockDataStore.errors:addSimulatedErrors(5)
+	resultRead = document:Read()
+	assert(not resultRead.success, "Read succeeded")
+	assert(failRan)
+
+	document:Close()
+end)
+
 Test("Read Hooks run correctly", function()
 	local documentStore, mockDataStore = createTestDocumentStore()
 	local document = documentStore:GetDocument("1")
@@ -1912,10 +2105,12 @@ Test("Read Hooks run correctly", function()
 	document:HookBefore("Read", function()
 		firstRan = true
 	end)
+
 	document:HookAfter("Read", function()
 		assert(firstRan, "Before hook didn't run")
 		secondRan = true
 	end)
+
 	document:HookFail("Read", function()
 		failRan = true
 	end)
@@ -1935,6 +2130,7 @@ Test("Read Hooks run correctly", function()
 
 	document:Close()
 end)
+
 
 Test("Open Once Hooks run correctly", function()
 	local documentStore, mockDataStore = createTestDocumentStore()
