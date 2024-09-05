@@ -317,7 +317,10 @@ end
 	document exists, or creates a document with the data that is in the given
 	key if the key hasn't been used with DocumentService before.
 
-	You must call this method before reading or writing to a Document.
+	Opening a session-locked document will enable periodic autosaves until it is
+	closed.
+
+	You must open a document before reading or writing to it.
 
 	:::info
 	If the document is locked by another session, this method will wait and

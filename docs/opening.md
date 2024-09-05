@@ -5,6 +5,7 @@ sidebar_position: 4
 # Opening a player document
 
 This is an example of how to open a document for a DocumentStore that deals with player data.
+Opening a session-locked document will enable autosaves. At the time of writing, these happen every 150 seconds.
 The following code should run on `Players.PlayerAdded`:
 
  ```lua
