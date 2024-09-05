@@ -8,6 +8,7 @@ local MockDataStoreService = require("./mock-datastore/init")
 local Results = {
 	passed = 0,
 	failed = 0,
+	failedStack = {} :: { string },
 	total = 0,
 }
 
@@ -33,6 +34,7 @@ local function Test(name, test)
 	else
 		warn(`Test {Results.total} "{name}" failed with {result}\n`)
 		Results.failed += 1
+		table.insert(Results.failedStack, name)
 	end
 end
 
@@ -2219,3 +2221,9 @@ Test("OpenAndUpdate mutates data correctly", function()
 end)
 
 print(`Tests complete. {Results.passed} passed, {Results.failed} failed`)
+if Results.failed > 0 then
+	print("These tests failed:")
+	for _, name in ipairs(Results.failedStack) do
+		print(name)
+	end
+end

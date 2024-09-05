@@ -597,7 +597,7 @@ function Document.Steal<T>(self: Document<T>)
 end
 
 --[=[
-	Returns a false Result if Document is currently open, locked by another 
+	Returns a false Result if Document is currently open, locked by another
 	session, otherwise returns a true Result.
 
 	If props.lockSessions is false, this will always return a true Result.
@@ -808,7 +808,7 @@ end
 	Unlike `Open`, this method will not retry if the lock is stolen, and will
 	instead return a `SessionLockedError` after the first attempt.
 	:::
-	
+
 	@param transform -- Transform function for the transaction.
 	@return WriteResult<T>
 
@@ -996,8 +996,8 @@ end
 
 	Runs migrations and the check function, but does not save changes.
 
-	This may be called while the document is not open. 
-	
+	This may be called while the document is not open.
+
 	:::warning
 	A `SchemaError` will be returned if document has never been opened before,
 	so it is strongly recommended to handle this case, and Open the document
@@ -1065,6 +1065,17 @@ function Document.Read<T>(
 	}
 end
 
+local function cleanupHook(hooks: { () -> () }, hook: () -> ()): boolean
+	local index = table.find(hooks, hook)
+
+	if not index then
+		return false
+	end
+
+	local removedHook = table.remove(hooks, index)
+	return removedHook ~= nil
+end
+
 --[=[
 	Attaches a hook which occurs before the event.
 
@@ -1075,9 +1086,15 @@ end
 
 	@param event -- the operation to call the hook before
 	@param hook -- a hook function that receives the arguments passed in to the operation
+	@return cleanup -- a callback that removes the hook from the given hook event registry
 ]=]
-function Document.HookBefore<T, S...>(self: Document<T>, event: HookEvent, hook: () -> ())
-	table.insert(self._preHooks[event], hook)
+function Document.HookBefore<T, S...>(self: Document<T>, event: HookEvent, hook: () -> ()): () -> boolean
+	local hooks = self._preHooks[event]
+	table.insert(hooks, hook)
+
+	return function()
+		return cleanupHook(hooks, hook)
+	end
 end
 
 --[=[
@@ -1091,9 +1108,15 @@ end
 
 	@param event -- the operation to call the hook after
 	@param hook -- a hook function that receives the arguments passed in to the operation
+	@return cleanup -- a callback that removes the hook from the given hook event registry
 ]=]
-function Document.HookAfter<T>(self: Document<T>, event: HookEvent, hook: () -> ())
-	table.insert(self._postHooks[event], hook)
+function Document.HookAfter<T>(self: Document<T>, event: HookEvent, hook: () -> ()): () -> boolean
+	local hooks = self._postHooks[event]
+	table.insert(hooks, hook)
+
+	return function()
+		return cleanupHook(hooks, hook)
+	end
 end
 
 --[=[
@@ -1104,17 +1127,15 @@ end
 
 	@param event -- the operation to call the hook after
 	@param hook -- a hook function that receives the arguments passed in to the operation
+	@return cleanup -- a callback that removes the hook from the given hook event registry
 ]=]
-function Document.HookFail<T>(self: Document<T>, event: HookEvent, hook: () -> ())
-	table.insert(self._failHooks[event], hook)
-end
+function Document.HookFail<T>(self: Document<T>, event: HookEvent, hook: () -> ()): () -> boolean
+	local hooks = self._failHooks[event]
+	table.insert(hooks, hook)
 
-local function hookOnce(hooks: { () -> () }, hook: () -> ())
-	local function func()
-		table.remove(hooks, table.find(hooks, func))
-		hook()
+	return function()
+		return cleanupHook(hooks, hook)
 	end
-	table.insert(hooks, func)
 end
 
 --[=[
@@ -1124,7 +1145,12 @@ end
 	@param hook -- a hook function that receives the arguments passed in to the operation
 ]=]
 function Document.OnceBefore<T, S...>(self: Document<T>, event: HookEvent, hook: () -> ())
-	hookOnce(self._preHooks[event], hook)
+	local cleanup
+
+	cleanup = Document.HookBefore(self, event, function()
+		cleanup()
+		hook()
+	end)
 end
 
 --[=[
@@ -1134,7 +1160,12 @@ end
 	@param hook -- a hook function that receives the arguments passed in to the operation
 ]=]
 function Document.OnceAfter<T>(self: Document<T>, event: HookEvent, hook: () -> ())
-	hookOnce(self._postHooks[event], hook)
+	local cleanup
+
+	cleanup = Document.HookAfter(self, event, function()
+		cleanup()
+		hook()
+	end)
 end
 
 --[=[
@@ -1144,7 +1175,12 @@ end
 	@param hook -- a hook function that receives the arguments passed in to the operation
 ]=]
 function Document.OnceFail<T>(self: Document<T>, event: HookEvent, hook: () -> ())
-	hookOnce(self._failHooks[event], hook)
+	local cleanup
+
+	cleanup = Document.HookFail(self, event, function()
+		cleanup()
+		hook()
+	end)
 end
 
 --[=[
