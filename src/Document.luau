@@ -1065,15 +1065,14 @@ function Document.Read<T>(
 	}
 end
 
-local function cleanupHook(hooks: { () -> () }, hook: () -> ()): boolean
+local function cleanupHook(hooks: { () -> () }, hook: () -> ())
 	local index = table.find(hooks, hook)
 
 	if not index then
-		return false
+		error(`Failed to cleanup "{hook}" hook, not found in the given "{hooks}" hooks event registry!`)
 	end
 
-	local removedHook = table.remove(hooks, index)
-	return removedHook ~= nil
+	table.remove(hooks, index)
 end
 
 --[=[
@@ -1088,12 +1087,12 @@ end
 	@param hook -- a hook function that receives the arguments passed in to the operation
 	@return cleanup -- a callback that removes the hook from the given hook event registry
 ]=]
-function Document.HookBefore<T, S...>(self: Document<T>, event: HookEvent, hook: () -> ()): () -> boolean
+function Document.HookBefore<T, S...>(self: Document<T>, event: HookEvent, hook: () -> ()): () -> ()
 	local hooks = self._preHooks[event]
 	table.insert(hooks, hook)
 
 	return function()
-		return cleanupHook(hooks, hook)
+		cleanupHook(hooks, hook)
 	end
 end
 
@@ -1110,12 +1109,12 @@ end
 	@param hook -- a hook function that receives the arguments passed in to the operation
 	@return cleanup -- a callback that removes the hook from the given hook event registry
 ]=]
-function Document.HookAfter<T>(self: Document<T>, event: HookEvent, hook: () -> ()): () -> boolean
+function Document.HookAfter<T>(self: Document<T>, event: HookEvent, hook: () -> ()): () -> ()
 	local hooks = self._postHooks[event]
 	table.insert(hooks, hook)
 
 	return function()
-		return cleanupHook(hooks, hook)
+		cleanupHook(hooks, hook)
 	end
 end
 
@@ -1129,12 +1128,12 @@ end
 	@param hook -- a hook function that receives the arguments passed in to the operation
 	@return cleanup -- a callback that removes the hook from the given hook event registry
 ]=]
-function Document.HookFail<T>(self: Document<T>, event: HookEvent, hook: () -> ()): () -> boolean
+function Document.HookFail<T>(self: Document<T>, event: HookEvent, hook: () -> ()): () -> ()
 	local hooks = self._failHooks[event]
 	table.insert(hooks, hook)
 
 	return function()
-		return cleanupHook(hooks, hook)
+		cleanupHook(hooks, hook)
 	end
 end
 
