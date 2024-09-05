@@ -1798,17 +1798,17 @@ Test("Open Hooks cleanup run correctly", function()
 	local cleanup1 = document:HookBefore("Open", function()
 		assert(not document:IsOpen(), "Hook ran too late")
 	end)
-	hook1CleanupRan = cleanup1()
+	hook1CleanupRan = pcall(cleanup1)
 
 	local cleanup2 = document:HookAfter("Open", function()
 		assert(document:IsOpen(), "Hook ran early")
 		assert(hook1CleanupRan)
 	end)
-	hook2CleanupRan = cleanup2()
+	hook2CleanupRan = pcall(cleanup2)
 
 	local cleanupFail
 	cleanupFail = document:HookFail("Open", function()
-		failRan = cleanupFail()
+		failRan = pcall(cleanupFail)
 	end)
 
 	local result = document:Open()
@@ -1869,17 +1869,17 @@ Test("Close Hooks cleanup run correctly", function()
 	local cleanup1 = document:HookBefore("Close", function()
 		assert(not document:IsOpen(), "Hook ran too late")
 	end)
-	hook1CleanupRan = cleanup1()
+	hook1CleanupRan = pcall(cleanup1)
 
 	local cleanup2 = document:HookAfter("Close", function()
 		assert(document:IsOpen(), "Hook ran early")
 		assert(hook1CleanupRan)
 	end)
-	hook2CleanupRan = cleanup2()
+	hook2CleanupRan = pcall(cleanup2)
 
 	local cleanupFail
 	cleanupFail = document:HookFail("Close", function()
-		failRan = cleanupFail()
+		failRan = pcall(cleanupFail)
 	end)
 
 	local result = document:Open()
@@ -1933,7 +1933,7 @@ Test("Before Update Hooks cleanup run correctly", function()
 	local cleanup = document:HookBefore("Update", function()
 		assert(mockDataStore:GetAsync("1").data.Document ~= "Updated")
 	end)
-	hookRan = cleanup()
+	hookRan = pcall(cleanup)
 
 	local result = document:Open()
 
@@ -1986,7 +1986,7 @@ Test("After Update Hooks cleanup run correctly", function()
 		assert(mockDataStore:GetAsync("1").data.Document == "Updated")
 		hookRan = true
 	end)
-	hookRan = cleanup()
+	hookRan = pcall(cleanup)
 
 	local result = document:Open()
 	assert(result.success, "Open failed")
@@ -2036,7 +2036,7 @@ Test("Fail Update Hooks cleanup run correctly", function()
 
 	local cleanup
 	cleanup = document:HookFail("Update", function()
-		failRan = cleanup()
+		failRan = pcall(cleanup)
 	end)
 
 	assert(not failRan)
@@ -2066,17 +2066,17 @@ Test("Read Hooks run correctly", function()
 	local cleanupFirst = document:HookBefore("Read", function()
 
 	end)
-	firstCleanupRan = cleanupFirst()
+	firstCleanupRan = pcall(cleanupFirst)
 
 	local cleanupSecond = document:HookAfter("Read", function()
 		assert(firstCleanupRan, "Before hook didn't run")
 	end)
-	secondCleanupRan = cleanupSecond()
+	secondCleanupRan = pcall(cleanupSecond)
 
 
 	local cleanup
 	cleanup = document:HookFail("Read", function()
-		failRan = cleanup()
+		failRan = pcall(cleanup)
 	end)
 
 	-- Open the document first so we don't get SchemaError
