@@ -1,10 +1,14 @@
 # DocumentService - A powerful, schematised Roblox datastore library
 
 DocumentService is a fully strictly typed Luau library for saving data with Roblox DataStores.
+It can be used for sesssion-locked data, such as player data, or for non-session-locked data, like
+shared groups or houses.
 
-DocumentService provides a DataStore abstraction, DocumentStore, which holds data about entities within Documents.
+See the [docs](https://anthony0br.github.io/DocumentService/docs/intro) for more information.
 
-This project is currently in its early stages and should not be used in production.
+This is a new release and, although it has been thoroughly unit tested, it hasn't yet been used 
+in a live production game - as with any open source software, use it at your own risk! I am
+working on adding it to my game, so this will not be a concern for too long.
 
 ## Features
 - Fully strictly typed. This means you get full intellisense and typechecking on your data,
@@ -29,7 +33,7 @@ with `:IsWriteAvailable` and `:Steal` methods if you need them.
 ## Installation
 
 ### Method 1: Wally
-Add `DocumentService = "anthony0br/documentservice@1.0.0-rc.12` to your `wally.toml`.
+Add `DocumentService = "anthony0br/documentservice@1.0.0` to your `wally.toml`.
 
 ### Method 2: Manual
 DocumentService has no dependencies so you can just copy and paste the contents of
@@ -37,6 +41,7 @@ DocumentService has no dependencies so you can just copy and paste the contents 
 
 ## Long-term goals
 - ACID transactions involving multiple Documents. Please get in touch if you can help with this!
+- See the [issues](https://github.com/anthony0br/DocumentService/issues) page to discuss ways to make DocumentService better!
 
 ## Inspiration
 This library takes inspiration from Lapis, ProfileService, keyForm, and kampfkarren's blog.
