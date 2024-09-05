@@ -1,9 +1,10 @@
 --!strict
 -- Author: Anthony O'Brien
+-- Contributor: kineticwallet
 
-local Types = require(script.Parent:FindFirstChild('Types'))
-local SaveUtil = require(script.Parent:FindFirstChild('SaveUtil'))
-local deepFreeze = require(script.Parent:FindFirstChild('DeepFreeze'))
+local Types = require(script.Parent:FindFirstChild("Types"))
+local SaveUtil = require(script.Parent:FindFirstChild("SaveUtil"))
+local deepFreeze = require(script.Parent:FindFirstChild("DeepFreeze"))
 
 local SESSION_EXPIRE_TIME = 600
 local AUTOSAVE_INTERVAL = 150
@@ -58,28 +59,28 @@ export type Document<T> = typeof(setmetatable(
 			Open: { () -> () },
 			Close: { () -> () },
 			Read: { () -> () },
-			Update: { () -> () }		
-},
+			Update: { () -> () },
+		},
 		_postHooks: {
 			Open: { () -> () },
 			Close: { () -> () },
 			Read: { () -> () },
-			Update: { () -> () }		
-},
+			Update: { () -> () },
+		},
 		_failHooks: {
 			Open: { () -> () },
 			Close: { () -> () },
 			Read: { () -> () },
-			Update: { () -> () }		
-},
+			Update: { () -> () },
+		},
 		_migrations: Migrations,
 		_cache: T,
 		_isClosing: boolean,
 		_lockSessions: boolean,
 		_autoSaveThread: thread?,
 		_shouldSteal: boolean,
-		_onOpenTransform: Transform<T>?	
-},
+		_onOpenTransform: Transform<T>?,
+	},
 	Document
 ))
 
@@ -112,7 +113,7 @@ type KeyData<T> = {
 	isLocked: boolean,
 	dataSchemaVersion: number,
 	lastCompatibleVersion: number,
-	data: T
+	data: T,
 }
 
 type RobloxAPIError = Types.RobloxAPIError
@@ -270,7 +271,7 @@ function Document.new<T>(props: {
 	check: (unknown) -> (boolean, T),
 	default: T,
 	migrations: Types.Migrations,
-	lockSessions: boolean
+	lockSessions: boolean,
 }): Document<T>
 	assert(props.check(props.default), "Default must pass type check")
 	assert(typeof(props.default) == "table", "Non-table values are not supported - group your data.")
