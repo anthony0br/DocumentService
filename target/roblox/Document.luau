@@ -392,6 +392,7 @@ function Document.Open<T>(self: Document<T>): OpenResult<T>
 			-- data is migrated, then they rejoin an old server
 			if #self._migrations < keyData.lastCompatibleVersion then
 				incompatibleVersion = true
+
 				return
 			end
 
@@ -401,6 +402,7 @@ function Document.Open<T>(self: Document<T>): OpenResult<T>
 			if locked and not lockedByUs and not self._shouldSteal then
 				lockedByOther = true
 				abortAttempt(`Session lock held by another session for {self}.`)
+
 				return
 			end
 		end
@@ -409,9 +411,14 @@ function Document.Open<T>(self: Document<T>): OpenResult<T>
 
 		if not checkOk then
 			failedCheck = true
+
 			return
 		end
 
+		-- By this point, we know the data is valid because the function would've
+		-- exited if it wasn't.
+		-- We also know that we can safely mutate it because it is a compatible
+		-- version and unlocked.
 		local data = migratedData :: T
 
 		if self._onOpenTransform then
@@ -428,11 +435,13 @@ function Document.Open<T>(self: Document<T>): OpenResult<T>
 		if not isStorable then
 			notStorable = true
 			notStorableErr = err
+
 			return
 		end
 
 		if not newDataIsValid then
 			transformInvalid = true
+
 			return
 		end
 
@@ -452,18 +461,11 @@ function Document.Open<T>(self: Document<T>): OpenResult<T>
 		}
 	end, self._dataStore, self._key)
 
-	if transformInvalid then
-		error("Invalid transform function - must return a table that passes the check function.")
-	end
-
-	if notStorable then
-		error("Not storable: " .. notStorableErr)
-	end
-
 	-- We need to check this first, since updateOk will be false in
 	-- the case of a SessionLockedError
 	if lockedByOther then
 		runHooks(self._failHooks.Open)
+
 		return {
 			success = false,
 			reason = "SessionLockedError",
@@ -472,6 +474,7 @@ function Document.Open<T>(self: Document<T>): OpenResult<T>
 
 	if not updateOk then
 		runHooks(self._failHooks.Open)
+
 		return {
 			success = false,
 			reason = "RobloxAPIError",
@@ -480,6 +483,7 @@ function Document.Open<T>(self: Document<T>): OpenResult<T>
 
 	if incompatibleVersion then
 		runHooks(self._failHooks.Open)
+
 		return {
 			success = false,
 			reason = "BackwardsCompatibilityError",
@@ -488,10 +492,19 @@ function Document.Open<T>(self: Document<T>): OpenResult<T>
 
 	if failedCheck then
 		runHooks(self._failHooks.Open)
+
 		return {
 			success = false,
 			reason = "CheckError",
 		}
+	end
+
+	if transformInvalid then
+		error("Invalid transform function - must return a table that passes the check function.")
+	end
+
+	if notStorable then
+		error("Not storable: " .. notStorableErr)
 	end
 
 	self._open = true
@@ -548,9 +561,11 @@ function Document.OpenAndUpdate<T>(self: Document<T>, transform: Transform<T>): 
 
 	if result.success then
 		runHooks(self._postHooks.Update)
+
 		return result
 	else
 		runHooks(self._failHooks.Update)
+
 		return result
 	end
 end
@@ -818,6 +833,7 @@ function Document.Update<T>(self: Document<T>, transform: Transform<T>): WriteRe
 
 		if not keyData then
 			schemaError = true
+
 			return
 		end
 
@@ -827,6 +843,7 @@ function Document.Update<T>(self: Document<T>, transform: Transform<T>): WriteRe
 
 		if locked and not lockedByUs then
 			lockedByOther = true
+
 			return
 		end
 
@@ -847,11 +864,13 @@ function Document.Update<T>(self: Document<T>, transform: Transform<T>): WriteRe
 		if not isStorable then
 			notStorable = true
 			notStorableErr = err
+
 			return
 		end
 
 		if not newDataIsValid then
 			transformInvalid = true
+
 			return
 		end
 
@@ -878,6 +897,7 @@ function Document.Update<T>(self: Document<T>, transform: Transform<T>): WriteRe
 
 	if not success then
 		runHooks(self._failHooks.Update)
+
 		return {
 			success = false,
 			reason = "RobloxAPIError",
@@ -886,6 +906,7 @@ function Document.Update<T>(self: Document<T>, transform: Transform<T>): WriteRe
 
 	if lockedByOther then
 		runHooks(self._failHooks.Update)
+
 		return {
 			success = false,
 			reason = "SessionLockedError",
@@ -894,6 +915,7 @@ function Document.Update<T>(self: Document<T>, transform: Transform<T>): WriteRe
 
 	if schemaError then
 		runHooks(self._failHooks.Update)
+
 		return {
 			success = false,
 			reason = "SchemaError",
@@ -1072,7 +1094,10 @@ function Document.HookAfter<T>(self: Document<T>, event: HookEvent, hook: () -> 
 end
 
 --[=[
-	Attaches a hook which occurs after an event fails
+	Attaches a hook which occurs after an event fails.
+
+	Note that fail hooks only run when a method returns an Err<E> type. They
+	will not run if the method throws a Luau error due to incorrect usage.
 
 	@param event -- the operation to call the hook after
 	@param hook -- a hook function that receives the arguments passed in to the operation
