@@ -1,5 +1,6 @@
 --!strict
 -- Author: Anthony O'Brien
+-- Contributors: kineticwallet
 
 local Types = require("./Types")
 local SaveUtil = require("./SaveUtil")
