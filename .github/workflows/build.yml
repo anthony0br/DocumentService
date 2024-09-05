@@ -21,11 +21,11 @@ jobs:
       - name: Build for Roblox
         run: |
           rojo sourcemap source.project.json -o sourcemap.json
-          darklua process src build/roblox
+          darklua process src target/roblox
       - name: Upload build to repository
         run: |
           git config user.name "GitHub Actions"
           git config user.email "noreply@github.com"
-          git add build/roblox
+          git add target/roblox
           git commit -m "Upload new build for Roblox"
           git push
