@@ -29,5 +29,5 @@ jobs:
           git config user.name "GitHub Actions"
           git config user.email "noreply@github.com"
           git add target/roblox
-          git commit -m "Upload new build for Roblox"
+          git commit -m "upload new build for the Roblox target"
           git push
