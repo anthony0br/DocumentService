@@ -20,11 +20,6 @@ jobs:
         uses: CompeyDev/setup-rokit@v0.1.2
         with:
           cache: true
-      - name: Build for Roblox
-        run: |
-          rojo sourcemap source.project.json -o sourcemap.json
-          darklua process src $target
-          stylua $target
       - name: Publish to wally
         run: |
           wally install
