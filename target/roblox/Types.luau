@@ -20,7 +20,7 @@ export type HookEvent = "Open" | "Close" | "Update" | "Read"
 ]=]
 export type Ok<T> = {
 	success: true,
-	data: T
+	data: T,
 }
 
 --[=[
@@ -32,7 +32,7 @@ export type Ok<T> = {
 ]=]
 export type Err<E> = {
 	success: false,
-	reason: E
+	reason: E,
 }
 
 --[=[
@@ -117,8 +117,8 @@ export type SchemaError = "SchemaError"
 export type Migrations = {
 	{
 		backwardsCompatible: boolean,
-		migrate: (data: any) -> any	
-}
+		migrate: (data: any) -> any,
+	}
 }
 
 --[=[
@@ -150,7 +150,7 @@ export type DataStoreInterface = {
 		(any, DataStoreKeyInfo) -> (any, { number }?, any?)
 	) -> (any, DataStoreKeyInfo),
 	GetAsync: (DataStoreInterface, key: string, options: DataStoreGetOptions) -> (any, DataStoreKeyInfo),
-	RemoveAsync: (DataStoreInterface, key: string) -> (any, DataStoreKeyInfo)
+	RemoveAsync: (DataStoreInterface, key: string) -> (any, DataStoreKeyInfo),
 }
 
 return {}

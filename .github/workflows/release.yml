@@ -1,0 +1,27 @@
+name: Release To Wally
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - wally.toml
+
+jobs:
+  release:
+    name: Release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4.1.7
+      - name: Setup rokit
+        uses: CompeyDev/setup-rokit@v0.1.2
+        with:
+          cache: true
+      - name: Publish to wally
+        run: |
+          wally install
+          wally login --token "${{ secrets.WALLY_TOKEN }}"
+          wally publish

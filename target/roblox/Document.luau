@@ -1,9 +1,10 @@
 --!strict
 -- Author: Anthony O'Brien
+-- Contributor: kineticwallet
 
-local Types = require(script.Parent:FindFirstChild('Types'))
-local SaveUtil = require(script.Parent:FindFirstChild('SaveUtil'))
-local deepFreeze = require(script.Parent:FindFirstChild('DeepFreeze'))
+local Types = require(script.Parent:FindFirstChild("Types"))
+local SaveUtil = require(script.Parent:FindFirstChild("SaveUtil"))
+local deepFreeze = require(script.Parent:FindFirstChild("DeepFreeze"))
 
 local SESSION_EXPIRE_TIME = 600
 local AUTOSAVE_INTERVAL = 150
@@ -58,28 +59,28 @@ export type Document<T> = typeof(setmetatable(
 			Open: { () -> () },
 			Close: { () -> () },
 			Read: { () -> () },
-			Update: { () -> () }		
-},
+			Update: { () -> () },
+		},
 		_postHooks: {
 			Open: { () -> () },
 			Close: { () -> () },
 			Read: { () -> () },
-			Update: { () -> () }		
-},
+			Update: { () -> () },
+		},
 		_failHooks: {
 			Open: { () -> () },
 			Close: { () -> () },
 			Read: { () -> () },
-			Update: { () -> () }		
-},
+			Update: { () -> () },
+		},
 		_migrations: Migrations,
 		_cache: T,
 		_isClosing: boolean,
 		_lockSessions: boolean,
 		_autoSaveThread: thread?,
 		_shouldSteal: boolean,
-		_onOpenTransform: Transform<T>?	
-},
+		_onOpenTransform: Transform<T>?,
+	},
 	Document
 ))
 
@@ -112,7 +113,7 @@ type KeyData<T> = {
 	isLocked: boolean,
 	dataSchemaVersion: number,
 	lastCompatibleVersion: number,
-	data: T
+	data: T,
 }
 
 type RobloxAPIError = Types.RobloxAPIError
@@ -270,7 +271,7 @@ function Document.new<T>(props: {
 	check: (unknown) -> (boolean, T),
 	default: T,
 	migrations: Types.Migrations,
-	lockSessions: boolean
+	lockSessions: boolean,
 }): Document<T>
 	assert(props.check(props.default), "Default must pass type check")
 	assert(typeof(props.default) == "table", "Non-table values are not supported - group your data.")
@@ -317,7 +318,10 @@ end
 	document exists, or creates a document with the data that is in the given
 	key if the key hasn't been used with DocumentService before.
 
-	You must call this method before reading or writing to a Document.
+	Opening a session-locked document will enable periodic autosaves until it is
+	closed.
+
+	You must open a document before reading or writing to it.
 
 	:::info
 	If the document is locked by another session, this method will wait and
@@ -594,7 +598,7 @@ function Document.Steal<T>(self: Document<T>)
 end
 
 --[=[
-	Returns a false Result if Document is currently open, locked by another 
+	Returns a false Result if Document is currently open, locked by another
 	session, otherwise returns a true Result.
 
 	If props.lockSessions is false, this will always return a true Result.
@@ -805,7 +809,7 @@ end
 	Unlike `Open`, this method will not retry if the lock is stolen, and will
 	instead return a `SessionLockedError` after the first attempt.
 	:::
-	
+
 	@param transform -- Transform function for the transaction.
 	@return WriteResult<T>
 
@@ -993,8 +997,8 @@ end
 
 	Runs migrations and the check function, but does not save changes.
 
-	This may be called while the document is not open. 
-	
+	This may be called while the document is not open.
+
 	:::warning
 	A `SchemaError` will be returned if document has never been opened before,
 	so it is strongly recommended to handle this case, and Open the document
@@ -1062,6 +1066,16 @@ function Document.Read<T>(
 	}
 end
 
+local function cleanupHook(hooks: { () -> () }, hook: () -> ())
+	local index = table.find(hooks, hook)
+
+	if not index then
+		error(`Failed to cleanup "{hook}" hook, not found in the given "{hooks}" hooks event registry!`)
+	end
+
+	table.remove(hooks, index)
+end
+
 --[=[
 	Attaches a hook which occurs before the event.
 
@@ -1072,9 +1086,15 @@ end
 
 	@param event -- the operation to call the hook before
 	@param hook -- a hook function that receives the arguments passed in to the operation
+	@return cleanup -- a callback that removes the hook from the given hook event registry
 ]=]
-function Document.HookBefore<T, S...>(self: Document<T>, event: HookEvent, hook: () -> ())
-	table.insert(self._preHooks[event], hook)
+function Document.HookBefore<T, S...>(self: Document<T>, event: HookEvent, hook: () -> ()): () -> ()
+	local hooks = self._preHooks[event]
+	table.insert(hooks, hook)
+
+	return function()
+		cleanupHook(hooks, hook)
+	end
 end
 
 --[=[
@@ -1088,9 +1108,15 @@ end
 
 	@param event -- the operation to call the hook after
 	@param hook -- a hook function that receives the arguments passed in to the operation
+	@return cleanup -- a callback that removes the hook from the given hook event registry
 ]=]
-function Document.HookAfter<T>(self: Document<T>, event: HookEvent, hook: () -> ())
-	table.insert(self._postHooks[event], hook)
+function Document.HookAfter<T>(self: Document<T>, event: HookEvent, hook: () -> ()): () -> ()
+	local hooks = self._postHooks[event]
+	table.insert(hooks, hook)
+
+	return function()
+		cleanupHook(hooks, hook)
+	end
 end
 
 --[=[
@@ -1101,17 +1127,15 @@ end
 
 	@param event -- the operation to call the hook after
 	@param hook -- a hook function that receives the arguments passed in to the operation
+	@return cleanup -- a callback that removes the hook from the given hook event registry
 ]=]
-function Document.HookFail<T>(self: Document<T>, event: HookEvent, hook: () -> ())
-	table.insert(self._failHooks[event], hook)
-end
+function Document.HookFail<T>(self: Document<T>, event: HookEvent, hook: () -> ()): () -> ()
+	local hooks = self._failHooks[event]
+	table.insert(hooks, hook)
 
-local function hookOnce(hooks: { () -> () }, hook: () -> ())
-	local function func()
-		table.remove(hooks, table.find(hooks, func))
-		hook()
+	return function()
+		cleanupHook(hooks, hook)
 	end
-	table.insert(hooks, func)
 end
 
 --[=[
@@ -1121,7 +1145,12 @@ end
 	@param hook -- a hook function that receives the arguments passed in to the operation
 ]=]
 function Document.OnceBefore<T, S...>(self: Document<T>, event: HookEvent, hook: () -> ())
-	hookOnce(self._preHooks[event], hook)
+	local cleanup
+
+	cleanup = Document.HookBefore(self, event, function()
+		cleanup()
+		hook()
+	end)
 end
 
 --[=[
@@ -1131,7 +1160,12 @@ end
 	@param hook -- a hook function that receives the arguments passed in to the operation
 ]=]
 function Document.OnceAfter<T>(self: Document<T>, event: HookEvent, hook: () -> ())
-	hookOnce(self._postHooks[event], hook)
+	local cleanup
+
+	cleanup = Document.HookAfter(self, event, function()
+		cleanup()
+		hook()
+	end)
 end
 
 --[=[
@@ -1141,7 +1175,12 @@ end
 	@param hook -- a hook function that receives the arguments passed in to the operation
 ]=]
 function Document.OnceFail<T>(self: Document<T>, event: HookEvent, hook: () -> ())
-	hookOnce(self._failHooks[event], hook)
+	local cleanup
+
+	cleanup = Document.HookFail(self, event, function()
+		cleanup()
+		hook()
+	end)
 end
 
 --[=[

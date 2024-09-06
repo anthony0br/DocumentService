@@ -1,10 +1,10 @@
 --!strict
 -- Author: Anthony O'Brien
 
-local Document = require(script.Parent:FindFirstChild('Document'))
-local Types = require(script.Parent:FindFirstChild('Types'))
-local Util = require(script.Parent:FindFirstChild('SaveUtil'))
-local deepFreeze = require(script.Parent:FindFirstChild('DeepFreeze'))
+local Document = require(script.Parent:FindFirstChild("Document"))
+local Types = require(script.Parent:FindFirstChild("Types"))
+local Util = require(script.Parent:FindFirstChild("SaveUtil"))
+local deepFreeze = require(script.Parent:FindFirstChild("DeepFreeze"))
 
 local CLOSE_PASS_INTERVAL = 1
 
@@ -35,8 +35,8 @@ export type DocumentStore<T> = typeof(setmetatable(
 		-- than trying to do inheritance in Luau
 		_lockSessions: boolean,
 		_openingDocuments: number,
-		_documentsToClose: number	
-},
+		_documentsToClose: number,
+	},
 	DocumentStore
 ))
 
@@ -77,7 +77,7 @@ function DocumentStore.new<T>(props: {
 	check: (unknown) -> (boolean, T),
 	default: T & {},
 	migrations: Migrations,
-	lockSessions: boolean
+	lockSessions: boolean,
 }): DocumentStore<T>
 	local self = setmetatable({
 		_dataStore = props.dataStore,
@@ -89,19 +89,15 @@ function DocumentStore.new<T>(props: {
 		_openingDocuments = 0,
 		_documentsToClose = 0,
 	}, DocumentStore)
-do		
-
-
-
-
-game:BindToClose(function()
+	do
+		game:BindToClose(function()
 			gameClosing = true
 
 			self:CloseAllDocuments()
 		end)
-end
-	
-return self
+	end
+
+	return self
 end
 
 --[=[
@@ -204,8 +200,6 @@ function DocumentStore.CloseAllDocuments<T>(self: DocumentStore<T>)
 			requestCount += 1
 
 			task.spawn(function()
-				print("Closing", tostring(v))
-
 				if v:IsOpen() and not v:IsClosing() then
 					v:Close()
 				end
@@ -234,9 +228,7 @@ function DocumentStore.CloseAllDocuments<T>(self: DocumentStore<T>)
 		-- will try to close the same documents lots of times, which would
 		-- waste request budget.
 		if documentsToClose > 0 then
-			print("Waiting for documents in pass to close")
 			coroutine.yield()
-			print("Pass complete!")
 		end
 
 		complete = self._documentsToClose == 0 and self._openingDocuments == 0

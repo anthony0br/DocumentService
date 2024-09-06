@@ -1,10 +1,10 @@
 --!strict
 -- Author: Anthony O'Brien
 
-local Document = require(script:FindFirstChild('Document'))
-local DocumentStore = require(script:FindFirstChild('DocumentStore'))
-local Types = require(script:FindFirstChild('Types'))
-local SaveUtil = require(script:FindFirstChild('SaveUtil'))
+local Document = require(script:FindFirstChild("Document"))
+local DocumentStore = require(script:FindFirstChild("DocumentStore"))
+local Types = require(script:FindFirstChild("Types"))
+local SaveUtil = require(script:FindFirstChild("SaveUtil"))
 
 export type HookEvent = Types.HookEvent
 export type Document<T> = Document.Document<T>

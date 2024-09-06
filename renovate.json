@@ -1,0 +1,6 @@
+{
+	"extends": [
+		"config:recommended",
+		"github>kineticwallet/renovate-configs:rokit"
+	]
+}

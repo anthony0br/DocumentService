@@ -1,0 +1,37 @@
+name: Build Roblox Version
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - src/**
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    env:
+      target: target/roblox
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4.1.7
+      - name: Setup rokit
+        uses: CompeyDev/setup-rokit@v0.1.2
+        with:
+          cache: true
+      - name: Build for Roblox
+        run: |
+          rojo sourcemap source.project.json -o sourcemap.json
+          darklua process src $target
+          stylua $target
+      - name: Upload build to repository
+        run: |
+          git config user.name "GitHub Actions"
+          git config user.email "noreply@github.com"
+          git pull
+          git add $target
+          git commit -m "upload new build for the Roblox target"
+          git push
