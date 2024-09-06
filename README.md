@@ -13,27 +13,22 @@ working on adding it to my game, so this will not be a concern for too long.
 ## Features
 - Fully strictly typed. This means you get full intellisense and typechecking on your data,
 and on every API method, including possible errors for each method.
-- Superior Rust-inspired error handling, with each Result for each method
-providing unique intellisense on which errors you need to handle.
+- Superior Rust-inspired error handling (Result types).
 - Immutable cache and autosaves - preventing bugs caused by updates interfering with eachother.
 - Migrations, inspired by nezuo's Lapis.
 - Validate your data with support for runtime and static typechecking.
 - Documents can be session-locked, or not (to allow multi-server editing).
 - Run hooks before and after operations, e.g. logging.
-- Automatic retry with exponential backoff.
+- Automatic retries with exponential backoff.
 - Migrate from no library, or another library if you're brave.
 - Checks your data can be stored in JSON to avoid silent errors.
-- Simple API that follows SOLID principles: session-locking a document simply extends the API.
-For example, in ProfileService you need to provide a lockedHandler function, which changes the
-behaviour of the method to open a Profile, but in DocumentService you can just use the
-with `:IsWriteAvailable` and `:Steal` methods if you need them.
-- Maintainable, strictly typed source code, that is actively maintained.
-- No dependencies (like Promise). Use whatever abstractions you like, and install easily.
+- Simple API: session-locking a document simply extends the API.
+- Use any Mock DataStore you like.
 
 ## Installation
 
 ### Method 1: Wally
-Add `DocumentService = "anthony0br/documentservice@1.1.0` to your `wally.toml`.
+Add `DocumentService = "anthony0br/documentservice@1.1.1` to your `wally.toml`.
 
 ### Method 2: Manual
 DocumentService has no dependencies so you can just copy and paste the contents of
