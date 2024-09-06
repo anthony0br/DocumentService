@@ -47,22 +47,26 @@ local RETRY = {
 	@param data
 ]=]
 
-function SaveUtil.assertStorable(data: unknown)
+function SaveUtil.assertStorable(data: unknown, fieldName: string?)
 	local indexDataType
-	-- Check for NaN, inf, -inf
 
-	assert(data == data, "NaN is not storable")
+	if not fieldName then
+		fieldName = "Data"
+	end
+
+	-- Check for NaN, inf, -inf
+	assert(data == data, `NaN is not storable. Field: {fieldName}`)
 
 	local dataType = type(data)
 
-	assert(dataType ~= "userdata", "Userdata is not storable in DataStore")
+	assert(dataType ~= "userdata", `Userdata is not storable in DataStores. Field: {fieldName}`)
 
-	assert(dataType ~= "thread", "Threads are not storable in DataStore")
+	assert(dataType ~= "thread", `Threads are not storable in DataStores. Field: {fieldName}`)
 
-	assert(dataType ~= "function", "Functions are not storable in DataStore")
+	assert(dataType ~= "function", `Functions are not storable in DataStores. Field: {fieldName}`)
 
 	if dataType == "table" then
-		assert(getmetatable(data :: any) == nil, "Metatables are not storables in DataStore")
+		assert(getmetatable(data :: any) == nil, `Metatables are not storable in DataStores. Field: {fieldName}`)
 
 		local last
 		for i, v in data :: {} do
@@ -70,27 +74,27 @@ function SaveUtil.assertStorable(data: unknown)
 				indexDataType = type(i)
 
 				if not (indexDataType == "string" or indexDataType == "number") then
-					error("Table indexes must be strings or numbers")
+					error(`Table indexes must be strings or numbers to be storable. Field: {fieldName}`)
 				end
 			end
 
 			if indexDataType and type(i) ~= indexDataType then
-				error("Mixed tables are not storable")
+				error(`Tables must only have on type of index to be storable. Field: {fieldName}`)
 			end
 
 			if type(i) == "number" and last then
 				if i - last ~= 1 then
-					error("Tables with number indexes must be sequential")
+					error(`Tables with number indexes must be sequential. Field: {fieldName}`)
 				end
 
 				last = i
 			end
 
 			if v == data then
-				error("Tables cannot be cyclic")
+				error(`Tables cannot be cyclic. Field: {fieldName}`)
 			end
 
-			SaveUtil.assertStorable(v)
+			SaveUtil.assertStorable(v, tostring(i))
 		end
 	end
 end
