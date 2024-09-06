@@ -33,7 +33,7 @@ with `:IsWriteAvailable` and `:Steal` methods if you need them.
 ## Installation
 
 ### Method 1: Wally
-Add `DocumentService = "anthony0br/documentservice@1.0.0` to your `wally.toml`.
+Add `DocumentService = "anthony0br/documentservice@1.1.0` to your `wally.toml`.
 
 ### Method 2: Manual
 DocumentService has no dependencies so you can just copy and paste the contents of
