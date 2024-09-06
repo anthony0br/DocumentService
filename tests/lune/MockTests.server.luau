@@ -2056,7 +2056,7 @@ Test("Fail Update Hooks cleanup run correctly", function()
 	document:Close()
 end)
 
-Test("Read Hooks run correctly", function()
+Test("Read Hooks cleanup run correctly", function()
 	local documentStore, mockDataStore = createTestDocumentStore()
 	local document = documentStore:GetDocument("1")
 	local firstCleanupRan = false
