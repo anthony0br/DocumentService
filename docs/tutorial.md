@@ -17,8 +17,8 @@ local DocumentService = require(ReplicatedStorage.Shared.ThirdParty.DocumentServ
 local Guard = require(ReplicatedStorage.Shared.Utils.Guard)
 ```
 Here, we're fetching two Modules:
-- `DocumentService`: To simply get access to the DocumentService module
-- `Guard`: This module essentially acts as a type-checker. If you don't have it, check the `Resources` page.
+- `DocumentService`: To simply get access to the DocumentService module.
+- `Guard`: This module essentially acts as a type-checker.
 
 ## Defining the Player's Data Structure
 
@@ -112,7 +112,13 @@ function PlayerData:CloseDocument(player: Player)
 end
 ```
 
-## Best Practices
+## Best Practices. And When to use What
+
+Write your scripts in strict mode. This is essential to make use of the main benefits of DocumentService, because Luau will tell you when you do silly things.
+
+A good linter (luau-lsp) and selene for VSCode. Roblox Studio lints are mostly hidden and useless, which does not allow you to utilise the library’s typechecking support to its fullest.
+
+Put your `DataSchema`, `DataInterface`, and `dataCheck` in a separate ModuleScript. It helps keeping things clean and ultimately, easier to edit.
 
 If you want to edit player's data, you'd do:
 ```lua
@@ -135,7 +141,7 @@ document:SetCache(documentClone)
 Perhaps you want to get the player's data from the Client:
 ```lua
 -- Server
-GetPlayerData:Connect(function(player)
+GetPlayerData_Remote:Connect(function(player)
 	local playerDocument = PlayerData:GetDocument(player)
 
 	if playerDocument then
@@ -146,7 +152,7 @@ GetPlayerData:Connect(function(player)
 end)
 
 -- Client
-local playerDocument = GetPlayerData:Invoke()
+local playerDocument = GetPlayerData_Remote:Invoke()
 
 print(playerDocument.XP) -- 99
 print(playerDocument.Coins) -- 99
