@@ -44,7 +44,7 @@ local DataInterface = {
 ```
 
 **DataCheck**:
-Of course, we'd need a function to actualyl validate the player's data. This is where `dataCheck` comes in. It ensures the data we're working with matches the format defined in `DataSchema`
+Of course, we'd need a function to validate the player's data. This is where `dataCheck` comes in. It ensures the data we're working with matches the format defined in `DataSchema`
 ```lua
 local function dataCheck(value: unknown): DataSchema
 	assert(type(value) == "table", "Data must be a table")
