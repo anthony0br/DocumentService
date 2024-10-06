@@ -72,6 +72,11 @@ function SaveUtil.assertStorable(data: unknown, fieldName: string?)
 
 	assert(dataType ~= "function", `Functions are not storable in DataStores. Field: {fieldName}`)
 
+	if dataType == "string" then
+		local len = utf8.len(data :: string)
+		assert(len, `Strings with invalid UTF-8 codepoints are not storable in Datastores. Field: {fieldName}`)
+	end
+
 	if dataType == "table" then
 		assert(getmetatable(data :: any) == nil, `Metatables are not storable in DataStores. Field: {fieldName}`)
 
