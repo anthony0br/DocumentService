@@ -57,7 +57,7 @@ end
 ## Creating the Document Store
 
 **DocumentStore**:
-Setting up the `DocumentStore` to manage the player's data:
+Set up the `DocumentStore` to manage the player's data:
 ```lua
 local PlayerDataStore = DocumentService.DocumentStore.new({
 	dataStore = DataStoreService:GetDataStore("PlayerData"),
