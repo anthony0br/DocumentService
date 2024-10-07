@@ -2,7 +2,7 @@
 sidebar_position: 4
 ---
  
-# Tutorial
+# Setting Up Player Data
 
 This page covers setting up player data for your game, as well as a modulescript to handle everything.
 
@@ -24,17 +24,17 @@ local Guard = require(ReplicatedStorage.Shared.Utils.Guard)
 Defines the player's data:
 ```lua
 type DataSchema = {
-    Coins: number,
-    XP: number,
+	-- This can be extended if needed
+	Coins: number,
+	XP: number,
 }
 ```
-For this tutorial, we'll only be storing `Coins` and `XP`.
 
 **DataInterface**:
 Ensuring the data types are correct:
 ```lua
 local DataInterface = {
-	-- We expect 'Coins' and 'XP' to be an Integers (or otherwise known as Numbers)
+	-- We expect 'Coins' and 'XP' to be an Integers
 	Coins = Guard.Integer,
 	XP = Guard.Integer,
 }
