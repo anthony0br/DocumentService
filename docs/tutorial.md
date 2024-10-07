@@ -4,9 +4,9 @@ sidebar_position: 4
  
 # Tutorial
 
-Imagine you're making a game, the player can get Coins and XP. Wouldn't want the Player Data from simply vanishing when the player closes the game, would you?
+This page covers setting up player data for your game, as well as a modulescript to handle everything.
 
-## Setting Up the PlayerData Module
+## Setup
 
 We'll need to start with getting services and the required modules
 ```lua
@@ -16,35 +16,32 @@ local DataStoreService = game:GetService("DataStoreService")
 local DocumentService = require(ReplicatedStorage.Shared.ThirdParty.DocumentService)
 local Guard = require(ReplicatedStorage.Shared.Utils.Guard)
 ```
-Here, we're fetching two Modules:
-- `DocumentService`: To simply get access to the DocumentService module.
-- `Guard`: This module essentially acts as a type-checker.
+- `Guard`: Validates data types.
 
-## Defining the Player's Data Structure
-
-And then, we'll need to focus on the `DataSchema`, `DataInterface`, a function to validate data, and a `DocumentStore`.
+## Player Data Structure
 
 **DataSchema**:
-The DataSchema defines the Data that will be stored for each Player. For this, each player would have `Coins` and `XP`
+Defines the player's data:
 ```lua
 type DataSchema = {
     Coins: number,
     XP: number,
 }
 ```
-It could be extended further, but to keep things simple, we'll only be keeping `Coins` and `XP`
+For this tutorial, we'll only be storing `Coins` and `XP`.
 
 **DataInterface**:
-The DataInterface helps validate that the data types are correct. The `Guard` Module is used for this
+Ensuring the data types are correct:
 ```lua
 local DataInterface = {
-    Coins = Guard.Integer,
-    XP = Guard.Integer,
+	-- We expect 'Coins' and 'XP' to be an Integers (or otherwise known as Numbers)
+	Coins = Guard.Integer,
+	XP = Guard.Integer,
 }
 ```
 
 **DataCheck**:
-Of course, we'd need a function to validate the player's data. This is where `dataCheck` comes in. It ensures the data we're working with matches the format defined in `DataSchema`
+To validate the player's data:
 ```lua
 local function dataCheck(value: unknown): DataSchema
 	assert(type(value) == "table", "Data must be a table")
@@ -57,8 +54,10 @@ local function dataCheck(value: unknown): DataSchema
 end
 ```
 
+## Creating the Document Store
+
 **DocumentStore**:
-This is where we create a new `DocumentStore` and specify the **default** values for each property, and how it should be managed.
+Setting up the `DocumentStore` to manage the player's data:
 ```lua
 local PlayerDataStore = DocumentService.DocumentStore.new({
 	dataStore = DataStoreService:GetDataStore("PlayerData"),
@@ -73,23 +72,23 @@ local PlayerDataStore = DocumentService.DocumentStore.new({
 	lockSessions = true,
 })
 ```
-- `BackwardsCompatible`: if perhaps you update your DataSchema, players will only be able to join the up-to-date servers if this option is `False`. Otherwise, players can join older servers without hinderance.
-- `LockSessions`: prevents multiple or the same device from accessing a player's data simultaneously.
+- `BackwardsCompatible`: If `False`, players can only join up-to-date servers.
+- `LockSessions`: Prevents the player's data from being accessed to more than one device.
 
-## Managing Player Data with Functions
+## Managing Player Data
 
 Let's define two functions: `GetDocument` and `CloseDocument`
 
 **GetDocument**:
-This functions retrieves the player's document, allowing us to access their data.
+To fetch a player's document:
 ```lua
 function PlayerData:GetDocument(player: Player)
 	return PlayerDataStore:GetDocument(`{player.UserId}`)
 end
 ```
 
-CloseDocument:
-If a player were to leave the game, we can run this function to prevent it from being lost.
+**CloseDocument**:
+Close and Save the player's data on exit:
 ```lua
 function PlayerData:CloseDocument(player: Player)
 	local document = PlayerDataStore:GetDocument(`{player.Name}_{player.UserId}`)
@@ -112,15 +111,15 @@ function PlayerData:CloseDocument(player: Player)
 end
 ```
 
-## Best Practices. And When to use What
+## Best Practices
 
-Write your scripts in strict mode. This is essential to make use of the main benefits of DocumentService, because Luau will tell you when you do silly things.
+**Strict Mode:** Write your scripts in strict mode. This is essential to make use of the benefits of DocumentService's type-checking
 
-A good linter (luau-lsp) and selene for VSCode. Roblox Studio lints are mostly hidden and useless, which does not allow you to utilise the library’s typechecking support to its fullest.
+**Seperation:** Put your `DataSchema`, `DataInterface`, and `dataCheck` in a separate ModuleScripts for better maintainability in the long run.
 
-Put your `DataSchema`, `DataInterface`, and `dataCheck` in a separate ModuleScript. It helps keeping things clean and ultimately, easier to edit.
+## Editing Player Data
 
-If you want to edit player's data, you'd do:
+To modify the player's data:
 ```lua
 -- Server
 local document = YourPlayerDataModule:GetDocument(player)
@@ -135,10 +134,11 @@ documentClone.Coins = 99
 documentClone.XP = 99
 document:SetCache(documentClone)
 ```
+- `document:SetCache()`: This lets us cache player data and save it later with `document:Close()` or `PlayerDataModule:CloseDocument(player)`
 
-- `document:SetCache()`: This allows us to set the Cache of the player data. And once the player leaves, we can simply save their data afterwards with `document:Close()` or `PlayerDataModule:CloseDocument(player)`
+## Accessing Data from the Client
 
-Perhaps you want to get the player's data from the Client:
+To access the player's data from the client:
 ```lua
 -- Server
 GetPlayerData_Remote:Connect(function(player)
@@ -157,4 +157,4 @@ local playerDocument = GetPlayerData_Remote:Invoke()
 print(playerDocument.XP) -- 99
 print(playerDocument.Coins) -- 99
 ```
-- `playerDocument:Read()`: This simply returns the current Data of the player. Why not `playerDocument:Open()`? well, the client wouldn't be editing Data. So, we simply call `:Read()`
+- `playerDocument:Read()`: Returns the player's data
