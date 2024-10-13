@@ -16,32 +16,31 @@ local DataStoreService = game:GetService("DataStoreService")
 local DocumentService = require(ReplicatedStorage.Shared.ThirdParty.DocumentService)
 local Guard = require(ReplicatedStorage.Shared.Utils.Guard)
 ```
-- `Guard`: Validates data types.
+- `Guard`: Used to validate data types.
 
 ## Player Data Structure
 
 **DataSchema**:
-Defines the player's data:
+Specifies the player data format:
 ```lua
 type DataSchema = {
-	-- This can be extended if needed
 	Coins: number,
 	XP: number,
 }
 ```
+You can add more fields as needed.
 
 **DataInterface**:
 Ensuring the data types are correct:
 ```lua
 local DataInterface = {
-	-- We expect 'Coins' and 'XP' to be an Integers
 	Coins = Guard.Integer,
 	XP = Guard.Integer,
 }
 ```
 
 **DataCheck**:
-To validate the player's data:
+Validate the player's data:
 ```lua
 local function dataCheck(value: unknown): DataSchema
 	assert(type(value) == "table", "Data must be a table")
@@ -57,7 +56,7 @@ end
 ## Creating the Document Store
 
 **DocumentStore**:
-Set up the `DocumentStore` to manage the player's data:
+Set up the [DocumentStore](https://anthony0br.github.io/DocumentService/api/DocumentStore/) to manage player data.
 ```lua
 local PlayerDataStore = DocumentService.DocumentStore.new({
 	dataStore = DataStoreService:GetDataStore("PlayerData"),
@@ -73,14 +72,12 @@ local PlayerDataStore = DocumentService.DocumentStore.new({
 })
 ```
 - `BackwardsCompatible`: If `False`, players can only join up-to-date servers.
-- `LockSessions`: Prevents the player's data from being accessed to more than one device.
+- `LockSessions`: Prevents multiple devices from accessing the same player's data simultaneously.
 
 ## Managing Player Data
 
-Let's define two functions: `GetDocument` and `CloseDocument`
-
 **GetDocument**:
-To fetch a player's document:
+Fetch a player's document:
 ```lua
 function PlayerData:GetDocument(player: Player)
 	return PlayerDataStore:GetDocument(`{player.UserId}`)
@@ -88,7 +85,7 @@ end
 ```
 
 **CloseDocument**:
-Close and Save the player's data on exit:
+Save the player's data when they exit:
 ```lua
 function PlayerData:CloseDocument(player: Player)
 	local document = PlayerDataStore:GetDocument(`{player.Name}_{player.UserId}`)
@@ -113,15 +110,14 @@ end
 
 ## Best Practices
 
-**Strict Mode:** Write your scripts in strict mode. This is essential to make use of the benefits of DocumentService's type-checking
+**Strict Mode:** Always write your scripts in strict mode to benefit from the type-checking features of DocumentService.
 
-**Seperation:** Put your `DataSchema`, `DataInterface`, and `dataCheck` in a separate ModuleScripts for better maintainability in the long run.
+**Seperation:** Put your `DataSchema`, `DataInterface`, and `dataCheck` in a separate ModuleScript for better maintainability.
 
 ## Editing Player Data
 
-To modify the player's data:
+To modify the player's data on the **Server**:
 ```lua
--- Server
 local document = YourPlayerDataModule:GetDocument(player)
 
 if not document:IsOpen() and document:IsOpenAvailable() then
@@ -134,11 +130,11 @@ documentClone.Coins = 99
 documentClone.XP = 99
 document:SetCache(documentClone)
 ```
-- `document:SetCache()`: This lets us cache player data and save it later with `document:Close()` or `PlayerDataModule:CloseDocument(player)`
+- `document:SetCache()`: Updates the player's data cache, which is saved when the document is closed.
 
 ## Accessing Data from the Client
 
-To access the player's data from the client:
+Access the player's data from the **Client**:
 ```lua
 -- Server
 GetPlayerData_Remote:Connect(function(player)
