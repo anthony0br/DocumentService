@@ -15,7 +15,7 @@ export type HookEvent = "Open" | "Close" | "Update" | "Read"
 	@type Ok<T> { success: true, data: T }
 
 	Subtype of Result. A success.
-	
+
 	@within DocumentService
 ]=]
 export type Ok<T> = {
@@ -27,7 +27,7 @@ export type Ok<T> = {
 	@type Err<E> { success: false, reason: E }
 
 	Subtype of Result. An error.
-	
+
 	@within DocumentService
 ]=]
 export type Err<E> = {
@@ -40,7 +40,7 @@ export type Err<E> = {
 
 	The result of a yielding operation that could error. You should always write
 	error handling for all types of errors that can be returned.
-	
+
 	@within DocumentService
 ]=]
 export type Result<T, E> = Ok<T> | Err<E>
@@ -49,7 +49,7 @@ export type Result<T, E> = Ok<T> | Err<E>
 	@type RobloxAPIError "RobloxAPIError"
 
 	Indicates the Roblox API failed, e.g. too many requests
-	
+
 	@within DocumentService
 ]=]
 export type RobloxAPIError = "RobloxAPIError"
@@ -58,7 +58,7 @@ export type RobloxAPIError = "RobloxAPIError"
 	@type SessionLockedError "SessionLockedError"
 
 	Indicates the document was locked by some other session.
-	
+
 	@within DocumentService
 ]=]
 export type SessionLockedError = "SessionLockedError"
@@ -67,7 +67,7 @@ export type SessionLockedError = "SessionLockedError"
 	@type CheckError "CheckError"
 
 	Indicates the document's check function failed.
-	
+
 	@within DocumentService
 ]=]
 export type CheckError = "CheckError"
@@ -77,7 +77,7 @@ export type CheckError = "CheckError"
 
 	Attempted to load data that has been migrated ahead to a version that isn't
 	backwards compatible with the latest version our session has.
-	
+
 	@within DocumentService
 ]=]
 export type BackwardsCompatibilityError = "BackwardsCompatibilityError"
@@ -90,7 +90,7 @@ export type BackwardsCompatibilityError = "BackwardsCompatibilityError"
 
 	In the case of a SchemaError during opening, a new
 	Document will be created, enclosing the existing value at the key.
-	
+
 	@within DocumentService
 ]=]
 export type SchemaError = "SchemaError"
@@ -126,7 +126,7 @@ export type Migrations = {
 
 	Takes data and returns an updated version of it.
 	Ideally this should be a pure function.
-	
+
 	@within DocumentService
 ]=]
 export type Transform<T> = (data: T) -> T
@@ -153,4 +153,4 @@ export type DataStoreInterface = {
 	RemoveAsync: (DataStoreInterface, key: string) -> (any, DataStoreKeyInfo),
 }
 
-return {}
+return nil
