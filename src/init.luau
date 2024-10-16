@@ -14,6 +14,8 @@ export type Ok<T> = Types.Ok<T>
 export type Transform<T> = Types.Transform<T>
 export type DataStoreInterface = Types.DataStoreInterface
 export type Migrations = Types.Migrations
+export type DocumentStore<T> = DocumentStore.DocumentStore<T>
+export type DocumentStoreProps<T> = DocumentStore.DocumentStoreProps<T>
 
 --[=[
 	@class DocumentService
