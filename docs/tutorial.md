@@ -4,7 +4,7 @@ sidebar_position: 4
  
 # Setting Up Player Data
 
-This page covers setting up player data for your game, as well as a modulescript to handle everything.
+This page covers setting up player data for your game in more detail.
 
 ## Setup
 
