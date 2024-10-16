@@ -8,20 +8,21 @@ This page covers setting up player data for your game, as well as a modulescript
 
 ## Setup
 
-We'll need to start with getting services and the required modules
+Get the required services and libraries.
 ```lua
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local DataStoreService = game:GetService("DataStoreService")
 
-local DocumentService = require(ReplicatedStorage.Shared.ThirdParty.DocumentService)
-local Guard = require(ReplicatedStorage.Shared.Utils.Guard)
+local DocumentService = require(path.to.DocumentService)
+local Guard = require(path.to.Guard)
 ```
 - `Guard`: Used to validate data types.
 
 ## Player Data Structure
 
-**DataSchema**:
-Specifies the player data format:
+You need to define a structure for your data - this is called a schema.
+
+**Define a type**:
+It is useful to define your schema as a type.
 ```lua
 type DataSchema = {
 	Coins: number,
@@ -30,18 +31,23 @@ type DataSchema = {
 ```
 You can add more fields as needed.
 
-**DataInterface**:
-Ensuring the data types are correct:
+**Check function**:
+
+The check function takes an unknown value (the value from Data Stores) and
+verifies that it meets the correct format by returning a boolean. The second return type must match the
+type of your default - however, this is only to help you prevent mistakes.
+
+A good way to create a check function is to use [Guard](https://util.redblox.dev/guard.html). Create a standard interface check in Guard, and then wrap it with Guard.Check so it returns a boolean.
+
+Note that, while it is recommended that you use a check function, you can of course write one
+that always returns true if you are confident data won't be mistakenly corrupted!
+
 ```lua
 local DataInterface = {
 	Coins = Guard.Integer,
 	XP = Guard.Integer,
 }
-```
 
-**DataCheck**:
-Validate the player's data:
-```lua
 local function dataCheck(value: unknown): DataSchema
 	assert(type(value) == "table", "Data must be a table")
 	local Value: any = value
@@ -53,12 +59,12 @@ local function dataCheck(value: unknown): DataSchema
 end
 ```
 
-## Creating the Document Store
+## Creating the DocumentStore
 
 **DocumentStore**:
-Set up the [DocumentStore](https://anthony0br.github.io/DocumentService/api/DocumentStore/) to manage player data.
+Set up the [DocumentStore](https://anthony0br.github.io/DocumentService/api/DocumentStore/) for player data.
 ```lua
-local PlayerDataStore = DocumentService.DocumentStore.new({
+local PlayerDocumentStore = DocumentService.DocumentStore.new({
 	dataStore = DataStoreService:GetDataStore("PlayerData"),
 	check = Guard.Check(dataCheck),
 	default = {
@@ -68,6 +74,10 @@ local PlayerDataStore = DocumentService.DocumentStore.new({
 	migrations = {
 		backwardsCompatible = false, 
 	},
+	-- This is an important feature of player data. It locks editing to one server
+	-- at a time, allowing us to safely cache player data and save batches of updates.
+	-- We do this through additional methods that session locking unlocks, such as
+	-- `SetCache` and `GetCache`.
 	lockSessions = true,
 })
 ```
@@ -80,7 +90,7 @@ local PlayerDataStore = DocumentService.DocumentStore.new({
 Fetch a player's document:
 ```lua
 function PlayerData:GetDocument(player: Player)
-	return PlayerDataStore:GetDocument(`{player.UserId}`)
+	return PlayerDocumentStore:GetDocument(`{player.UserId}`)
 end
 ```
 
@@ -88,7 +98,7 @@ end
 Save the player's data when they exit:
 ```lua
 function PlayerData:CloseDocument(player: Player)
-	local document = PlayerDataStore:GetDocument(`{player.Name}_{player.UserId}`)
+	local document = PlayerDocumentStore:GetDocument(`{player.Name}_{player.UserId}`)
 
 	if not document:IsOpen() and document:IsOpenAvailable() then
 		document:Open()
@@ -117,13 +127,17 @@ end
 ## Editing Player Data
 
 To modify the player's data on the **Server**:
+Note that this assumes the player is in the server!
 ```lua
 local document = YourPlayerDataModule:GetDocument(player)
 
-if not document:IsOpen() and document:IsOpenAvailable() then
-	document:Open()
+if not document:IsOpen() then
+	-- See "Waiting for a Document to Open" page if you need to wait for the document to be open
 end
 
+-- We need to clone the table and any sub-tables we intend to edit, since
+-- DocumentService freezes tables on SetCache.
+-- This forces immutable updates and helps you avoid creating bugs!
 local documentClone = table.clone(document:GetCache())
 
 documentClone.Coins = 99
@@ -140,11 +154,7 @@ Access the player's data from the **Client**:
 GetPlayerData_Remote:Connect(function(player)
 	local playerDocument = PlayerData:GetDocument(player)
 
-	if playerDocument then
-		return playerDocument:Read()
-	end
-
-	return {}
+	return playerDocument:GetCache()
 end)
 
 -- Client
