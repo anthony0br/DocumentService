@@ -41,6 +41,7 @@ A good way to create a check function is to use [Guard](https://util.redblox.dev
 
 Note that, while it is recommended that you use a check function, you can of course write one
 that always returns true if you are confident data won't be mistakenly corrupted!
+In the future, the check function may be optional.
 
 ```lua
 local DataInterface = {
