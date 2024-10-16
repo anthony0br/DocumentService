@@ -82,42 +82,11 @@ local PlayerDocumentStore = DocumentService.DocumentStore.new({
 	lockSessions = true,
 })
 ```
-- `BackwardsCompatible`: If `False`, players can only join up-to-date servers.
-- `LockSessions`: Prevents multiple devices from accessing the same player's data simultaneously.
-
-## Managing Player Data
-
-**GetDocument**:
-Fetch a player's document:
-```lua
-function PlayerData:GetDocument(player: Player)
-	return PlayerDocumentStore:GetDocument(`{player.UserId}`)
-end
-```
-
-**CloseDocument**:
-Save the player's data when they exit:
-```lua
-function PlayerData:CloseDocument(player: Player)
-	local document = PlayerDocumentStore:GetDocument(`{player.Name}_{player.UserId}`)
-
-	if not document:IsOpen() and document:IsOpenAvailable() then
-		document:Open()
-	end
-
-	if document and document:IsOpen() then
-		local successfulClose, closeResult = pcall(function()
-			return document:Close()
-		end)
-
-		if not successfulClose then
-			warn("Failed to close document for player:", player.Name, "Error:", closeResult)
-		end
-	else
-		warn("Failed to retrieve document for player:", player.Name)
-	end
-end
-```
+- `backwardsCompatible`: If `false`, the document with this version or later will not load in
+servers whose latest version is prior to this version. Otherwise, this version will run
+on old servers. Generally, removing or changing the type of a field is not backwards compatible,
+but adding fields is.
+- `lockSessions`: Prevents multiple devices from accessing the same player's data simultaneously.
 
 ## Best Practices
 
