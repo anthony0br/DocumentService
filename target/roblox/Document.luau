@@ -125,7 +125,9 @@ type SchemaError = Types.SchemaError
 local INTERNAL_SCHEMA_VERSION = 0
 
 local function runHooks(hooks: { () -> () })
-	for _, hook in hooks do
+	-- Clone the table instead of iterating backwards, so hooks are executed in the
+	-- order they were added
+	for _, hook in table.clone(hooks) do
 		hook()
 	end
 end
