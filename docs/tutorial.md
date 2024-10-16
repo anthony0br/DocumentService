@@ -121,9 +121,15 @@ end
 
 ## Best Practices
 
-**Strict Mode:** Always write your scripts in strict mode to benefit from the type-checking features of DocumentService.
+**Strict types:** Write your scripts in strict mode to benefit fully from the type-checking features of DocumentService. Be as precise as you can with types - using `any` or other loosely-defined types for your fields will have little to no benefit.
 
-**Seperation:** Put your `DataSchema`, `DataInterface`, and `dataCheck` in a separate ModuleScript for better maintainability.
+**Use good tools:** Roblox Studio's script editor doesn't provide great linting - luau-lsp is better
+for taking full advantage of type-checking.
+
+**Seperation:** You might want to put your default table, migrations, types and your check function in a separate file to keep things manageable and modular.
+
+**Use cache where you can:** Minimise methods that call DataStore APIs, such as `Read` and `Update`, in
+favour of `GetCache` and `SetCache`. This improves performance and reduces the chance of hitting limits.
 
 ## Editing Player Data
 
