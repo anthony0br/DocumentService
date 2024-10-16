@@ -73,7 +73,12 @@ local PlayerDocumentStore = DocumentService.DocumentStore.new({
 		XP = 0,
 	},
 	migrations = {
-		backwardsCompatible = false, 
+		{
+			backwardsCompatible = false,
+			migrate = function()
+				-- Put a migration here!
+			end
+		}
 	},
 	-- This is an important feature of player data. It locks editing to one server
 	-- at a time, allowing us to safely cache player data and save batches of updates.
@@ -82,6 +87,7 @@ local PlayerDocumentStore = DocumentService.DocumentStore.new({
 	lockSessions = true,
 })
 ```
+- `migrations`: Used to mutate your schema over time.
 - `backwardsCompatible`: If `false`, the document with this version or later will not load in
 servers whose latest version is prior to this version. Otherwise, this version will run
 on old servers. Generally, removing or changing the type of a field is not backwards compatible,
