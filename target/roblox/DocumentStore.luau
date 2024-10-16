@@ -24,6 +24,14 @@ local CLOSE_PASS_INTERVAL = 1
 local DocumentStore = {}
 DocumentStore.__index = DocumentStore
 
+export type DocumentStoreProps<T> = {
+	dataStore: DataStoreInterface,
+	check: (unknown) -> (boolean, T),
+	default: T & {},
+	migrations: Migrations,
+	lockSessions: boolean,
+}
+
 export type DocumentStore<T> = typeof(setmetatable(
 	{} :: {
 		_dataStore: DataStoreInterface,
@@ -72,13 +80,7 @@ type DataStoreInterface = Types.DataStoreInterface
 
 	@return DocumentStore<T>
 ]=]
-function DocumentStore.new<T>(props: {
-	dataStore: DataStoreInterface,
-	check: (unknown) -> (boolean, T),
-	default: T & {},
-	migrations: Migrations,
-	lockSessions: boolean,
-}): DocumentStore<T>
+function DocumentStore.new<T>(props: DocumentStoreProps<T>): DocumentStore<T>
 	local self = setmetatable({
 		_dataStore = props.dataStore,
 		_check = props.check,
@@ -112,7 +114,7 @@ end
 	are no other references to them.
 	:::
 
-	@param key 
+	@param key
 
 	@return Document<T>
 	@return boolean -- whether a new document was created
