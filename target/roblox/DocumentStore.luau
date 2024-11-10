@@ -30,6 +30,7 @@ export type DocumentStoreProps<T> = {
 	default: T & {},
 	migrations: Migrations,
 	lockSessions: boolean,
+	bindToClose: boolean?,
 }
 
 export type DocumentStore<T> = typeof(setmetatable(
@@ -64,6 +65,7 @@ type DataStoreInterface = Types.DataStoreInterface
 	.default T & {} -- Default values, which are set if keys are empty
 	.migrations Migrations -- Migrations
 	.lockSessions boolean -- Should the documents be session locked?
+	.bindToClose boolean? -- Should the DocumentStore close all documents on BindToClose? [default=true] (This should always be true in production)
 ]=]
 --[=[
 	Creates a new DocumentStore.
@@ -91,7 +93,12 @@ function DocumentStore.new<T>(props: DocumentStoreProps<T>): DocumentStore<T>
 		_openingDocuments = 0,
 		_documentsToClose = 0,
 	}, DocumentStore)
-	do
+
+	-- Save and close all documents as fast as possible on BindToClose
+	-- Yielding on BindToClose in studio can cause studio to take a very long
+	-- time to stop play test sessions, so we give the user the option to
+	-- disable this behavior.
+	if props.bindToClose ~= false then
 		game:BindToClose(function()
 			gameClosing = true
 
