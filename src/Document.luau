@@ -670,8 +670,9 @@ function Document.IsOpen<T>(self: Document<T>): boolean
 end
 
 --[=[
-	Yields the current thread until the document has been opened.
-	Returns true if the document is open, false if the document failed to open.
+	Yields the current thread until the document has been opened by another thread.
+	Does not open the document on its own.
+	Returns true if the document is open, or false if the document failed to open.
 
 	@return boolean
 
