@@ -661,12 +661,57 @@ function Document.IsOpenAvailable<T>(self: Document<T>): Result<boolean, RobloxA
 end
 
 --[=[
-	Returns whether the document is open or not
+	Returns whether the document is open or not.
 
 	@return boolean
 ]=]
 function Document.IsOpen<T>(self: Document<T>): boolean
 	return self._open
+end
+
+--[=[
+	Yields the current thread until the document has been opened.
+	Returns true if the document is open, false if the document failed to open.
+
+	@return boolean
+
+	@yields
+]=]
+function Document.AwaitOpen<T>(self: Document<T>): boolean
+	if self._open then
+		return true
+	end
+
+	local thread = coroutine.running()
+	local success = false
+	local done = false
+
+	local function resume()
+		if done or coroutine.status(thread) ~= "suspended" then
+			return
+		end
+		done = true
+		task.defer(thread)
+	end
+
+	local cleanupSuccess, cleanupFail
+
+	cleanupSuccess = self:HookAfter("Open", function()
+		cleanupFail()
+		cleanupSuccess()
+		success = true
+		resume()
+	end)
+
+	cleanupFail = self:HookFail("Open", function()
+		cleanupFail()
+		cleanupSuccess()
+		resume()
+	end)
+
+	coroutine.yield()
+
+	return success
 end
 
 --[=[

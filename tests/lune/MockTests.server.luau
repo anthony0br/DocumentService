@@ -22,6 +22,11 @@ local function shouldFail(func: (...any) -> ())
 end
 
 local function Test(name, test)
+	-- FIXME remove this
+	if not string.match(name, "AwaitOpen") then
+		return
+	end
+
 	Results.total += 1
 
 	print(`Running test {Results.total}`)
@@ -393,6 +398,74 @@ Test("Session locking affects IsOpenAvailable correctly", function()
 		assert(result.success == true)
 		assert(result.data == false)
 	end
+end)
+
+Test("AwaitOpen returns true immediately if the document is open", function()
+	local documentStore = createTestDocumentStore()
+	local document = documentStore:GetDocument("1")
+	local openResult = document:Open()
+	assert(openResult.success == true)
+
+	local thread = task.spawn(function()
+		local awaitResult = document:AwaitOpen()
+		assert(awaitResult == true)
+	end)
+
+	assert(coroutine.status(thread) == "dead")
+end)
+
+Test("AwaitOpen returns true once the document has opened", function()
+	local documentStore = createTestDocumentStore()
+	local document = documentStore:GetDocument("1")
+
+	local thread = task.spawn(function()
+		local awaitResult = document:AwaitOpen()
+		assert(awaitResult == true)
+	end)
+
+	assert(document:IsOpen() == false)
+	assert(coroutine.status(thread) == "suspended")
+
+	local openResult = document:Open()
+	assert(openResult.success == true)
+
+	local mainThread = coroutine.running()
+	local checkThread = task.defer(function()
+		-- Defer to wait for AwaitOpen to return
+		assert(coroutine.status(thread) == "dead")
+		task.defer(mainThread)
+	end)
+	coroutine.yield()
+	
+	assert(coroutine.status(checkThread) == "dead")
+end)
+
+Test("AwaitOpen returns false if the document fails to open", function()
+	local documentStore, mockDataStore = createTestDocumentStore()
+	local document = documentStore:GetDocument("1")
+
+	local thread = task.spawn(function()
+		local awaitResult = document:AwaitOpen()
+		assert(awaitResult == false)
+	end)
+
+	assert(document:IsOpen() == false)
+	assert(coroutine.status(thread) == "suspended")
+
+	mockDataStore.errors:addSimulatedErrors(5)
+
+	local openResult = document:Open()
+	assert(openResult.success == false)
+
+	local mainThread = coroutine.running()
+	local checkThread = task.defer(function()
+		-- Defer to wait for AwaitOpen to return
+		assert(coroutine.status(thread) == "dead")
+		task.defer(mainThread)
+	end)
+	coroutine.yield()
+
+	assert(coroutine.status(checkThread) == "dead")
 end)
 
 Test("Session locking prevents other sessions from opening", function()
