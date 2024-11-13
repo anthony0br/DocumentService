@@ -22,11 +22,6 @@ local function shouldFail(func: (...any) -> ())
 end
 
 local function Test(name, test)
-	-- FIXME remove this
-	if not string.match(name, "AwaitOpen") then
-		return
-	end
-
 	Results.total += 1
 
 	print(`Running test {Results.total}`)
