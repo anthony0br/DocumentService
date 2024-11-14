@@ -24,10 +24,13 @@ local function Retry<T...>(
 
 	for i = 1, maxAttempts do
 		result = { pcall(func, ...) }
+
 		if result[1] == true then
 			break
 		end
+
 		warn(`[Retry] Attempt {i} failed: {result[2]} {debug.traceback("\nat", 1)}`)
+
 		if i < maxAttempts then
 			task.wait(initialWait * (2 ^ (i - 1)))
 		end
