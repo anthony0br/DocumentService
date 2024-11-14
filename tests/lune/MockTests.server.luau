@@ -395,42 +395,6 @@ Test("Session locking affects IsOpenAvailable correctly", function()
 	end
 end)
 
-Test("Session locking prevents other sessions from opening", function()
-	local mockDataStore = MockDataStoreService.new():GetDataStore("1")
-
-	local session1 = DocumentService.DocumentStore.new({
-		dataStore = mockDataStore,
-		check = Guard.Check(testDataCheck),
-		default = {
-			Document = "Document",
-			Service = 3,
-		},
-		migrations = {},
-		lockSessions = true,
-	})
-	local session2 = DocumentService.DocumentStore.new({
-		dataStore = mockDataStore,
-		check = Guard.Check(testDataCheck),
-		default = {
-			Document = "Document",
-			Service = 3,
-		},
-		migrations = {},
-		lockSessions = true,
-	})
-	do
-		local document = session1:GetDocument("1")
-		local result = document:Open()
-		assert(result.success == true)
-	end
-	do
-		local document = session2:GetDocument("1")
-		local result = document:Open()
-		assert(result.success == false)
-		assert(result.reason == "SessionLockedError")
-	end
-end)
-
 Test("Data mutations with :Update persist with no migrations", function()
 	local documentStore = createTestDocumentStore()
 	local document = documentStore:GetDocument("6")
@@ -1575,6 +1539,7 @@ Test("Opening a locked document returns SessionLockedError", function()
 		migrations = {},
 		lockSessions = true,
 	})
+
 	local session2 = DocumentService.DocumentStore.new({
 		dataStore = mockDataStore,
 		check = Guard.Check(testDataCheck),
@@ -2258,16 +2223,13 @@ Test("Read Hooks cleanup run correctly", function()
 	local secondCleanupRan = false
 	local failRan = false
 
-	local cleanupFirst = document:HookBefore("Read", function()
-
-	end)
+	local cleanupFirst = document:HookBefore("Read", function() end)
 	firstCleanupRan = pcall(cleanupFirst)
 
 	local cleanupSecond = document:HookAfter("Read", function()
 		assert(firstCleanupRan, "Before hook didn't run")
 	end)
 	secondCleanupRan = pcall(cleanupSecond)
-
 
 	local cleanup
 	cleanup = document:HookFail("Read", function()
@@ -2596,6 +2558,14 @@ Test("Read Hooks run correctly", function()
 
 	document:Close()
 end)
+
+-- Test("Opened signal fires in all cases")
+
+-- Test("Closed signal fires in all cases")
+
+-- Test("Updated signal fires in all cases")
+
+-- Test("Read signal fires in all cases")
 
 Test("Open documents are not garbage collected", function()
 	local documentStore = createTestDocumentStore()
