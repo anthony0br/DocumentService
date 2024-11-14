@@ -5,6 +5,7 @@
 local Types = require("./Types")
 local SaveUtil = require("./SaveUtil")
 local deepFreeze = require("./DeepFreeze")
+local Signal = require("./Signal")
 
 local SESSION_EXPIRE_TIME = 600
 local AUTOSAVE_INTERVAL = 150
@@ -61,6 +62,7 @@ export type Document<T> = typeof(setmetatable(
 			Read: { () -> () },
 			Update: { () -> () },
 		},
+		-- Post & fail hooks are deprectaed.
 		_postHooks: {
 			Open: { () -> () },
 			Close: { () -> () },
@@ -72,6 +74,13 @@ export type Document<T> = typeof(setmetatable(
 			Close: { () -> () },
 			Read: { () -> () },
 			Update: { () -> () },
+		},
+		-- We get a recursive type error if we use Signal.Signal<OpenResult<T>> etc
+		_actionSignals: {
+			Open: Signal.Signal<any>,
+			Close: Signal.Signal<any>,
+			Read: Signal.Signal<any>,
+			Update: Signal.Signal<any>,
 		},
 		_migrations: Migrations,
 		_cache: T,
@@ -105,6 +114,8 @@ type OpenResult<T> = Result<T, RobloxAPIError | BackwardsCompatibilityError | Ch
 	@within Document
 ]=]
 type WriteResult<T> = Result<T, RobloxAPIError | SessionLockedError | SchemaError>
+
+type ReadResult<T> = Result<T, RobloxAPIError | SchemaError | CheckError | BackwardsCompatibilityError>
 
 type KeyData<T> = {
 	documentServiceSchemaVersion: number,
@@ -305,6 +316,12 @@ function Document.new<T>(props: {
 			Update = {},
 			Read = {},
 		},
+		_actionSignals = {
+			Open = Signal.new(),
+			Close = Signal.new(),
+			Update = Signal.new(),
+			Read = Signal.new(),
+		},
 		_migrations = deepFreeze(props.migrations),
 		_isClosing = false,
 		_cache = props.default,
@@ -457,7 +474,7 @@ function Document.Open<T>(self: Document<T>): OpenResult<T>
 			documentServiceSchemaVersion = INTERNAL_SCHEMA_VERSION,
 			sessionLockId = self._sessionId,
 			lockTimestamp = os.time(),
-			isLocked = if self._lockSessions then true else false,
+			isLocked = self._lockSessions,
 			-- If we are in an old server and the data is of a future version
 			-- that is backwards compatible, keep the version number so that
 			-- migrations do not run more than once
@@ -467,42 +484,46 @@ function Document.Open<T>(self: Document<T>): OpenResult<T>
 		}
 	end, self._dataStore, self._key)
 
+	local failResult: OpenResult<T>?
+
 	-- We need to check this first, since updateOk will be false in
 	-- the case of a SessionLockedError
 	if lockedByOther then
-		runHooks(self._failHooks.Open)
-
-		return {
+		failResult = {
 			success = false,
 			reason = "SessionLockedError",
 		}
 	end
 
 	if not updateOk then
-		runHooks(self._failHooks.Open)
-
-		return {
+		failResult = {
 			success = false,
 			reason = "RobloxAPIError",
 		}
 	end
 
 	if incompatibleVersion then
-		runHooks(self._failHooks.Open)
-
-		return {
+		failResult = {
 			success = false,
 			reason = "BackwardsCompatibilityError",
 		}
 	end
 
 	if failedCheck then
-		runHooks(self._failHooks.Open)
-
-		return {
+		failResult = {
 			success = false,
 			reason = "CheckError",
 		}
+	end
+
+	print(failResult)
+
+	if failResult then
+		runHooks(self._failHooks.Open)
+
+		self._actionSignals.Open:Fire(failResult)
+
+		return failResult
 	end
 
 	if transformInvalid then
@@ -534,10 +555,14 @@ function Document.Open<T>(self: Document<T>): OpenResult<T>
 
 	runHooks(self._postHooks.Open)
 
-	return {
+	local result: OpenResult<T> = {
 		success = true,
 		data = (updatedKeyData :: KeyData<T>).data,
 	}
+
+	self._actionSignals.Open:Fire(result)
+
+	return result
 end
 
 --[=[
@@ -547,7 +572,7 @@ end
 
 	Will throw a Luau error if the transform produces invalid or unsavable data.
 
-	Runs both Open and Update hooks, including fail hooks.
+	Runs both Open and Update hooks and signals, including fail hooks.
 
 	@return OpenResult<T>
 
@@ -564,6 +589,8 @@ function Document.OpenAndUpdate<T>(self: Document<T>, transform: Transform<T>): 
 	local result = self:Open()
 
 	self._onOpenTransform = nil
+
+	self._actionSignals.Update:Fire(result)
 
 	if result.success then
 		runHooks(self._postHooks.Update)
@@ -600,8 +627,59 @@ function Document.Steal<T>(self: Document<T>)
 end
 
 --[=[
-	Returns a false Result if Document is currently open, locked by another
-	session, otherwise returns a true Result.
+	Retrieves a signal that is fired when a document is opened. Note that this will
+	be fired on completion of any `:Open`, even if the document failed to update.
+	
+	@return Signal<OpenResult<T>>
+
+	@yields
+]=]
+function Document.GetOpenedSignal<T>(self: Document<T>): Signal.Signal<OpenResult<T>>
+	return self._actionSignals.Open
+end
+
+--[=[
+	Retrieves a signal that is fired when a document is opened. Note that this will
+	be fired on completion of any `:Close`, even if the document failed to update.
+	
+	@return Signal<OpenResult<T>>
+
+	@yields
+]=]
+function Document.GetClosedSignal<T>(self: Document<T>): Signal.Signal<WriteResult<T?>>
+	return self._actionSignals.Close
+end
+
+--[=[
+	Retrieves a signal that is fired when a document is opened. Note that this will
+	be fired on completion of any `:Update`, even if the document failed to update.
+	
+	@return Signal<OpenResult<T>>
+
+	@yields
+]=]
+function Document.GetUpdatedSignal<T>(self: Document<T>): Signal.Signal<WriteResult<T>>
+	return self._actionSignals.Update
+end
+
+--[=[
+	Retrieves a signal that is fired when a document is opened. Note that this will
+	be fired on completion of any `:Update`, even if the document failed to update.
+	
+	@return Signal<OpenResult<T>>
+
+	@yields
+]=]
+function Document.GetReadSignal<T>(self: Document<T>): Signal.Signal<ReadResult<T>>
+	return self._actionSignals.Read
+end
+
+--[=[
+	Returns a false Result if Document is either:
+	i. Currently open in this server
+	ii. Currently locked by another session
+	
+	Otherwise returns a true Result.
 
 	If props.lockSessions is false, this will always return a true Result.
 
@@ -677,6 +755,8 @@ end
 	If session locked, will save the document, remove the lock, and
 	cancel autosaves first. If this fails, the document will not be closed.
 
+	If the Close performs a Save, Result.data will be the data saved.
+
 	@return WriteResult<T?>
 
 	@yields
@@ -689,17 +769,19 @@ function Document.Close<T>(self: Document<T>): WriteResult<T?>
 	-- This causes :Save to also remove the session lock
 	self._isClosing = true
 
-	local result: WriteResult<T>
+	local saveResult: WriteResult<T>
 
 	if self._lockSessions then
-		result = self:Save()
+		saveResult = self:Save()
 
-		if not result.success then
+		-- Abort the closure if the save failed
+		if not saveResult.success then
 			self._isClosing = false
 
 			runHooks(self._failHooks.Close)
+			self._actionSignals.Close:Fire(saveResult)
 
-			return result
+			return saveResult
 		end
 	end
 
@@ -712,11 +794,18 @@ function Document.Close<T>(self: Document<T>): WriteResult<T?>
 
 	runHooks(self._postHooks.Close)
 
-	return if result
-		then result
-		else {
-			success = true,
-		}
+	local result: WriteResult<T?> = {
+		success = true,
+	}
+
+	-- If we saved then return the data saved in the result
+	if self._lockSessions then
+		result = saveResult
+	end
+
+	self._actionSignals.Close:Fire(result)
+
+	return result
 end
 
 --[=[
@@ -901,31 +990,35 @@ function Document.Update<T>(self: Document<T>, transform: Transform<T>): WriteRe
 		error("Not storable: " .. notStorableErr)
 	end
 
-	if not success then
-		runHooks(self._failHooks.Update)
+	local failResult: WriteResult<T>?
 
-		return {
+	if not success then
+		failResult = {
 			success = false,
 			reason = "RobloxAPIError",
 		}
 	end
 
 	if lockedByOther then
-		runHooks(self._failHooks.Update)
-
-		return {
+		failResult = {
 			success = false,
 			reason = "SessionLockedError",
 		}
 	end
 
 	if schemaError then
-		runHooks(self._failHooks.Update)
-
-		return {
+		failResult = {
 			success = false,
 			reason = "SchemaError",
 		}
+	end
+
+	if failResult then
+		runHooks(self._failHooks.Update)
+
+		self._actionSignals.Update:Fire(failResult)
+
+		return failResult
 	end
 
 	-- Cast to KeyData<T> since the new data has already passed self._check and
@@ -938,10 +1031,14 @@ function Document.Update<T>(self: Document<T>, transform: Transform<T>): WriteRe
 
 	runHooks(self._postHooks.Update)
 
-	return {
+	local result: WriteResult<T> = {
 		success = true,
 		data = updatedData,
 	}
+
+	self._actionSignals.Update:Fire(result)
+
+	return result
 end
 
 --[=[
@@ -1013,29 +1110,37 @@ end
 
 	@yields
 ]=]
-function Document.Read<T>(
-	self: Document<T>
-): Result<T, RobloxAPIError | SchemaError | CheckError | BackwardsCompatibilityError>
+function Document.Read<T>(self: Document<T>): ReadResult<T>
 	runHooks(self._preHooks.Read)
 
 	local success, getValue: any = SaveUtil.getAsync(self._dataStore, self._key)
 
 	if not success then
 		runHooks(self._failHooks.Read)
-		return {
+
+		local result: ReadResult<T> = {
 			success = false,
 			reason = "RobloxAPIError",
 		}
+
+		self._actionSignals.Read:Fire(result)
+
+		return result
 	end
 
 	local keyData = checkKeyData(getValue)
 
 	if not keyData then
 		runHooks(self._failHooks.Read)
-		return {
+
+		local result: ReadResult<T> = {
 			success = false,
 			reason = "SchemaError",
 		}
+
+		self._actionSignals.Read:Fire(result)
+
+		return result
 	end
 
 	local migratedData = runMigrations(self._migrations, keyData.data, keyData.dataSchemaVersion)
@@ -1044,28 +1149,42 @@ function Document.Read<T>(
 
 	if not checkOk then
 		runHooks(self._failHooks.Read)
-		return {
+
+		local result: ReadResult<T> = {
 			success = false,
 			reason = "CheckError",
 		}
+
+		self._actionSignals.Read:Fire(result)
+
+		return result
 	end
 
 	local data = migratedData :: T
 
 	if #self._migrations < keyData.lastCompatibleVersion then
 		runHooks(self._failHooks.Read)
-		return {
+
+		local result: ReadResult<T> = {
 			success = false,
 			reason = "BackwardsCompatibilityError",
 		}
+
+		self._actionSignals.Read:Fire(result)
+
+		return result
 	end
 
 	runHooks(self._postHooks.Read)
 
-	return {
+	local result: ReadResult<T> = {
 		success = true,
 		data = data,
 	}
+
+	self._actionSignals.Read:Fire(result)
+
+	return result
 end
 
 local function cleanupHook(hooks: { () -> () }, hook: () -> ())
@@ -1124,6 +1243,8 @@ end
 --[=[
 	Attaches a hook which occurs after an event fails.
 
+	@deprecated
+
 	Note that fail hooks only run when a method returns an Err<E> type. They
 	will not run if the method throws a Luau error due to incorrect usage.
 
@@ -1143,6 +1264,8 @@ end
 --[=[
 	Attaches a single-use hook which occurs before the event.
 
+	@deprecated
+
 	@param event -- the operation to call the hook before
 	@param hook -- a hook function that receives the arguments passed in to the operation
 ]=]
@@ -1158,6 +1281,8 @@ end
 --[=[
 	Attaches a single-use hook which occurs after the event, before the method returns.
 
+	@deprecated
+
 	@param event -- the operation to call the hook after
 	@param hook -- a hook function that receives the arguments passed in to the operation
 ]=]
@@ -1172,6 +1297,8 @@ end
 
 --[=[
 	Attaches a single-use hook which occurs after an event fails.
+
+	@deprecated
 
 	@param event -- the operation to call the hook after
 	@param hook -- a hook function that receives the arguments passed in to the operation
