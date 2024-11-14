@@ -628,7 +628,7 @@ end
 
 --[=[
 	Retrieves a signal that is fired when a document is opened. Note that this will
-	be fired on completion of any `:Open`, even if the document failed to update.
+	be fired on completion of any `:Open`, even if it if it failed.
 	
 	@return Signal<OpenResult<T>>
 
@@ -639,10 +639,10 @@ function Document.GetOpenedSignal<T>(self: Document<T>): Signal.Signal<OpenResul
 end
 
 --[=[
-	Retrieves a signal that is fired when a document is opened. Note that this will
-	be fired on completion of any `:Close`, even if the document failed to update.
+	Retrieves a signal that is fired when a document is closed. Note that this will
+	be fired on completion of any `:Close`, even if it failed.
 	
-	@return Signal<OpenResult<T>>
+	@return Signal<WriteResult<T?>
 
 	@yields
 ]=]
@@ -651,10 +651,10 @@ function Document.GetClosedSignal<T>(self: Document<T>): Signal.Signal<WriteResu
 end
 
 --[=[
-	Retrieves a signal that is fired when a document is opened. Note that this will
-	be fired on completion of any `:Update`, even if the document failed to update.
+	Retrieves a signal that is fired when a document is updated. Note that this will
+	be fired on completion of any `:Update`, even if it failed.
 	
-	@return Signal<OpenResult<T>>
+	@return Signal<WriteResult<T>>
 
 	@yields
 ]=]
@@ -663,10 +663,10 @@ function Document.GetUpdatedSignal<T>(self: Document<T>): Signal.Signal<WriteRes
 end
 
 --[=[
-	Retrieves a signal that is fired when a document is opened. Note that this will
-	be fired on completion of any `:Update`, even if the document failed to update.
+	Retrieves a signal that is fired when a document is read. Note that this will
+	be fired on completion of any `:Read`, even if it failed.
 	
-	@return Signal<OpenResult<T>>
+	@return Signal<ReadResult<T>>
 
 	@yields
 ]=]
