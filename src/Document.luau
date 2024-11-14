@@ -1221,6 +1221,8 @@ end
 --[=[
 	Attaches a hook which occurs after the event, before the method returns.
 
+	@deprecated v1.2.0 -- use signals
+
 	Note that if a hook yields, it will yield all methods that call it. Hooks
 	are called in the order they are added.
 
@@ -1243,7 +1245,7 @@ end
 --[=[
 	Attaches a hook which occurs after an event fails.
 
-	@deprecated
+	@deprecated v1.2.0 -- use signals
 
 	Note that fail hooks only run when a method returns an Err<E> type. They
 	will not run if the method throws a Luau error due to incorrect usage.
@@ -1264,8 +1266,6 @@ end
 --[=[
 	Attaches a single-use hook which occurs before the event.
 
-	@deprecated
-
 	@param event -- the operation to call the hook before
 	@param hook -- a hook function that receives the arguments passed in to the operation
 ]=]
@@ -1281,7 +1281,7 @@ end
 --[=[
 	Attaches a single-use hook which occurs after the event, before the method returns.
 
-	@deprecated
+	@deprecated v1.2.0 -- use signals
 
 	@param event -- the operation to call the hook after
 	@param hook -- a hook function that receives the arguments passed in to the operation
@@ -1298,7 +1298,7 @@ end
 --[=[
 	Attaches a single-use hook which occurs after an event fails.
 
-	@deprecated
+	@deprecated v1.2.0 -- use signals
 
 	@param event -- the operation to call the hook after
 	@param hook -- a hook function that receives the arguments passed in to the operation
