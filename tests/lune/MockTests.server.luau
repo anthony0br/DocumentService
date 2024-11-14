@@ -2288,6 +2288,127 @@ Test("Read Hooks run correctly", function()
 	document:Close()
 end)
 
+-- Sleitnick Signal is well-established and tested, so we do not need
+-- to test Once functionality etc
+Test("Read signals fire correctly", function()
+	local documentStore, mockDataStore = createTestDocumentStore()
+	local document = documentStore:GetDocument("1")
+	local secondRan = false
+	local failRan = false
+
+	document:GetReadSignal():Connect(function(result)
+		if result.success then
+			secondRan = true
+		else
+			failRan = true
+		end
+	end)
+
+	-- Open the document first so we don't get SchemaError
+	local result = document:Open()
+	local resultRead = document:Read()
+	assert(resultRead.success, "Read failed")
+	assert(secondRan, "Success signal didn't run")
+	assert(result.success, "Open failed")
+
+	assert(not failRan)
+	mockDataStore.errors:addSimulatedErrors(5)
+	resultRead = document:Read()
+	assert(not resultRead.success, "Read succeeded")
+	assert(failRan)
+
+	document:Close()
+end)
+
+-- This test relies on the fact that `:Save` calls Update
+-- to avoid very repetitive unit tests
+Test("Update signals fire correctly", function()
+	local documentStore, mockDataStore = createTestDocumentStore()
+	local document = documentStore:GetDocument("1")
+	local secondRan = false
+	local failRan = false
+
+	document:GetUpdatedSignal():Connect(function(result)
+		if result.success then
+			secondRan = true
+		else
+			failRan = true
+		end
+	end)
+
+	-- Open the document first so we don't get SchemaError
+	local result = document:Open()
+	local saveResult = document:Save()
+	assert(saveResult.success, "Save failed")
+	assert(secondRan, "Success signal didn't run")
+	assert(result.success, "Open failed")
+
+	assert(not failRan)
+	mockDataStore.errors:addSimulatedErrors(5)
+	saveResult = document:Save()
+	assert(not saveResult.success, "Save succeeded")
+	assert(failRan)
+
+	document:Close()
+end)
+
+Test("Closed signals fire correctly", function()
+	local documentStore, mockDataStore = createTestDocumentStore()
+	local document = documentStore:GetDocument("1")
+	local secondRan = false
+	local failRan = false
+
+	document:GetClosedSignal():Connect(function(result)
+		if result.success then
+			secondRan = true
+		else
+			failRan = true
+		end
+	end)
+
+	-- Open the document first so we don't get SchemaError
+	local result = document:Open()
+	local closeResult = document:Close()
+	assert(closeResult.success, "Close failed")
+	assert(secondRan, "Success signal didn't run")
+	assert(result.success, "Open failed")
+
+	assert(not failRan)
+	document:Open()
+	mockDataStore.errors:addSimulatedErrors(5)
+	closeResult = document:Close()
+	assert(not closeResult.success, "Close succeeded")
+	assert(failRan)
+
+	document:Close()
+end)
+
+Test("Open signals fire correctly", function()
+	local documentStore, mockDataStore = createTestDocumentStore()
+	local document = documentStore:GetDocument("1")
+	local secondRan = false
+	local failRan = false
+
+	document:GetOpenedSignal():Connect(function(result)
+		if result.success then
+			secondRan = true
+		else
+			failRan = true
+		end
+	end)
+
+	local result = document:Open()
+	assert(secondRan, "Hook didn't run")
+	assert(result.success, "Open failed")
+	document:Close()
+
+	assert(not failRan)
+	mockDataStore.errors:addSimulatedErrors(5)
+	local openResult = document:Open()
+	assert(not openResult.success, "Open succeeded")
+	assert(failRan)
+end)
+
 Test("Read Hooks run even if cleaned up while executing hooks", function()
 	local documentStore, mockDataStore = createTestDocumentStore()
 	local document = documentStore:GetDocument("1")
@@ -2518,7 +2639,7 @@ Test("Fail Update Hooks run correctly", function()
 	document:Close()
 end)
 
-Test("Read Hooks run correctly", function()
+Test("Read Once Hooks run correctly", function()
 	local documentStore, mockDataStore = createTestDocumentStore()
 	local document = documentStore:GetDocument("1")
 	local firstRan = false
@@ -2558,14 +2679,6 @@ Test("Read Hooks run correctly", function()
 
 	document:Close()
 end)
-
--- Test("Opened signal fires in all cases")
-
--- Test("Closed signal fires in all cases")
-
--- Test("Updated signal fires in all cases")
-
--- Test("Read signal fires in all cases")
 
 Test("Open documents are not garbage collected", function()
 	local documentStore = createTestDocumentStore()
