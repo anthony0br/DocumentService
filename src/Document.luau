@@ -486,19 +486,19 @@ function Document.Open<T>(self: Document<T>): OpenResult<T>
 
 	local failResult: OpenResult<T>?
 
-	-- We need to check this first, since updateOk will be false in
+	if not updateOk then
+		failResult = {
+			success = false,
+			reason = "RobloxAPIError",
+		}
+	end
+
+	-- We need to check this after updateOk, since updateOk will be false in
 	-- the case of a SessionLockedError
 	if lockedByOther then
 		failResult = {
 			success = false,
 			reason = "SessionLockedError",
-		}
-	end
-
-	if not updateOk then
-		failResult = {
-			success = false,
-			reason = "RobloxAPIError",
 		}
 	end
 
@@ -509,14 +509,14 @@ function Document.Open<T>(self: Document<T>): OpenResult<T>
 		}
 	end
 
+	-- If there are multiple problems, this is the highest priority one so
+	-- overwrites the others.
 	if failedCheck then
 		failResult = {
 			success = false,
 			reason = "CheckError",
 		}
 	end
-
-	print(failResult)
 
 	if failResult then
 		runHooks(self._failHooks.Open)
