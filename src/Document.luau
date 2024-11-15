@@ -653,8 +653,9 @@ function Document.GetClosedSignal<T>(self: Document<T>): Signal.Signal<WriteResu
 end
 
 --[=[
-	Retrieves a signal that is fired when the document is updated. Note that this will
-	be fired on completion of any `:Update`, even if it failed.
+	Retrieves a signal that is fired when the document is updated.
+	For example, this will be fired after an autosave or after you call :`Save()`.
+	Note that this will be fired on completion of any `:Update`, even if it failed.
 	
 	@return Signal<WriteResult<T>>
 
