@@ -81,6 +81,7 @@ export type Document<T> = typeof(setmetatable(
 			Close: Signal.Signal<any>,
 			Read: Signal.Signal<any>,
 			Update: Signal.Signal<any>,
+			Cache: Signal.Signal<any>,
 		},
 		_migrations: Migrations,
 		_cache: T,
@@ -321,6 +322,7 @@ function Document.new<T>(props: {
 			Close = Signal.new(),
 			Update = Signal.new(),
 			Read = Signal.new(),
+			Cache = Signal.new(),
 		},
 		_migrations = deepFreeze(props.migrations),
 		_isClosing = false,
@@ -627,8 +629,8 @@ function Document.Steal<T>(self: Document<T>)
 end
 
 --[=[
-	Retrieves a signal that is fired when a document is opened. Note that this will
-	be fired on completion of any `:Open`, even if it if it failed.
+	Retrieves a signal that is fired when the document is opened. Note that this will
+	be fired on completion of any `:Open`, even if it failed.
 	
 	@return Signal<OpenResult<T>>
 
@@ -639,7 +641,7 @@ function Document.GetOpenedSignal<T>(self: Document<T>): Signal.Signal<OpenResul
 end
 
 --[=[
-	Retrieves a signal that is fired when a document is closed. Note that this will
+	Retrieves a signal that is fired when the document is closed. Note that this will
 	be fired on completion of any `:Close`, even if it failed.
 	
 	@return Signal<WriteResult<T?>
@@ -651,7 +653,7 @@ function Document.GetClosedSignal<T>(self: Document<T>): Signal.Signal<WriteResu
 end
 
 --[=[
-	Retrieves a signal that is fired when a document is updated. Note that this will
+	Retrieves a signal that is fired when the document is updated. Note that this will
 	be fired on completion of any `:Update`, even if it failed.
 	
 	@return Signal<WriteResult<T>>
@@ -663,7 +665,7 @@ function Document.GetUpdatedSignal<T>(self: Document<T>): Signal.Signal<WriteRes
 end
 
 --[=[
-	Retrieves a signal that is fired when a document is read. Note that this will
+	Retrieves a signal that is fired when the document is read. Note that this will
 	be fired on completion of any `:Read`, even if it failed.
 	
 	@return Signal<ReadResult<T>>
@@ -672,6 +674,17 @@ end
 ]=]
 function Document.GetReadSignal<T>(self: Document<T>): Signal.Signal<ReadResult<T>>
 	return self._actionSignals.Read
+end
+
+--[=[
+	Retrieves a signal that is fired when the document's cache is set.
+	
+	@return Signal<T>
+
+	@yields
+]=]
+function Document.GetCacheChangedSignal<T>(self: Document<T>): Signal.Signal<T>
+	return self._actionSignals.Cache
 end
 
 --[=[
@@ -839,6 +852,8 @@ function Document.SetCache<T>(self: Document<T>, newCache: T): T
 	assert(self._lockSessions, "Cache is only supported for session locked data")
 
 	self._cache = deepFreeze(newCache)
+
+	self._actionSignals.Cache:Fire(newCache)
 
 	return self._cache
 end
