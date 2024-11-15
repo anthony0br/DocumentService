@@ -28,7 +28,7 @@ export type DocumentStoreProps<T> = {
 	dataStore: DataStoreInterface,
 	check: (unknown) -> (boolean, T),
 	default: T & {},
-	migrations: Migrations,
+	migrations: Migrations?,
 	lockSessions: boolean,
 	bindToClose: boolean?,
 }
@@ -87,7 +87,7 @@ function DocumentStore.new<T>(props: DocumentStoreProps<T>): DocumentStore<T>
 		_dataStore = props.dataStore,
 		_check = props.check,
 		_default = deepFreeze(props.default),
-		_migrations = deepFreeze(props.migrations),
+		_migrations = deepFreeze(props.migrations or {}),
 		_documents = setmetatable({}, { __mode = "v" }),
 		_lockSessions = props.lockSessions,
 		_openingDocuments = 0,
