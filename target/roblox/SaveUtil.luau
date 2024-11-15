@@ -167,7 +167,13 @@ function SaveUtil.updateAsync<T>(
 		assert(SaveUtil.getUpdateBudget() > 0, "Ran out of budget")
 
 		local resultData, resultKeyInfo = dataStore:UpdateAsync(key, function(data: any, keyInfo: DataStoreKeyInfo)
-			return transform(abortAttempt, data, keyInfo)
+			local transformResult = transform(abortAttempt, data, keyInfo)
+
+			if shouldAbort then
+				return data
+			else
+				return transformResult
+			end
 		end)
 
 		if shouldAbort then
