@@ -2,11 +2,14 @@
 ---
 sidebar_position: 6
 ---
+# What are Migrations?
+Migrations are a simple way to mutate values in the data schema to add, remove, change the data structure's format, or fix inconsistencies in data.
+The migrations are stored in a table, where each migration contains a table with a boolean for backwards compatibility and a migrate function.
 
 # Migrating to a new data version
-To add and remove values from your database, you must use migrations.
+To add and remove values from your data schema, you must use migrations.
 Here is an example migrating to a data version with the Time value.
-This example uses [Sift.](https://github.com/cxmeel/sift?tab=readme-ov-file#sift)
+This example uses [Sift.](https://github.com/cxmeel/sift?tab=readme-ov-file#sift) You may use any other module that can merge dictionaries or implement a method to merge the two dictionaries yourself.
 ```lua
 -- Migrations take data from the version one less than their index in the table, and update the data to the next version
 type DataSchema = {
@@ -39,7 +42,7 @@ local function dataCheck(value: unknown): DataSchema
 end
 
 local migrations: {{backwardsCompatible: boolean,migrate: (any) -> any,}} = {
-	[1] = {
+	{
 		backwardsCompatible = false, -- If a player joins an old server with an outdated data version, DocumentService will throw an error and kick the player
 		migrate = function(old)
 			return Sift.Dictionary.merge(old, {
@@ -47,7 +50,7 @@ local migrations: {{backwardsCompatible: boolean,migrate: (any) -> any,}} = {
 			})
 		end,
 	},
-	[2] = {
+	{
 		backwardsCompatible = true, -- If a player joins an old server with an outdated data version, DocumentService will load the previous data version
 		migrate = function(old)
 			return Sift.Dictionary.merge(old, {
@@ -55,7 +58,7 @@ local migrations: {{backwardsCompatible: boolean,migrate: (any) -> any,}} = {
 			})
 		end,
 	},
-	[3] = {
+	{
 		backwardsCompatible = false, 
 		migrate = function(old)
 			old.test = nil
@@ -78,4 +81,7 @@ local PlayerDataStore = DocumentService.DocumentStore.new({
 	lockSessions = true,
 })
 ```
-Another option to fix data version overlap is to use `Migrate to Latest Update` every time you migrate data to a new version.
+# Backwards Compatibility
+As seen in the code example, you may set the backwards compatibility in a migration to true in order to utilize backwards compatibility. It works by rolling the player's data back to the previous data version if the server they are in is outdated.
+If backwards compatibility is disabled in a data version, any player will be kicked upon joining a server with an outdated data version. 
+Instead of using backwards compability, you can always use the `Migrate to Latest Update` function for a game every time you migrate data to a new version.
