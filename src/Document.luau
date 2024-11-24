@@ -550,7 +550,7 @@ function Document.Open<T>(self: Document<T>): OpenResult<T>
 			local result = self:Save()
 
 			if not result.success then
-				warn(`Auto Save failed due to a {result.reason}`)
+				warn(`Auto Save for key {self._key} failed due to a {result.reason}`)
 			end
 		end
 	end)
