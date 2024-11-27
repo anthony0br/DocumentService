@@ -1,29 +1,32 @@
 # DocumentService - A powerful, schematised Roblox datastore library
 
-DocumentService is a fully strictly typed Luau library for saving data with Roblox DataStores.
+DocumentService is a strictly typed Luau library for saving data with Roblox DataStores.
 It can be used for sesssion-locked data, such as player data, or for non-session-locked data, like
 shared groups or houses.
 
 See the [docs](https://anthony0br.github.io/DocumentService/docs/intro) for more information.
 
-This is a new release and, although it has been thoroughly unit tested, it hasn't yet been used 
-in a live production game - as with any open source software, use it at your own risk! I am
-working on adding it to my game, so this will not be a concern for too long.
-
 ## Features
-- Fully strictly typed. This means you get full intellisense and typechecking on your data,
+- Fully typed API. This means you get full intellisense and typechecking on your data,
 and on every API method, including possible errors for each method.
 - Superior Rust-inspired error handling (Result types).
-- Immutable cache and autosaves - preventing bugs caused by updates interfering with eachother.
+- Immutable cache - preventing bugs caused by updates interfering with eachother.
+- Does auto-saves and BindToClose saves for you.
 - Migrations, inspired by nezuo's Lapis.
 - Validate your data with support for runtime and static typechecking.
 - Documents can be session-locked, or not (to allow multi-server editing).
-- Run hooks before and after operations, e.g. logging.
+- Signals & hooks to 'tap in' to when operations start & finish.
 - Automatic retries with exponential backoff.
 - Migrate from no library, or another library if you're brave.
 - Checks your data can be stored in JSON to avoid silent errors.
-- Simple API: session-locking a document simply extends the API.
-- Use any Mock DataStore you like.
+- Supports DataStore dependency injection - use any Mock DataStore you like.
+- Internally, completely strictly typed (Luau "--!strict" mode), and high
+code quality standards with high test coverage.
+
+# Ready for production
+
+DocumentService is currently used in production in [Croydon: The London Transport Game](https://www.roblox.com/games/8265622251/V1-3-2-Croydon-The-London-Transport-Game). It powers both player data and the custom companies feature
+(these are complex shared social groups). In its first few hours it flawlessly handled over 300,000 data updates and performed tens of thousands of migrations, migrating from no library (the game originally used a different, fragile system).
 
 ## Installation
 
@@ -43,12 +46,12 @@ This library takes inspiration from Lapis, ProfileService, keyForm, and kampfkar
 These are all great projects but didn't meet my needs in some way.
 
 ## Contributing
-Contributions are accepted. Your contributions must run in Lune directly from src and, when compiled by darklua to target/roblox, in Roblox. You should use moonwave to update/generate documentation.
+Contributions are accepted. Please follow the Roblox Lua Style Guide and write unit tests.
 
-To build for Roblox:
-1. Install necessary tools (see aftman.toml).
+To build for Roblox (this process is automated through a GitHub action, but in case you need it):
+1. Install necessary tools (see rokit.toml).
 2. Run `rojo sourcemap source.project.json -o sourcemap.json`. It is necessary to generate a sourcemap of the src folder so darklua can convert our requires.
 3. Run `darklua process src target/roblox`.
 
 ## Contact
-The best way to get in touch is to ping me in the thread in the Roblox OSS discord, or create an issue.
+Most discussions relating to this project happen on the [Roblox OSS Discord Server](https://discord.gg/rhwQFJksJD) (go to the DocumentService thread under projects).
