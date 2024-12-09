@@ -2780,6 +2780,62 @@ Test("Update does not revert cache updates", function()
 	assert(document:GetCache() == newCache and document:GetCache().Document == "changed")
 end)
 
+Test("Migration errors result in Open erroring", function()
+	local mockDataStore = MockDataStoreService.new():GetDataStore("1")
+
+	local CheckInterface = {
+		testString = Guard.String,
+		testNumber = Guard.Number,
+	}
+
+	local function check(value: unknown)
+		assert(type(value) == "table")
+		local Value: any = value
+
+		return {
+			testString = CheckInterface.testString(Value.testString),
+			testNumber = CheckInterface.testNumber(Value.testNumber),
+		}
+	end
+
+	local store0 = DocumentService.DocumentStore.new({
+		dataStore = mockDataStore,
+		check = Guard.Check(check),
+		default = {
+			testString = "string",
+			testNumber = 0,
+		},
+		lockSessions = true,
+	})
+
+	local store1 = DocumentService.DocumentStore.new({
+		dataStore = mockDataStore,
+		check = Guard.Check(check),
+		default = {
+			testString = "string",
+			testNumber = 0,
+		},
+		migrations = {
+			{
+				backwardsCompatible = false,
+				migrate = function(data)
+					error("Oops")
+					return data
+				end,
+			},
+		},
+		lockSessions = true,
+	})
+
+	local document = store0:GetDocument("1")
+	document:Open()
+	document:Close()
+	document = store1:GetDocument("1")
+	shouldFail(function()
+		document:Open()
+	end)
+end)
+
 print(`Tests complete. {Results.passed} passed, {Results.failed} failed`)
 if Results.failed > 0 then
 	print("These tests failed:")

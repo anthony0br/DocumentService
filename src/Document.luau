@@ -372,6 +372,8 @@ function Document.Open<T>(self: Document<T>): OpenResult<T>
 	local notStorable: boolean
 	local notStorableErr: string
 	local transformInvalid: boolean
+	local migrationErrored: boolean
+	local migrationErr: string
 
 	runHooks(self._preHooks.Open)
 
@@ -408,7 +410,18 @@ function Document.Open<T>(self: Document<T>): OpenResult<T>
 			savedVersion = keyData.dataSchemaVersion
 		end
 
-		local migratedData = runMigrations(self._migrations, dataToMigrate, savedVersion)
+		local success, migrateResult = pcall(function()
+			return runMigrations(self._migrations, dataToMigrate, savedVersion)
+		end)
+
+		if not success then
+			migrationErrored = true
+			migrationErr = migrateResult :: any
+
+			return
+		end
+
+		local migratedData = migrateResult
 
 		-- If keyData exists, the data could be in a future version, or the data
 		-- could be session locked
@@ -530,11 +543,15 @@ function Document.Open<T>(self: Document<T>): OpenResult<T>
 	end
 
 	if transformInvalid then
-		error("Invalid transform function - must return a table that passes the check function.")
+		error(`Could not open Document {self._key}. Invalid transform function - must return a table that passes the check function.`)
 	end
 
 	if notStorable then
-		error("Not storable: " .. notStorableErr)
+		error(`Could not open Document {self._key}. Not storable: {notStorableErr}`)
+	end
+
+	if migrationErrored then
+		error(`Could not open Document {self._key}. Migrations errored: {migrationErr}`)
 	end
 
 	self._open = true
