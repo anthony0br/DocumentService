@@ -838,7 +838,7 @@ Test("Migrating from a non-zero version does not run old migrations", function()
 				},
 				{
 					backwardsCompatible = true,
-					migrate = function(data)
+					migrate = function(data: any)
 						data.newField = "new field migrated"
 						migrationRunCount += 1
 
@@ -928,7 +928,9 @@ Test("Backwards incompatible schemas fail with BackwardsCompatibilityError", fun
 
 			return {
 				testString = CheckInterface.testString(Value.testString),
-				testNumber = CheckInterface.testNumber(Value.testNumber),
+				-- We deliberately use the wrong type to make sure
+				-- BackwardsCompatibilityError takes priority over CheckError.
+				testNumber = CheckInterface.testString(Value.testNumber),
 			}
 		end
 
@@ -937,7 +939,7 @@ Test("Backwards incompatible schemas fail with BackwardsCompatibilityError", fun
 			check = Guard.Check(check),
 			default = {
 				testString = "string",
-				testNumber = 0,
+				testNumber = "string",
 			},
 			migrations = {},
 			lockSessions = true,
@@ -2711,7 +2713,7 @@ Test("Documents are garbage collected if closed", function()
 end)
 
 Test("OpenAndUpdate fails with invalid transform", function()
-	local documentStore = createTestDocumentStore()
+	local documentStore = createTestDocumentStoreNotLocked()
 	local document = documentStore:GetDocument("1")
 
 	shouldFail(function()
@@ -2722,7 +2724,7 @@ Test("OpenAndUpdate fails with invalid transform", function()
 end)
 
 Test("OpenAndUpdate fails with unsavable data", function()
-	local documentStore = createTestDocumentStore()
+	local documentStore = createTestDocumentStoreNotLocked()
 	local document = documentStore:GetDocument("1")
 
 	shouldFail(function()
@@ -2733,7 +2735,7 @@ Test("OpenAndUpdate fails with unsavable data", function()
 end)
 
 Test("OpenAndUpdate mutates data correctly", function()
-	local documentStore = createTestDocumentStore()
+	local documentStore = createTestDocumentStoreNotLocked()
 	local document = documentStore:GetDocument("1")
 
 	document:OpenAndUpdate(function(data: TestData)
@@ -2752,6 +2754,30 @@ Test("OpenAndUpdate mutates data correctly", function()
 
 	assert(result2.data.Service == 10000)
 	assert(result2.data.Document == "hi!")
+end)
+
+Test("Update does not revert cache updates", function()
+	local documentStore, mockDataStore = createTestDocumentStore()
+	local document = documentStore:GetDocument("1")
+
+	document:Open()
+
+	mockDataStore.yield:startYield()
+
+	task.spawn(function()
+		document:Update(function(data: any)
+			print(data)
+			return table.clone(data) :: any
+		end)
+	end)
+
+	local newCache = table.clone(document:GetCache())
+	newCache.Document = "changed"
+	document:SetCache(newCache)
+
+	mockDataStore.yield:stopYield()
+
+	assert(document:GetCache() == newCache and document:GetCache().Document == "changed")
 end)
 
 print(`Tests complete. {Results.passed} passed, {Results.failed} failed`)
