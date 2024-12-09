@@ -504,19 +504,20 @@ function Document.Open<T>(self: Document<T>): OpenResult<T>
 		}
 	end
 
-	if incompatibleVersion then
-		failResult = {
-			success = false,
-			reason = "BackwardsCompatibilityError",
-		}
-	end
-
-	-- If there are multiple problems, this is the highest priority one so
-	-- overwrites the others.
+	-- If it isn't a backwards compatibility problem and check doesn't pass
+	-- we should report CheckError.
 	if failedCheck then
 		failResult = {
 			success = false,
 			reason = "CheckError",
+		}
+	end
+
+	-- Highest priority.
+	if incompatibleVersion then
+		failResult = {
+			success = false,
+			reason = "BackwardsCompatibilityError",
 		}
 	end
 
@@ -882,7 +883,11 @@ end
 
 	The document must be open before using this method.
 
-	If using session locking, transforms will build on cached data.
+	If using session locking, passing a transform is equvialent to calling
+	`SetCache` with the transformed data and then `Save`.
+	It is recommended you do this instead and reserver the transform
+	function for non-session-locked data.
+	If the Save fails, the cache will still be updated.
 
 	Throws if data is not storable or the transform return value is invalid.
 
@@ -933,6 +938,17 @@ function Document.Update<T>(self: Document<T>, transform: Transform<T>): WriteRe
 	local schemaError: boolean
 	local notStorableErr: string
 
+	-- We need to do this here since the updateAsync transform could run
+	-- multiple times.
+	if self._lockSessions then
+		-- It is important we set the cache straight away with no yield,
+		-- otherwise we could accidentally revert updates.
+		local updatedData = transform(self._cache)
+		if updatedData ~= self._cache then
+			self:SetCache(updatedData)
+		end
+	end
+
 	local success, updatedKeyData = SaveUtil.updateAsync(function(_abortAttempt, value: unknown): KeyData<T>?
 		-- Reset error flags in case callback runs multiple times
 		lockedByOther = false
@@ -959,8 +975,8 @@ function Document.Update<T>(self: Document<T>, transform: Transform<T>): WriteRe
 		end
 
 		local newData
-		if lockedByUs and self._cache then
-			newData = transform(self._cache)
+		if self._lockSessions then
+			newData = self._cache
 		else
 			newData = transform(keyData.data)
 		end
@@ -1041,10 +1057,6 @@ function Document.Update<T>(self: Document<T>, transform: Transform<T>): WriteRe
 	-- the update succeeded.
 	local updatedData: T = (updatedKeyData :: KeyData<T>).data
 
-	if self._lockSessions then
-		self:SetCache(updatedData)
-	end
-
 	runHooks(self._postHooks.Update)
 
 	local result: WriteResult<T> = {
@@ -1062,6 +1074,8 @@ end
 	without transforming the data.
 
 	The document must be open and locked to use this method.
+
+	Returns a WriteResult with the data field being the data saved to Data Stores.
 
 	@return WriteResult<T>
 
