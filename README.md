@@ -38,6 +38,8 @@ DocumentService has no dependencies so you can just copy and paste the contents 
 `target/roblox` into your project.
 
 ## Long-term goals
+- Split DocumentService's API up into separate classes for session-locked and non-session-locked documents,
+that share common functionality.
 - ACID transactions involving multiple Documents. Please get in touch if you can help with this!
 - See the [issues](https://github.com/anthony0br/DocumentService/issues) page to discuss ways to make DocumentService better!
 
