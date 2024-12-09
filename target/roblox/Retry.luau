@@ -29,7 +29,7 @@ local function Retry<T...>(
 			break
 		end
 
-		warn(`[Retry] Attempt {i} failed: {result[2]} {debug.traceback("\nat", 1)}`)
+		warn(`[DocumentService Retry] Attempt {i} failed: {result[2]} {debug.traceback("\nat", 1)}`)
 
 		if i < maxAttempts then
 			task.wait(initialWait * (2 ^ (i - 1)))
