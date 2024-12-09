@@ -10,3 +10,6 @@ that would break the schema. These also won't fire any signals or hooks. You sho
 to explicitly catch these.
 
 Other things, where there is a possibility the problem is external (e.g. data modified, Roblox API failure, session locks) return errors through the `Result` type. These should be explicitly caught.
+
+Currently trying to open a document when the game is closing results in
+an explicit error, and you are expected to check the game is not closing first.
