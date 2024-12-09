@@ -961,6 +961,9 @@ function Document.Update<T>(self: Document<T>, transform: Transform<T>): WriteRe
 		-- It is important we set the cache straight away with no yield,
 		-- otherwise we could accidentally revert updates.
 		local updatedData = transform(self._cache)
+		-- Since session locked data requires immutable updates, we can
+		-- get away with just checking references here to avoid running
+		-- SetCache (and firing the signal) for a `:Save` call.
 		if updatedData ~= self._cache then
 			self:SetCache(updatedData)
 		end
