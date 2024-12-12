@@ -62,7 +62,7 @@ export type Document<T> = typeof(setmetatable(
 			Read: { () -> () },
 			Update: { () -> () },
 		},
-		-- Post & fail hooks are deprectaed.
+		-- Post & fail hooks are deprecated.
 		_postHooks: {
 			Open: { () -> () },
 			Close: { () -> () },
