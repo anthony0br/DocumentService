@@ -327,6 +327,7 @@ function Document.new<T>(props: {
 		_migrations = deepFreeze(props.migrations),
 		_isClosing = false,
 		_cache = props.default,
+		-- TODO: Change to LOCK_SESSIONS as this should not change
 		_lockSessions = props.lockSessions,
 		_shouldSteal = false,
 	}, Document)
@@ -564,6 +565,10 @@ function Document.Open<T>(self: Document<T>): OpenResult<T>
 	self._autoSaveThread = task.defer(function()
 		while self._lockSessions and self._open do
 			task.wait(AUTOSAVE_INTERVAL)
+
+			if not self._open then
+				return
+			end
 
 			local result = self:Save()
 
