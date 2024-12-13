@@ -96,6 +96,8 @@ but adding fields is.
 
 ## Best Practices
 
+**Be very cautious of yielding:** Transforms and cache updates should never yield. When you are updating data, if you yield and some other code makes an update, that update could be reverted. Do not update between GetCache and SetCache pairs.
+
 **Strict types:** Write your scripts in strict mode to benefit fully from the type-checking features of DocumentService. Be as precise as you can with types - using `any` or other loosely-defined types for your fields will have little to no benefit.
 
 **Use good tools:** Roblox Studio's script editor doesn't provide great linting - luau-lsp is better
@@ -105,6 +107,9 @@ for taking full advantage of type-checking.
 
 **Use cache where you can:** Minimise methods that call DataStore APIs, such as `Read` and `Update`, in
 favour of `GetCache` and `SetCache`. This improves performance and reduces the chance of hitting limits.
+
+**Don't change your migrations:** You should never delete a migration. You should not change migrations once they are live (unless you
+really have to, but you should never change their effect).
 
 ## Editing Player Data
 
