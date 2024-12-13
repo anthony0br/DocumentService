@@ -862,6 +862,10 @@ end
 	The document must be open before using this method. You can only use cache for session-locked data.
 
 	:::warning
+	Never yield between a GetCache and a SetCache while modifying data or you may revert data.
+	:::
+
+	:::warning
 	Your cache should always pass your check function, otherwise autosaves
 	may error.
 	:::
