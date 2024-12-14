@@ -340,6 +340,11 @@ end
 	document exists, or creates a document with the data that is in the given
 	key if the key hasn't been used with DocumentService before.
 
+	A document needs to be opened before use (even if it is not session-locked),
+	as this ensures all migrations run and the cases of missing or legacy data
+	are handled. If you only need to update a document once, consider
+	`OpenAndUpdate`.
+
 	Opening a session-locked document will enable periodic autosaves until it is
 	closed.
 
@@ -913,9 +918,9 @@ end
 
 	If using session locking, passing a transform is equvialent to calling
 	`SetCache` with the transformed data and then `Save`.
-	It is recommended you do this instead and reserver the transform
-	function for non-session-locked data.
 	If the Save fails, the cache will still be updated.
+
+	If you only need to update a document once, consider `OpenAndUpdate`.
 
 	Throws if data is not storable or the transform return value is invalid.
 
