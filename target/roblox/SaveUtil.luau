@@ -84,7 +84,7 @@ function SaveUtil.assertStorable(data: unknown, fieldName: string?)
 			end
 
 			if indexDataType and type(i) ~= indexDataType then
-				error(`Tables must only have on type of index to be storable. Field: {fieldName}`)
+				error(`Tables must only have one type of index to be storable. Field: {fieldName}`)
 			end
 
 			if type(i) == "number" and last then
