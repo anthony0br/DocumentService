@@ -10,7 +10,7 @@ Here's an example of creating one:
 
  ```lua
 type DataSchema = {
-    points: number,
+    coins: number,
 }
 
 local DataInterface = {
