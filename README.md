@@ -25,6 +25,8 @@ code quality standards with high test coverage.
 
 ## Ready for production
 
+DocumentService has been battle-tested with 156K CCU in game "Climb for Brainrots".
+
 DocumentService is currently used in production in [Croydon: The London Transport Game](https://www.roblox.com/games/8265622251/V1-3-2-Croydon-The-London-Transport-Game). It powers both player data and the custom companies feature
 (these are complex shared social groups). In its first few hours it flawlessly handled over 300,000 data updates and performed tens of thousands of migrations, migrating from no library (the game originally used a different, fragile system).
 
