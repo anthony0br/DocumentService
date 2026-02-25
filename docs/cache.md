@@ -12,4 +12,4 @@ data.Points += points
 document:SetCache(newData)
 ```
 
-For Robux transactions remember to call `Save` to ensure they save!
+For Robux transactions remember to call `SaveAsync` to ensure they save!

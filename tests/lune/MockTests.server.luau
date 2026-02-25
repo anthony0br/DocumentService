@@ -125,7 +125,7 @@ assert(not tableEquals({ test1 = { "test" } }, { test1 = { "test", "test2" } }))
 
 Test("Opens document with no simulated errors and valid is valid", function()
 	local document = createTestDocumentStore():GetDocument("1")
-	local result = document:Open()
+	local result = document:OpenAsync()
 	assert(result.success == true)
 	assert(result.data)
 	testDataCheck(result.data)
@@ -134,21 +134,21 @@ end)
 Test("Can close document", function()
 	local documentStore = createTestDocumentStore()
 	local document = documentStore:GetDocument("1")
-	local result = document:Open()
+	local result = document:OpenAsync()
 	assert(result.success == true)
-	local result2 = document:Close()
+	local result2 = document:CloseAsync()
 	assert(result2.success == true)
 end)
 
 Test("Can reopen document after closed with session locking", function()
 	local documentStore = createTestDocumentStore()
 	local document = documentStore:GetDocument("1")
-	local result = document:Open()
+	local result = document:OpenAsync()
 	assert(result.success == true)
-	local result2 = document:Close()
+	local result2 = document:CloseAsync()
 	assert(result2.success == true)
 
-	local result3 = document:Open()
+	local result3 = document:OpenAsync()
 	if not result3.success then
 		error(result3.reason)
 	end
@@ -179,8 +179,8 @@ end)
 Test("Can retrieve the same document if reference exists even if closed", function()
 	local documentStore = createTestDocumentStore()
 	local document1 = documentStore:GetDocument("1")
-	document1:Open()
-	document1:Close()
+	document1:OpenAsync()
+	document1:CloseAsync()
 	local document1_2 = documentStore:GetDocument("1")
 	assert(document1 == document1_2, "Documents not equal")
 end)
@@ -189,19 +189,19 @@ Test("GetDocument returns a new document after an old document is closed", funct
 	local documentStore = createTestDocumentStore()
 	do
 		local document = documentStore:GetDocument("1")
-		local result = document:Open()
+		local result = document:OpenAsync()
 		assert(result.success)
 		testDataCheck(result.data)
-		document:Close()
+		document:CloseAsync()
 		assert(result.success)
 	end
 	do
 		local document = documentStore:GetDocument("1")
 
-		local result = document:Open()
+		local result = document:OpenAsync()
 		assert(result.success)
 		testDataCheck(result.data)
-		document:Close()
+		document:CloseAsync()
 		assert(result.success)
 	end
 end)
@@ -210,22 +210,22 @@ Test("Opens document with simulated error", function()
 	local documentStore, mockDataStore = createTestDocumentStore()
 	mockDataStore.errors:addSimulatedErrors(1)
 	local document = documentStore:GetDocument("2")
-	local result = document:Open()
+	local result = document:OpenAsync()
 	assert(result.success == true)
 	assert(result.data)
 	testDataCheck(result.data)
-	document:Close()
+	document:CloseAsync()
 end)
 
 Test("Opens document with 4 simulated errors", function()
 	local documentStore, mockDataStore = createTestDocumentStore()
 	mockDataStore.errors:addSimulatedErrors(4)
 	local document = documentStore:GetDocument("2")
-	local result = document:Open()
+	local result = document:OpenAsync()
 	assert(result.success == true)
 	assert(result.data)
 	testDataCheck(result.data)
-	document:Close()
+	document:CloseAsync()
 end)
 
 -- Now that all operations only use a single datastore API request, we only need
@@ -234,15 +234,15 @@ Test("Fails to open document with 5 simulated errors", function()
 	local documentStore, mockDataStore = createTestDocumentStore()
 	mockDataStore.errors:addSimulatedErrors(5)
 	local document = documentStore:GetDocument("3")
-	local result = document:Open()
+	local result = document:OpenAsync()
 	assert(result.success == false)
 end)
 
 Test("Open fails with CheckError if data corrupted", function()
 	local documentStore, mockDataStore = createTestDocumentStore()
 	local document = documentStore:GetDocument("1")
-	document:Open()
-	document:Close()
+	document:OpenAsync()
+	document:CloseAsync()
 
 	mockDataStore:UpdateAsync("1", function(value)
 		value.data = {
@@ -252,43 +252,43 @@ Test("Open fails with CheckError if data corrupted", function()
 		return value
 	end)
 
-	local result = document:Open()
+	local result = document:OpenAsync()
 	assert(not result.success, "Open didn't fail")
 	assert(result.reason == "CheckError")
 end)
 
-Test("Update fails if not open", function()
+Test("UpdateAsync fails if not open", function()
 	local documentStore = createTestDocumentStore()
 	local document = documentStore:GetDocument("1")
 	shouldFail(function()
-		document:Update(function(data: TestData)
+		document:UpdateAsync(function(data: TestData)
 			data.Document = "newString"
 			return data
 		end)
 	end)
 end)
 
-Test("Update fails with invalid transform", function()
+Test("UpdateAsync fails with invalid transform", function()
 	local documentStore = createTestDocumentStore()
 	local document = documentStore:GetDocument("1")
 
-	document:Open()
+	document:OpenAsync()
 
 	shouldFail(function()
-		document:Update(function(data)
+		document:UpdateAsync(function(data)
 			return {} :: any
 		end)
 	end)
 end)
 
-Test("Update fails with unsavable data", function()
+Test("UpdateAsync fails with unsavable data", function()
 	local documentStore = createTestDocumentStore()
 	local document = documentStore:GetDocument("1")
 
-	document:Open()
+	document:OpenAsync()
 
 	shouldFail(function()
-		document:Update(function(data: TestData)
+		document:UpdateAsync(function(data: TestData)
 			return { Document = "test", Service = 3, 5 }
 		end)
 	end)
@@ -313,11 +313,11 @@ Test("SetCache fails if not open", function()
 	end)
 end)
 
-Test("Save fails if not open", function()
+Test("SaveAsync fails if not open", function()
 	local documentStore = createTestDocumentStore()
 	local document = documentStore:GetDocument("1")
 	shouldFail(function()
-		document:Save()
+		document:SaveAsync()
 	end)
 end)
 
@@ -340,11 +340,11 @@ Test("SetCache fails if not session locked", function()
 	end)
 end)
 
-Test("Save fails if not session locked", function()
+Test("SaveAsync fails if not session locked", function()
 	local documentStore = createTestDocumentStoreNotLocked()
 	local document = documentStore:GetDocument("1")
 	shouldFail(function()
-		document:Save()
+		document:SaveAsync()
 	end)
 end)
 
@@ -352,11 +352,11 @@ Test("IsOpen returns correctly", function()
 	local documentStore = createTestDocumentStoreNotLocked()
 	local document = documentStore:GetDocument("1")
 	assert(document:IsOpen() == false)
-	document:Open()
+	document:OpenAsync()
 	assert(document:IsOpen() == true)
 end)
 
-Test("Session locking affects IsOpenAvailable correctly", function()
+Test("Session locking affects IsAvailableAsync correctly", function()
 	local mockDataStore = MockDataStoreService.new():GetDataStore("1")
 
 	local session1 = DocumentService.DocumentStore.new({
@@ -381,29 +381,29 @@ Test("Session locking affects IsOpenAvailable correctly", function()
 	})
 	do
 		local document = session1:GetDocument("sessionLockTest1")
-		local openAvailable = document:IsOpenAvailable()
-		local result = document:Open()
+		local openAvailable = document:IsAvailableAsync()
+		local result = document:OpenAsync()
 		assert(result.success == true)
 		assert(openAvailable.success == true)
 		assert(openAvailable.data == true)
 	end
 	do
 		local document = session2:GetDocument("sessionLockTest1")
-		local result = document:IsOpenAvailable()
+		local result = document:IsAvailableAsync()
 		assert(result.success == true)
 		assert(result.data == false)
 	end
 end)
 
-Test("Data mutations with :Update persist with no migrations", function()
+Test("Data mutations with :UpdateAsync persist with no migrations", function()
 	local documentStore = createTestDocumentStore()
 	local document = documentStore:GetDocument("6")
-	local result = document:Open()
+	local result = document:OpenAsync()
 	if not result.success then
 		error(result.reason)
 	end
 
-	document:Update(function(data: TestData)
+	document:UpdateAsync(function(data: TestData)
 		data = table.clone(data)
 		data.Service = 10000
 		data.Document = "hi!"
@@ -411,8 +411,8 @@ Test("Data mutations with :Update persist with no migrations", function()
 		return data
 	end)
 
-	document:Close()
-	local result2 = document:Open()
+	document:CloseAsync()
+	local result2 = document:OpenAsync()
 	if not result2.success then
 		error(result2.reason)
 	end
@@ -420,7 +420,7 @@ Test("Data mutations with :Update persist with no migrations", function()
 	assert(result2.data.Service == 10000)
 	assert(result2.data.Document == "hi!")
 
-	document:Update(function(data: TestData)
+	document:UpdateAsync(function(data: TestData)
 		data = table.clone(data)
 		data.Service = data.Service + 10000
 		data.Document = data.Document .. "... hi!"
@@ -428,8 +428,8 @@ Test("Data mutations with :Update persist with no migrations", function()
 		return data
 	end)
 
-	document:Close()
-	local result3 = document:Open()
+	document:CloseAsync()
+	local result3 = document:OpenAsync()
 	if not result3.success then
 		error(result3.reason)
 	end
@@ -437,11 +437,11 @@ Test("Data mutations with :Update persist with no migrations", function()
 	assert(result3.data.Document == "hi!... hi!")
 end)
 
-Test("Update succeeds with less than 4 API fails", function()
+Test("UpdateAsync succeeds with less than 4 API fails", function()
 	local documentStore, mockDataStore = createTestDocumentStore()
 	local document = documentStore:GetDocument("1")
 
-	local result = document:Open()
+	local result = document:OpenAsync()
 
 	if not result.success then
 		error(result.reason)
@@ -449,7 +449,7 @@ Test("Update succeeds with less than 4 API fails", function()
 
 	mockDataStore.errors:addSimulatedErrors(4)
 
-	local updateResult = document:Update(function(data: TestData)
+	local updateResult = document:UpdateAsync(function(data: TestData)
 		data = table.clone(data)
 		data.Service = -100
 		data.Document = "hi!"
@@ -460,19 +460,19 @@ Test("Update succeeds with less than 4 API fails", function()
 	assert(updateResult.data.Service == -100)
 end)
 
-Test("Update fails with RobloxAPIFail for 5 or more API fails", function()
+Test("UpdateAsync fails with RobloxAPIFail for 5 or more API fails", function()
 	local documentStore, mockDataStore = createTestDocumentStore()
 
 	local document = documentStore:GetDocument("1")
 
-	local result = document:Open()
+	local result = document:OpenAsync()
 	if not result.success then
 		error(result.reason)
 	end
 
 	mockDataStore.errors:addSimulatedErrors(5)
 
-	local updateResult = document:Update(function(data: TestData)
+	local updateResult = document:UpdateAsync(function(data: TestData)
 		data = table.clone(data)
 		data.Service = 10000
 		data.Document = "hi!"
@@ -504,16 +504,16 @@ Test("Migrate from an invalid data with no migration should fail with CheckFaile
 	end)
 
 	local document = store:GetDocument("nolibrary2")
-	local result = document:Open()
+	local result = document:OpenAsync()
 	assert(result.success == false)
 	assert(result.reason == "CheckError")
 end)
 
-Test("Close fails if not open", function()
+Test("CloseAsync fails if not open", function()
 	local documentStore = createTestDocumentStore()
 	local document = documentStore:GetDocument("1")
 	shouldFail(function()
-		document:Close()
+		document:CloseAsync()
 	end)
 end)
 
@@ -575,14 +575,14 @@ Test("When migrating from from no library with a migration, the migration runs e
 	end)
 
 	local document = store:GetDocument("1")
-	local result = document:Open()
+	local result = document:OpenAsync()
 	assert(result.success)
 	check2(result.data)
 	assert((result.data :: any).rogueData)
 
-	document:Close()
+	document:CloseAsync()
 	document = store:GetDocument("1")
-	local result2 = document:Open()
+	local result2 = document:OpenAsync()
 	assert(result2.success)
 	check2(result2.data)
 
@@ -622,10 +622,10 @@ Test("Migrating from version 0 runs all migrations exactly once", function()
 		})
 
 		local document = store:GetDocument("1")
-		local result = document:Open()
+		local result = document:OpenAsync()
 		assert(result.success)
 		check(result.data)
-		document:Close()
+		document:CloseAsync()
 	end
 
 	-- Imagine now we update the game and add a migration
@@ -671,16 +671,16 @@ Test("Migrating from version 0 runs all migrations exactly once", function()
 		})
 
 		local document = store:GetDocument("1")
-		document:Open()
-		document:Close()
+		document:OpenAsync()
+		document:CloseAsync()
 		document = store:GetDocument("1")
-		local result = document:Open()
+		local result = document:OpenAsync()
 		assert(result.success)
 		check(result.data)
 		assert(result.data.newField == "new field migrated")
 		assert(result.data.testString == "string")
 		assert(result.data.testNumber == 0)
-		document:Close()
+		document:CloseAsync()
 	end
 
 	assert(migrationRunCount == 1, "Migration ran " .. migrationRunCount .. " times, it should run once")
@@ -711,7 +711,7 @@ Test("Using default data never runs migrations", function()
 			testString = "string",
 			testNumber = 0,
 		},
-		-- We assume an earlier version exis
+		-- We assume an earlier version exists
 		migrations = {
 			{
 				backwardsCompatible = true,
@@ -729,21 +729,21 @@ Test("Using default data never runs migrations", function()
 	-- Opening from the first time should use default
 	do
 		local document = store:GetDocument("1")
-		local result = document:Open()
+		local result = document:OpenAsync()
 		assert(result.success)
 		check(result.data)
 		assert(result.data.testNumber == 0)
-		document:Close()
+		document:CloseAsync()
 	end
 
 	-- Re-open the document to make sure the version is set/checked correctly
 	do
 		local document = store:GetDocument("1")
-		local result = document:Open()
+		local result = document:OpenAsync()
 		assert(result.success)
 		check(result.data)
 		assert(result.data.testNumber == 0)
-		document:Close()
+		document:CloseAsync()
 	end
 end)
 
@@ -791,11 +791,11 @@ Test("Migrating from a non-zero version does not run old migrations", function()
 
 		local document = store:GetDocument("1")
 		-- Opening from the first time should use default
-		local result = document:Open()
+		local result = document:OpenAsync()
 		assert(result.success)
 		check(result.data)
 		assert(result.data.testNumber == 0)
-		document:Close()
+		document:CloseAsync()
 	end
 
 	-- Imagine now we update the game and add a migration
@@ -850,16 +850,16 @@ Test("Migrating from a non-zero version does not run old migrations", function()
 		})
 
 		local document = store:GetDocument("1")
-		document:Open()
-		document:Close()
+		document:OpenAsync()
+		document:CloseAsync()
 		document = store:GetDocument("1")
-		local result = document:Open()
+		local result = document:OpenAsync()
 		assert(result.success)
 		check(result.data)
 		assert(result.data.newField == "new field migrated")
 		assert(result.data.testString == "string")
 		assert(result.data.testNumber == 0)
-		document:Close()
+		document:CloseAsync()
 	end
 
 	assert(migrationRunCount == 1, "Migration ran " .. migrationRunCount .. " times, it should run once")
@@ -909,10 +909,10 @@ Test("Backwards incompatible schemas fail with BackwardsCompatibilityError", fun
 		})
 
 		local document = store:GetDocument("1")
-		local result = document:Open()
+		local result = document:OpenAsync()
 		assert(result.success)
 		check(result.data)
-		document:Close()
+		document:CloseAsync()
 	end
 
 	-- We join an old server
@@ -946,7 +946,7 @@ Test("Backwards incompatible schemas fail with BackwardsCompatibilityError", fun
 		})
 
 		local document = store:GetDocument("1")
-		local result = document:Open()
+		local result = document:OpenAsync()
 		assert(result.success == false)
 		assert(result.reason == "BackwardsCompatibilityError")
 	end
@@ -996,10 +996,10 @@ Test("Backwards compatible schemas do not fail to open and preserve additional f
 		})
 
 		local document = store:GetDocument("1")
-		local result = document:Open()
+		local result = document:OpenAsync()
 		assert(result.success)
 		check(result.data)
-		document:Close()
+		document:CloseAsync()
 	end
 
 	-- We join an old server
@@ -1031,11 +1031,11 @@ Test("Backwards compatible schemas do not fail to open and preserve additional f
 		})
 
 		local document = store:GetDocument("1")
-		local result = document:Open()
+		local result = document:OpenAsync()
 		assert(result.success == true)
 		check(result.data)
 		assert((result.data :: any).newField == "new field default")
-		document:Close()
+		document:CloseAsync()
 	end
 end)
 
@@ -1083,10 +1083,10 @@ Test("Migrations do not re-run after going from latest -> outdated -> latest ses
 		})
 
 		local document = store:GetDocument("1")
-		local result = document:Open()
+		local result = document:OpenAsync()
 		assert(result.success)
 		check(result.data)
-		document:Close()
+		document:CloseAsync()
 	end
 
 	-- We join an old server
@@ -1118,10 +1118,10 @@ Test("Migrations do not re-run after going from latest -> outdated -> latest ses
 		})
 
 		local document = store:GetDocument("1")
-		local result = document:Open()
+		local result = document:OpenAsync()
 		assert(result.success)
 		check(result.data)
-		document:Close()
+		document:CloseAsync()
 	end
 
 	-- We now join a new server
@@ -1166,18 +1166,18 @@ Test("Migrations do not re-run after going from latest -> outdated -> latest ses
 		})
 
 		local document = store:GetDocument("1")
-		local result1 = document:Open()
+		local result1 = document:OpenAsync()
 		assert(result1.success, if not result1.success then result1.reason else "")
-		document:Close()
+		document:CloseAsync()
 		document = store:GetDocument("1")
-		local result = document:Open()
+		local result = document:OpenAsync()
 		assert(result.success)
 		check(result.data)
-		document:Close()
+		document:CloseAsync()
 	end
 end)
 
-Test("DocumentStore:CloseAllDocuments yields until all documents are closed", function()
+Test("DocumentStore:CloseAllDocumentsAsync yields until all documents are closed", function()
 	local mockDataStore = MockDataStoreService.new():GetDataStore("1")
 
 	-- We join a new server
@@ -1218,22 +1218,22 @@ Test("DocumentStore:CloseAllDocuments yields until all documents are closed", fu
 
 	do
 		local document = store:GetDocument("1")
-		local result = document:Open()
+		local result = document:OpenAsync()
 		assert(result.success)
 	end
 	do
 		local document = store:GetDocument("2")
-		local result = document:Open()
+		local result = document:OpenAsync()
 		assert(result.success)
 	end
 	do
 		local document = store:GetDocument("3")
-		local result = document:Open()
+		local result = document:OpenAsync()
 	end
 	do
 		local document = store:GetDocument("4")
-		local result = document:Open()
-		document:Close()
+		local result = document:OpenAsync()
+		document:CloseAsync()
 	end
 	do
 		local document = store:GetDocument("5")
@@ -1250,7 +1250,7 @@ Test("DocumentStore:CloseAllDocuments yields until all documents are closed", fu
 	assert(store:GetDocument("3"):IsOpen() == true)
 	assert(store:GetDocument("4"):IsOpen() == false)
 	assert(store:GetDocument("5"):IsOpen() == false)
-	store:CloseAllDocuments()
+	store:CloseAllDocumentsAsync()
 	assert(store:GetDocument("1"):IsOpen() == false)
 	assert(store:GetDocument("2"):IsOpen() == false)
 	assert(store:GetDocument("3"):IsOpen() == false)
@@ -1258,51 +1258,51 @@ Test("DocumentStore:CloseAllDocuments yields until all documents are closed", fu
 	assert(store:GetDocument("5"):IsOpen() == false)
 end)
 
-Test("Erase method sets the key to nil", function()
+Test("EraseAsync method sets the key to nil", function()
 	local documentStore, mockDataStore = createTestDocumentStore()
 	local document = documentStore:GetDocument("1")
-	local result = document:Open()
+	local result = document:OpenAsync()
 	assert(result.success)
 	assert(mockDataStore:GetAsync("1") ~= nil)
-	document:Close()
+	document:CloseAsync()
 	document = documentStore:GetDocument("1")
-	document:Erase()
+	document:EraseAsync()
 	assert(mockDataStore:GetAsync("1") == nil)
 end)
 
-Test("Read fails with SchemaError if key not initialised", function()
+Test("ReadAsync fails with SchemaError if key not initialised", function()
 	local documentStore = createTestDocumentStore()
 	local document = documentStore:GetDocument("1")
-	local result = document:Read()
+	local result = document:ReadAsync()
 	assert(not result.success, "Read didn't fail")
 	assert(result.reason == "SchemaError")
 end)
 
-Test("Read correctly reads data set properly", function()
+Test("ReadAsync correctly reads data set properly", function()
 	local documentStore = createTestDocumentStore()
 	local document = documentStore:GetDocument("1")
-	local openResult = document:Open()
+	local openResult = document:OpenAsync()
 	assert(openResult.success)
-	local result = document:Read()
+	local result = document:ReadAsync()
 	assert(result.success)
 	assert(tableEquals(openResult.data, result.data))
 end)
 
-Test("Read fails with SchemaError if key corrupted", function()
+Test("ReadAsync fails with SchemaError if key corrupted", function()
 	local documentStore, mockDataStore = createTestDocumentStore()
 	local document = documentStore:GetDocument("1")
-	local openResult = document:Open()
+	local openResult = document:OpenAsync()
 	assert(openResult.success)
 	mockDataStore:write("1", {})
-	local result = document:Read()
+	local result = document:ReadAsync()
 	assert(not result.success, "Read didn't fail")
 	assert(result.reason == "SchemaError")
 end)
 
-Test("Read fails with CheckError if data corrupted", function()
+Test("ReadAsync fails with CheckError if data corrupted", function()
 	local documentStore, mockDataStore = createTestDocumentStore()
 	local document = documentStore:GetDocument("1")
-	local openResult = document:Open()
+	local openResult = document:OpenAsync()
 	assert(openResult.success)
 	mockDataStore:UpdateAsync("1", function(value)
 		value.data = {
@@ -1311,12 +1311,12 @@ Test("Read fails with CheckError if data corrupted", function()
 		}
 		return value
 	end)
-	local result = document:Read()
+	local result = document:ReadAsync()
 	assert(not result.success, "Read didn't fail")
 	assert(result.reason == "CheckError")
 end)
 
-Test("Read runs migrations correctly", function()
+Test("ReadAsync runs migrations correctly", function()
 	local mockDataStore = MockDataStoreService.new():GetDataStore("1")
 
 	local CheckInterface1 = {
@@ -1391,67 +1391,67 @@ Test("Read runs migrations correctly", function()
 
 	do
 		local document = storeVersion0:GetDocument("1")
-		document:Open()
-		document:Close()
+		document:OpenAsync()
+		document:CloseAsync()
 	end
 	do
 		local document = storeVersion1:GetDocument("1")
-		local result = document:Read()
+		local result = document:ReadAsync()
 		assert(result.success)
 		check2(result.data)
-		local result2 = document:Read()
+		local result2 = document:ReadAsync()
 		assert(result2.success)
 		check2(result2.data)
-		local result3 = document:Open()
+		local result3 = document:OpenAsync()
 		assert(result3.success)
 		check2(result3.data)
-		local result4 = document:Read()
+		local result4 = document:ReadAsync()
 		assert(result4.success)
 		check2(result4.data)
-		document:Close()
+		document:CloseAsync()
 	end
 
 	assert(migrationRunCount == 3, "Migration should run 3 times")
 end)
 
-Test("Update fails with SchemaError if key corrupted", function()
+Test("UpdateAsync fails with SchemaError if key corrupted", function()
 	local documentStore, mockDataStore = createTestDocumentStore()
 	local document = documentStore:GetDocument("1")
-	local openResult = document:Open()
+	local openResult = document:OpenAsync()
 	assert(openResult.success)
 	mockDataStore:write("1", {})
-	local result = document:Update(function(value)
+	local result = document:UpdateAsync(function(value)
 		return value
 	end)
 	assert(not result.success, "Update didn't fail")
 	assert(result.reason == "SchemaError")
 end)
 
-Test("Update fails with a luau error if it corrupts the data", function()
+Test("UpdateAsync fails with a luau error if it corrupts the data", function()
 	local documentStore = createTestDocumentStore()
 	local document = documentStore:GetDocument("1")
-	local openResult = document:Open()
+	local openResult = document:OpenAsync()
 	assert(openResult.success)
 	shouldFail(function()
-		document:Update(function()
+		document:UpdateAsync(function()
 			return {
 				data = "This isn't right!",
 			} :: any
 		end)
 	end)
 	shouldFail(function()
-		document:Update(function()
+		document:UpdateAsync(function()
 			return nil :: any
 		end)
 	end)
 end)
 
-Test(":Steal will correctly steal a sesion", function()
+Test(":Steal will correctly steal a session", function()
 	-- Session 1
 	do
 		local documentStore = createTestDocumentStore()
 		local document = documentStore:GetDocument("1")
-		local openResult = document:Open()
+		local openResult = document:OpenAsync()
 		assert(openResult.success)
 	end
 
@@ -1460,12 +1460,12 @@ Test(":Steal will correctly steal a sesion", function()
 		local documentStore = createTestDocumentStore()
 		local document = documentStore:GetDocument("1")
 		document:Steal()
-		local openResult = document:Open()
+		local openResult = document:OpenAsync()
 		assert(openResult.success)
 	end
 end)
 
-Test("If the lock is stolen, Update, Save, Close return SessionLockedError", function()
+Test("If the lock is stolen, UpdateAsync, SaveAsync, CloseAsync return SessionLockedError", function()
 	local mockDataStore = MockDataStoreService.new():GetDataStore("1")
 
 	local session1 = DocumentService.DocumentStore.new({
@@ -1490,20 +1490,20 @@ Test("If the lock is stolen, Update, Save, Close return SessionLockedError", fun
 	})
 
 	local document = session1:GetDocument("1")
-	local openResult = document:Open()
+	local openResult = document:OpenAsync()
 	assert(openResult.success)
 
 	-- Session 2 steals the lock
 	do
 		local document2 = session2:GetDocument("1")
 		document2:Steal()
-		local result = document2:Open()
+		local result = document2:OpenAsync()
 		assert(result.success)
 	end
 
-	-- Test Update
+	-- Test UpdateAsync
 	do
-		local result = document:Update(function(value)
+		local result = document:UpdateAsync(function(value)
 			return value
 		end)
 
@@ -1511,17 +1511,17 @@ Test("If the lock is stolen, Update, Save, Close return SessionLockedError", fun
 		assert(result.reason == "SessionLockedError")
 	end
 
-	-- Test Save
+	-- Test SaveAsync
 	do
-		local result = document:Save()
+		local result = document:SaveAsync()
 
 		assert(not result.success)
 		assert(result.reason == "SessionLockedError")
 	end
 
-	-- Test Close
+	-- Test CloseAsync
 	do
-		local result = document:Close()
+		local result = document:CloseAsync()
 
 		assert(not result.success)
 		assert(result.reason == "SessionLockedError")
@@ -1555,14 +1555,14 @@ Test("Opening a locked document returns SessionLockedError", function()
 
 	do
 		local document = session1:GetDocument("1")
-		local openResult = document:Open()
+		local openResult = document:OpenAsync()
 		assert(openResult.success)
 	end
 
 	-- Session 2
 	do
 		local document = session2:GetDocument("1")
-		local result = document:Open()
+		local result = document:OpenAsync()
 		assert(not result.success)
 		assert(result.reason == "SessionLockedError")
 	end
@@ -1593,7 +1593,7 @@ Test("Opening a locked document will retry if session locked", function()
 	})
 
 	local document1 = session1:GetDocument("1")
-	local openResult = document1:Open()
+	local openResult = document1:OpenAsync()
 	assert(openResult.success)
 
 	-- Session 2
@@ -1602,18 +1602,18 @@ Test("Opening a locked document will retry if session locked", function()
 	task.spawn(function()
 		local document2 = session2:GetDocument("1")
 		-- This should initially fail, and then retry and succeed
-		result = document2:Open()
+		result = document2:OpenAsync()
 
 		task.defer(thread)
 	end)
 	task.spawn(function()
 		task.wait()
-		document1:Close()
+		document1:CloseAsync()
 	end)
 
 	coroutine.yield()
 
-	-- This will only pass if Open is tried again
+	-- This will only pass if OpenAsync is tried again
 	assert(result.success)
 end)
 
@@ -1621,7 +1621,7 @@ Test("Cache is set correctly opening a document", function()
 	local documentStore = createTestDocumentStore()
 
 	local document = documentStore:GetDocument("1")
-	local openResult = document:Open()
+	local openResult = document:OpenAsync()
 	assert(openResult.success)
 
 	assert(tableEquals(document:GetCache(), openResult.data))
@@ -1631,10 +1631,10 @@ Test("Cache is set correctly updating a document", function()
 	local documentStore = createTestDocumentStore()
 
 	local document = documentStore:GetDocument("1")
-	local openResult = document:Open()
+	local openResult = document:OpenAsync()
 	assert(openResult.success)
 
-	local result = document:Update(function(data: TestData)
+	local result = document:UpdateAsync(function(data: TestData)
 		local newData = table.clone(data)
 		newData.Document = "Updated data!"
 
@@ -1650,12 +1650,12 @@ Test("Error if cache is mutated", function()
 	local documentStore = createTestDocumentStore()
 
 	local document = documentStore:GetDocument("1")
-	local openResult = document:Open()
+	local openResult = document:OpenAsync()
 	assert(openResult.success)
 
 	do
 		local success
-		document:Update(function(data: TestData)
+		document:UpdateAsync(function(data: TestData)
 			success = pcall(function()
 				data.Document = "Updated data!"
 			end)
@@ -1684,7 +1684,7 @@ Test(":SetCache, :GetCache work correctly in the same session", function()
 	local documentStore = createTestDocumentStore()
 
 	local document = documentStore:GetDocument("1")
-	local openResult = document:Open()
+	local openResult = document:OpenAsync()
 	assert(openResult.success)
 
 	local newCache = {
@@ -1706,18 +1706,18 @@ Test("Cache updates persist between sessions (are saved on close)", function()
 
 	do
 		local document = documentStore:GetDocument("1")
-		local openResult = document:Open()
+		local openResult = document:OpenAsync()
 		assert(openResult.success)
 
 		document:SetCache(newCache)
-		assert(document:Close().success)
+		assert(document:CloseAsync().success)
 	end
 	do
 		local document = documentStore:GetDocument("1")
-		local openResult = document:Open()
+		local openResult = document:OpenAsync()
 		assert(openResult.success)
 		assert(tableEquals(openResult.data, newCache))
-		assert(document:Close().success)
+		assert(document:CloseAsync().success)
 	end
 end)
 
@@ -1743,14 +1743,14 @@ Test("Open Hooks run correctly", function()
 		failRan = true
 	end)
 
-	local result = document:Open()
+	local result = document:OpenAsync()
 	assert(hook2Ran, "Hook didn't run")
 	assert(result.success, "Open failed")
-	document:Close()
+	document:CloseAsync()
 
 	assert(not failRan)
 	mockDataStore.errors:addSimulatedErrors(5)
-	local openResult = document:Open()
+	local openResult = document:OpenAsync()
 	assert(not openResult.success, "Open succeeded")
 	assert(failRan)
 end)
@@ -1778,14 +1778,14 @@ Test("Open Hooks cleanup run correctly", function()
 		failRan = pcall(cleanupFail)
 	end)
 
-	local result = document:Open()
+	local result = document:OpenAsync()
 	assert(hook2CleanupRan, "Hook didn't run")
 	assert(result.success, "Open failed")
-	document:Close()
+	document:CloseAsync()
 
 	assert(not failRan)
 	mockDataStore.errors:addSimulatedErrors(5)
-	local openResult = document:Open()
+	local openResult = document:OpenAsync()
 	assert(not openResult.success, "Open succeeded")
 	assert(failRan)
 end)
@@ -1833,19 +1833,19 @@ Test("Open Hooks run even if cleaned up while executing hooks", function()
 		secondFailRan = true
 	end)
 
-	local result = document:Open()
+	local result = document:OpenAsync()
 	assert(result.success, "Open failed")
 	assert(firstBeforeRan)
 	assert(secondBeforeRan)
 	assert(firstAfterRan)
 	assert(secondAfterRan)
-	local resultClose = document:Close()
+	local resultClose = document:CloseAsync()
 	assert(resultClose.success, "Close failed")
 	assert(not firstFailRan)
 	assert(not secondFailRan)
 
 	mockDataStore.errors:addSimulatedErrors(5)
-	result = document:Open()
+	result = document:OpenAsync()
 	assert(not result.success, "Open succeeded")
 	assert(firstFailRan)
 	assert(secondFailRan)
@@ -1871,20 +1871,20 @@ Test("Close Hooks run correctly", function()
 		failRan = true
 	end)
 
-	local result = document:Open()
-	local resultClose = document:Close()
+	local result = document:OpenAsync()
+	local resultClose = document:CloseAsync()
 	assert(hook2Ran, "Hook didn't run")
 	assert(result.success, "Open failed")
 	assert(resultClose.success, "Close failed")
 
-	document:Open()
+	document:OpenAsync()
 	assert(not failRan)
 	mockDataStore.errors:addSimulatedErrors(5)
-	local closeResult = document:Close()
+	local closeResult = document:CloseAsync()
 	assert(not closeResult.success, "Close succeeded")
 	assert(failRan)
 
-	document:Close()
+	document:CloseAsync()
 end)
 
 Test("Close Hooks cleanup run correctly", function()
@@ -1910,20 +1910,20 @@ Test("Close Hooks cleanup run correctly", function()
 		failRan = pcall(cleanupFail)
 	end)
 
-	local result = document:Open()
-	local resultClose = document:Close()
+	local result = document:OpenAsync()
+	local resultClose = document:CloseAsync()
 	assert(hook2CleanupRan, "Hook didn't run")
 	assert(result.success, "Open failed")
 	assert(resultClose.success, "Close failed")
 
-	document:Open()
+	document:OpenAsync()
 	assert(not failRan)
 	mockDataStore.errors:addSimulatedErrors(5)
-	local closeResult = document:Close()
+	local closeResult = document:CloseAsync()
 	assert(not closeResult.success, "Close succeeded")
 	assert(failRan)
 
-	document:Close()
+	document:CloseAsync()
 end)
 
 Test("Close Hooks run even if cleaned up while executing hooks", function()
@@ -1969,8 +1969,8 @@ Test("Close Hooks run even if cleaned up while executing hooks", function()
 		secondFailRan = true
 	end)
 
-	local result = document:Open()
-	local resultClose = document:Close()
+	local result = document:OpenAsync()
+	local resultClose = document:CloseAsync()
 	assert(result.success, "Open failed")
 	assert(resultClose.success, "Close failed")
 	assert(firstBeforeRan)
@@ -1980,9 +1980,9 @@ Test("Close Hooks run even if cleaned up while executing hooks", function()
 	assert(not firstFailRan)
 	assert(not secondFailRan)
 
-	document:Open()
+	document:OpenAsync()
 	mockDataStore.errors:addSimulatedErrors(5)
-	resultClose = document:Close()
+	resultClose = document:CloseAsync()
 	assert(not resultClose.success, "Close succeeded")
 	assert(firstFailRan)
 	assert(secondFailRan)
@@ -1998,11 +1998,11 @@ Test("Before Update Hooks run correctly", function()
 		hookRan = true
 	end)
 
-	local result = document:Open()
+	local result = document:OpenAsync()
 
 	assert(result.success, "Open failed")
 
-	local updateResult = document:Update(function(data: TestData)
+	local updateResult = document:UpdateAsync(function(data: TestData)
 		local newData = table.clone(data)
 		newData.Document = "Updated"
 
@@ -2012,7 +2012,7 @@ Test("Before Update Hooks run correctly", function()
 	assert(hookRan, "Hook didn't run")
 	assert(updateResult.success)
 
-	document:Close()
+	document:CloseAsync()
 end)
 
 Test("Before Update Hooks cleanup run correctly", function()
@@ -2025,11 +2025,11 @@ Test("Before Update Hooks cleanup run correctly", function()
 	end)
 	hookRan = pcall(cleanup)
 
-	local result = document:Open()
+	local result = document:OpenAsync()
 
 	assert(result.success, "Open failed")
 
-	local updateResult = document:Update(function(data: TestData)
+	local updateResult = document:UpdateAsync(function(data: TestData)
 		local newData = table.clone(data)
 		newData.Document = "Updated"
 
@@ -2039,7 +2039,7 @@ Test("Before Update Hooks cleanup run correctly", function()
 	assert(hookRan, "Hook didn't run")
 	assert(updateResult.success)
 
-	document:Close()
+	document:CloseAsync()
 end)
 
 Test("After Update Hooks run correctly", function()
@@ -2052,10 +2052,10 @@ Test("After Update Hooks run correctly", function()
 		hookRan = true
 	end)
 
-	local result = document:Open()
+	local result = document:OpenAsync()
 	assert(result.success, "Open failed")
 
-	document:Update(function(data: TestData)
+	document:UpdateAsync(function(data: TestData)
 		local newData = table.clone(data)
 		newData.Document = "Updated"
 
@@ -2064,7 +2064,7 @@ Test("After Update Hooks run correctly", function()
 
 	assert(hookRan, "Hook didn't run")
 
-	document:Close()
+	document:CloseAsync()
 end)
 
 Test("After Update Hooks cleanup run correctly", function()
@@ -2078,10 +2078,10 @@ Test("After Update Hooks cleanup run correctly", function()
 	end)
 	hookRan = pcall(cleanup)
 
-	local result = document:Open()
+	local result = document:OpenAsync()
 	assert(result.success, "Open failed")
 
-	document:Update(function(data: TestData)
+	document:UpdateAsync(function(data: TestData)
 		local newData = table.clone(data)
 		newData.Document = "Updated"
 
@@ -2090,7 +2090,7 @@ Test("After Update Hooks cleanup run correctly", function()
 
 	assert(hookRan, "Hook didn't run")
 
-	document:Close()
+	document:CloseAsync()
 end)
 
 Test("Fail Update Hooks run correctly", function()
@@ -2103,10 +2103,10 @@ Test("Fail Update Hooks run correctly", function()
 	end)
 
 	assert(not failRan)
-	document:Open()
+	document:OpenAsync()
 	mockDataStore.errors:addSimulatedErrors(5)
 
-	local result = document:Update(function(data: TestData)
+	local result = document:UpdateAsync(function(data: TestData)
 		local newData = table.clone(data)
 		newData.Document = "Updated"
 
@@ -2116,7 +2116,7 @@ Test("Fail Update Hooks run correctly", function()
 	assert(not result.success, "Update succeeded")
 	assert(failRan)
 
-	document:Close()
+	document:CloseAsync()
 end)
 
 Test("Fail Update Hooks cleanup run correctly", function()
@@ -2130,10 +2130,10 @@ Test("Fail Update Hooks cleanup run correctly", function()
 	end)
 
 	assert(not failRan)
-	document:Open()
+	document:OpenAsync()
 	mockDataStore.errors:addSimulatedErrors(5)
 
-	local result = document:Update(function(data: TestData)
+	local result = document:UpdateAsync(function(data: TestData)
 		local newData = table.clone(data)
 		newData.Document = "Updated"
 
@@ -2143,7 +2143,7 @@ Test("Fail Update Hooks cleanup run correctly", function()
 	assert(not result.success, "Update succeeded")
 	assert(failRan)
 
-	document:Close()
+	document:CloseAsync()
 end)
 
 Test("Update Hooks run even if cleaned up while executing hooks", function()
@@ -2189,12 +2189,11 @@ Test("Update Hooks run even if cleaned up while executing hooks", function()
 		secondFailRan = true
 	end)
 
-	local result = document:Open()
+	local result = document:OpenAsync()
 
 	assert(result.success, "Open failed")
 
-	local updateResult = document:Update(function(data: TestData)
-		-- We don't really need to test for changes made here if the previous tests pass
+	local updateResult = document:UpdateAsync(function(data: TestData)
 		return table.clone(data)
 	end)
 
@@ -2208,14 +2207,14 @@ Test("Update Hooks run even if cleaned up while executing hooks", function()
 
 	mockDataStore.errors:addSimulatedErrors(5)
 
-	document:Update(function(data: TestData)
+	document:UpdateAsync(function(data: TestData)
 		return table.clone(data)
 	end)
 
 	assert(firstFailRan)
 	assert(secondFailRan)
 
-	document:Close()
+	document:CloseAsync()
 end)
 
 Test("Read Hooks cleanup run correctly", function()
@@ -2239,19 +2238,19 @@ Test("Read Hooks cleanup run correctly", function()
 	end)
 
 	-- Open the document first so we don't get SchemaError
-	local result = document:Open()
-	local resultRead = document:Read()
+	local result = document:OpenAsync()
+	local resultRead = document:ReadAsync()
 	assert(resultRead.success, "Read failed")
 	assert(secondCleanupRan, "After hook didn't run")
 	assert(result.success, "Open failed")
 
 	assert(not failRan)
 	mockDataStore.errors:addSimulatedErrors(5)
-	resultRead = document:Read()
+	resultRead = document:ReadAsync()
 	assert(not resultRead.success, "Read succeeded")
 	assert(failRan)
 
-	document:Close()
+	document:CloseAsync()
 end)
 
 Test("Read Hooks run correctly", function()
@@ -2275,19 +2274,19 @@ Test("Read Hooks run correctly", function()
 	end)
 
 	-- Open the document first so we don't get SchemaError
-	local result = document:Open()
-	local resultRead = document:Read()
+	local result = document:OpenAsync()
+	local resultRead = document:ReadAsync()
 	assert(resultRead.success, "Read failed")
 	assert(secondRan, "After hook didn't run")
 	assert(result.success, "Open failed")
 
 	assert(not failRan)
 	mockDataStore.errors:addSimulatedErrors(5)
-	resultRead = document:Read()
+	resultRead = document:ReadAsync()
 	assert(not resultRead.success, "Read succeeded")
 	assert(failRan)
 
-	document:Close()
+	document:CloseAsync()
 end)
 
 -- Sleitnick Signal is well-established and tested, so we do not need
@@ -2307,22 +2306,22 @@ Test("Read signals fire correctly", function()
 	end)
 
 	-- Open the document first so we don't get SchemaError
-	local result = document:Open()
-	local resultRead = document:Read()
+	local result = document:OpenAsync()
+	local resultRead = document:ReadAsync()
 	assert(resultRead.success, "Read failed")
 	assert(secondRan, "Success signal didn't run")
 	assert(result.success, "Open failed")
 
 	assert(not failRan)
 	mockDataStore.errors:addSimulatedErrors(5)
-	resultRead = document:Read()
+	resultRead = document:ReadAsync()
 	assert(not resultRead.success, "Read succeeded")
 	assert(failRan)
 
-	document:Close()
+	document:CloseAsync()
 end)
 
--- This test relies on the fact that `:Save` calls Update
+-- This test relies on the fact that `:SaveAsync` calls UpdateAsync
 -- to avoid very repetitive unit tests
 Test("Update signals fire correctly", function()
 	local documentStore, mockDataStore = createTestDocumentStore()
@@ -2339,19 +2338,19 @@ Test("Update signals fire correctly", function()
 	end)
 
 	-- Open the document first so we don't get SchemaError
-	local result = document:Open()
-	local saveResult = document:Save()
+	local result = document:OpenAsync()
+	local saveResult = document:SaveAsync()
 	assert(saveResult.success, "Save failed")
 	assert(secondRan, "Success signal didn't run")
 	assert(result.success, "Open failed")
 
 	assert(not failRan)
 	mockDataStore.errors:addSimulatedErrors(5)
-	saveResult = document:Save()
+	saveResult = document:SaveAsync()
 	assert(not saveResult.success, "Save succeeded")
 	assert(failRan)
 
-	document:Close()
+	document:CloseAsync()
 end)
 
 Test("Closed signals fire correctly", function()
@@ -2369,20 +2368,20 @@ Test("Closed signals fire correctly", function()
 	end)
 
 	-- Open the document first so we don't get SchemaError
-	local result = document:Open()
-	local closeResult = document:Close()
+	local result = document:OpenAsync()
+	local closeResult = document:CloseAsync()
 	assert(closeResult.success, "Close failed")
 	assert(secondRan, "Success signal didn't run")
 	assert(result.success, "Open failed")
 
 	assert(not failRan)
-	document:Open()
+	document:OpenAsync()
 	mockDataStore.errors:addSimulatedErrors(5)
-	closeResult = document:Close()
+	closeResult = document:CloseAsync()
 	assert(not closeResult.success, "Close succeeded")
 	assert(failRan)
 
-	document:Close()
+	document:CloseAsync()
 end)
 
 Test("Open signals fire correctly", function()
@@ -2399,14 +2398,14 @@ Test("Open signals fire correctly", function()
 		end
 	end)
 
-	local result = document:Open()
+	local result = document:OpenAsync()
 	assert(secondRan, "Hook didn't run")
 	assert(result.success, "Open failed")
-	document:Close()
+	document:CloseAsync()
 
 	assert(not failRan)
 	mockDataStore.errors:addSimulatedErrors(5)
-	local openResult = document:Open()
+	local openResult = document:OpenAsync()
 	assert(not openResult.success, "Open succeeded")
 	assert(failRan)
 end)
@@ -2454,8 +2453,8 @@ Test("Read Hooks run even if cleaned up while executing hooks", function()
 		secondFailRan = true
 	end)
 
-	local result = document:Open()
-	local resultRead = document:Read()
+	local result = document:OpenAsync()
+	local resultRead = document:ReadAsync()
 	assert(result.success, "Open failed")
 	assert(resultRead.success, "Read failed")
 	assert(firstBeforeRan)
@@ -2466,7 +2465,7 @@ Test("Read Hooks run even if cleaned up while executing hooks", function()
 	assert(not secondFailRan)
 
 	mockDataStore.errors:addSimulatedErrors(5)
-	resultRead = document:Read()
+	resultRead = document:ReadAsync()
 	assert(not resultRead.success, "Read succeeded")
 	assert(firstFailRan)
 	assert(secondFailRan)
@@ -2498,13 +2497,13 @@ Test("Open Once Hooks run correctly", function()
 	end)
 
 	for _ = 1, 2 do
-		local result = document:Open()
+		local result = document:OpenAsync()
 		assert(hook2Ran, "Hook didn't run")
 		assert(result.success, "Open failed")
-		document:Close()
+		document:CloseAsync()
 
 		mockDataStore.errors:addSimulatedErrors(5)
-		local openResult = document:Open()
+		local openResult = document:OpenAsync()
 		assert(not openResult.success, "Open succeeded")
 		assert(failRan)
 	end
@@ -2538,19 +2537,19 @@ Test("Close Once Hooks run correctly", function()
 	end)
 
 	for _ = 1, 2 do
-		local result = document:Open()
-		local resultClose = document:Close()
+		local result = document:OpenAsync()
+		local resultClose = document:CloseAsync()
 		assert(hook2Ran, "Hook didn't run")
 		assert(result.success, "Open failed")
 		assert(resultClose.success, "Close failed")
 
-		document:Open()
+		document:OpenAsync()
 		mockDataStore.errors:addSimulatedErrors(5)
-		local closeResult = document:Close()
+		local closeResult = document:CloseAsync()
 		assert(not closeResult.success, "Close succeeded")
 		assert(failRan)
 
-		document:Close()
+		document:CloseAsync()
 	end
 end)
 
@@ -2565,12 +2564,12 @@ Test("Update Once Before Hooks run correctly", function()
 		hookRan = true
 	end)
 
-	local result = document:Open()
+	local result = document:OpenAsync()
 
 	assert(result.success, "Open failed")
 
 	for _ = 1, 2 do
-		local updateResult = document:Update(function(data: TestData)
+		local updateResult = document:UpdateAsync(function(data: TestData)
 			local newData = table.clone(data)
 			newData.Document = "Updated"
 
@@ -2581,7 +2580,7 @@ Test("Update Once Before Hooks run correctly", function()
 		assert(updateResult.success)
 	end
 
-	document:Close()
+	document:CloseAsync()
 end)
 
 Test("Update Once After Hooks run correctly", function()
@@ -2595,11 +2594,11 @@ Test("Update Once After Hooks run correctly", function()
 		hookRan = true
 	end)
 
-	local result = document:Open()
+	local result = document:OpenAsync()
 	assert(result.success, "Open failed")
 
 	for _ = 1, 2 do
-		document:Update(function(data: TestData)
+		document:UpdateAsync(function(data: TestData)
 			local newData = table.clone(data)
 			newData.Document = "Updated"
 
@@ -2609,7 +2608,7 @@ Test("Update Once After Hooks run correctly", function()
 		assert(hookRan, "Hook didn't run")
 	end
 
-	document:Close()
+	document:CloseAsync()
 end)
 
 Test("Fail Update Hooks run correctly", function()
@@ -2623,11 +2622,11 @@ Test("Fail Update Hooks run correctly", function()
 	end)
 
 	assert(not failRan)
-	document:Open()
+	document:OpenAsync()
 
 	for _ = 1, 2 do
 		mockDataStore.errors:addSimulatedErrors(5)
-		local result = document:Update(function(data: TestData)
+		local result = document:UpdateAsync(function(data: TestData)
 			local newData = table.clone(data)
 			newData.Document = "Updated"
 
@@ -2638,7 +2637,7 @@ Test("Fail Update Hooks run correctly", function()
 		assert(failRan)
 	end
 
-	document:Close()
+	document:CloseAsync()
 end)
 
 Test("Read Once Hooks run correctly", function()
@@ -2665,28 +2664,28 @@ Test("Read Once Hooks run correctly", function()
 	end)
 
 	-- Open the document first so we don't get SchemaError
-	local result = document:Open()
+	local result = document:OpenAsync()
 
 	for _ = 1, 2 do
-		local resultRead = document:Read()
+		local resultRead = document:ReadAsync()
 		assert(resultRead.success, "Read failed")
 		assert(secondRan, "After hook didn't run")
 		assert(result.success, "Open failed")
 
 		mockDataStore.errors:addSimulatedErrors(5)
-		resultRead = document:Read()
+		resultRead = document:ReadAsync()
 		assert(not resultRead.success, "Read succeeded")
 		assert(failRan)
 	end
 
-	document:Close()
+	document:CloseAsync()
 end)
 
 Test("Open documents are not garbage collected", function()
 	local documentStore = createTestDocumentStore()
 	do
 		local document = documentStore:GetDocument("1")
-		assert(document:Open().success)
+		assert(document:OpenAsync().success)
 	end
 	local _ = (collectgarbage :: any)("collect")
 	local _document, newlyCreated = documentStore:GetDocument("1")
@@ -2704,41 +2703,41 @@ Test("Documents are garbage collected if closed", function()
 			upvalue += 1
 		end)
 
-		document:Open()
-		document:Close()
+		document:OpenAsync()
+		document:CloseAsync()
 	end
 	local _ = (collectgarbage :: any)("collect")
 	local _document, newlyCreated = documentStore:GetDocument("1")
 	assert(newlyCreated)
 end)
 
-Test("OpenAndUpdate fails with invalid transform", function()
+Test("OpenAndUpdateAsync fails with invalid transform", function()
 	local documentStore = createTestDocumentStoreNotLocked()
 	local document = documentStore:GetDocument("1")
 
 	shouldFail(function()
-		document:OpenAndUpdate(function(data)
+		document:OpenAndUpdateAsync(function(data)
 			return {} :: any
 		end)
 	end)
 end)
 
-Test("OpenAndUpdate fails with unsavable data", function()
+Test("OpenAndUpdateAsync fails with unsavable data", function()
 	local documentStore = createTestDocumentStoreNotLocked()
 	local document = documentStore:GetDocument("1")
 
 	shouldFail(function()
-		document:OpenAndUpdate(function(data: TestData)
+		document:OpenAndUpdateAsync(function(data: TestData)
 			return { Document = "test", Service = 3, 5 }
 		end)
 	end)
 end)
 
-Test("OpenAndUpdate mutates data correctly", function()
+Test("OpenAndUpdateAsync mutates data correctly", function()
 	local documentStore = createTestDocumentStoreNotLocked()
 	local document = documentStore:GetDocument("1")
 
-	document:OpenAndUpdate(function(data: TestData)
+	document:OpenAndUpdateAsync(function(data: TestData)
 		data = table.clone(data)
 		data.Service = 10000
 		data.Document = "hi!"
@@ -2746,8 +2745,8 @@ Test("OpenAndUpdate mutates data correctly", function()
 		return data
 	end)
 
-	document:Close()
-	local result2 = document:Open()
+	document:CloseAsync()
+	local result2 = document:OpenAsync()
 	if not result2.success then
 		error(result2.reason)
 	end
@@ -2756,16 +2755,16 @@ Test("OpenAndUpdate mutates data correctly", function()
 	assert(result2.data.Document == "hi!")
 end)
 
-Test("Update does not revert cache updates", function()
+Test("UpdateAsync does not revert cache updates", function()
 	local documentStore, mockDataStore = createTestDocumentStore()
 	local document = documentStore:GetDocument("1")
 
-	document:Open()
+	document:OpenAsync()
 
 	mockDataStore.yield:startYield()
 
 	task.spawn(function()
-		document:Update(function(data: any)
+		document:UpdateAsync(function(data: any)
 			print(data)
 			return table.clone(data) :: any
 		end)
@@ -2780,7 +2779,7 @@ Test("Update does not revert cache updates", function()
 	assert(document:GetCache() == newCache and document:GetCache().Document == "changed")
 end)
 
-Test("Migration errors result in Open erroring", function()
+Test("Migration errors result in OpenAsync erroring", function()
 	local mockDataStore = MockDataStoreService.new():GetDataStore("1")
 
 	local CheckInterface = {
@@ -2828,11 +2827,11 @@ Test("Migration errors result in Open erroring", function()
 	})
 
 	local document = store0:GetDocument("1")
-	document:Open()
-	document:Close()
+	document:OpenAsync()
+	document:CloseAsync()
 	document = store1:GetDocument("1")
 	shouldFail(function()
-		document:Open()
+		document:OpenAsync()
 	end)
 end)
 

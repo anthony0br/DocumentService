@@ -343,7 +343,7 @@ end
 	A document needs to be opened before use (even if it is not session-locked),
 	as this ensures all migrations run and the cases of missing or legacy data
 	are handled. If you only need to update a document once, consider
-	`OpenAndUpdate`.
+	`OpenAndUpdateAsync`.
 
 	Opening a session-locked document will enable periodic autosaves until it is
 	closed.
@@ -367,7 +367,7 @@ end
 
 	@yields
 ]=]
-function Document.Open<T>(self: Document<T>): OpenResult<T>
+function Document.OpenAsync<T>(self: Document<T>): OpenResult<T>
 	assert(not self._open, `{self} already open`)
 	assert(not self._isClosing, `{self} is closing, cannot open`)
 
@@ -575,7 +575,7 @@ function Document.Open<T>(self: Document<T>): OpenResult<T>
 				return
 			end
 
-			local result = self:Save()
+			local result = self:SaveAsync()
 
 			if not result.success then
 				warn(`[DocumentService] AutoSave for key {self._key} failed due to a {result.reason}`)
@@ -608,7 +608,7 @@ end
 
 	@yields
 ]=]
-function Document.OpenAndUpdate<T>(self: Document<T>, transform: Transform<T>): OpenResult<T>
+function Document.OpenAndUpdateAsync<T>(self: Document<T>, transform: Transform<T>): OpenResult<T>
 	assert(not self._open, `{self} already open`)
 	assert(not self._isClosing, `{self} is closing, cannot open`)
 
@@ -616,7 +616,7 @@ function Document.OpenAndUpdate<T>(self: Document<T>, transform: Transform<T>): 
 
 	self._onOpenTransform = transform
 
-	local result = self:Open()
+	local result = self:OpenAsync()
 
 	self._onOpenTransform = nil
 
@@ -634,20 +634,18 @@ function Document.OpenAndUpdate<T>(self: Document<T>, transform: Transform<T>): 
 end
 
 --[=[
-	Marks the lock as stolen. The next `:Open` call will ignore any existing
+	Marks the lock as stolen. The next `:OpenAsync` call will ignore any existing
 	locks.
 
 	:::info
-	Generally, it is recommended to call `:Steal` and then `:Open` in the case
-	that the initial `:Open` fails due to `SessionLockedError`.
+	Generally, it is recommended to call `:Steal` and then `:OpenAsync` in the case
+	that the initial `:OpenAsync` fails due to `SessionLockedError`.
 	:::
 
 	:::warning
 	Do not use this unless you are very sure the previous session is dead, or
 	you could cause data loss. Only usable on session-locked Documents.
 	:::
-
-	@yields
 ]=]
 function Document.Steal<T>(self: Document<T>)
 	assert(not self._isClosing, "Document is closing")
@@ -658,11 +656,9 @@ end
 
 --[=[
 	Retrieves a signal that is fired when the document is opened. Note that this will
-	be fired on completion of any `:Open`, even if it failed.
+	be fired on completion of any `:OpenAsync`, even if it failed.
 	
 	@return Signal<OpenResult<T>>
-
-	@yields
 ]=]
 function Document.GetOpenedSignal<T>(self: Document<T>): Signal.Signal<OpenResult<T>>
 	return self._actionSignals.Open
@@ -670,11 +666,9 @@ end
 
 --[=[
 	Retrieves a signal that is fired when the document is closed. Note that this will
-	be fired on completion of any `:Close`, even if it failed.
+	be fired on completion of any `:CloseAsync`, even if it failed.
 	
 	@return Signal<WriteResult<T?>
-
-	@yields
 ]=]
 function Document.GetClosedSignal<T>(self: Document<T>): Signal.Signal<WriteResult<T?>>
 	return self._actionSignals.Close
@@ -682,12 +676,10 @@ end
 
 --[=[
 	Retrieves a signal that is fired when the document is updated.
-	For example, this will be fired after an autosave or after you call :`Save()`.
-	Note that this will be fired on completion of any `:Update`, even if it failed.
+	For example, this will be fired after an autosave or after you call `:SaveAsync()`.
+	Note that this will be fired on completion of any `:UpdateAsync`, even if it failed.
 	
 	@return Signal<WriteResult<T>>
-
-	@yields
 ]=]
 function Document.GetUpdatedSignal<T>(self: Document<T>): Signal.Signal<WriteResult<T>>
 	return self._actionSignals.Update
@@ -695,11 +687,9 @@ end
 
 --[=[
 	Retrieves a signal that is fired when the document is read. Note that this will
-	be fired on completion of any `:Read`, even if it failed.
+	be fired on completion of any `:ReadAsync`, even if it failed.
 	
 	@return Signal<ReadResult<T>>
-
-	@yields
 ]=]
 function Document.GetReadSignal<T>(self: Document<T>): Signal.Signal<ReadResult<T>>
 	return self._actionSignals.Read
@@ -709,32 +699,28 @@ end
 	Retrieves a signal that is fired when the document's cache is set.
 	
 	@return Signal<T>
-
-	@yields
 ]=]
 function Document.GetCacheChangedSignal<T>(self: Document<T>): Signal.Signal<T>
 	return self._actionSignals.Cache
 end
 
 --[=[
-	Returns a false Result if Document is either:
-	i. Currently open in this server
-	ii. Currently locked by another session
-	
-	Otherwise returns a true Result.
+	Returns false if the document is either currently open in this server, or
+	currently session-locked by a different server. Otherwise returns true.
 
-	If props.lockSessions is false, this will always return a true Result.
+	If `props.lockSessions` is false, this will always return a true Result since
+	there is no session lock to check.
 
 	:::tip
-	You can use this to check if a player is active to avoid data loss while
-	editing data from another server.
+	You can use this to check if a player is active on another server before
+	attempting to edit their data from this server.
 	:::
 
 	@yields
 
 	@return Result<boolean, RobloxAPIError>
 ]=]
-function Document.IsOpenAvailable<T>(self: Document<T>): Result<boolean, RobloxAPIError>
+function Document.IsAvailableAsync<T>(self: Document<T>): Result<boolean, RobloxAPIError>
 	assert(not self._isClosing, "Document is closing")
 
 	if self._open then
@@ -762,7 +748,7 @@ function Document.IsOpenAvailable<T>(self: Document<T>): Result<boolean, RobloxA
 
 	local keyData = checkKeyData(getValue)
 
-	-- Since the behaviour of Open in this case is to put the existing value
+	-- Since the behaviour of OpenAsync in this case is to put the existing value
 	-- in the key into keyData.data, return a true Result.
 	if not keyData then
 		return {
@@ -781,7 +767,7 @@ function Document.IsOpenAvailable<T>(self: Document<T>): Result<boolean, RobloxA
 end
 
 --[=[
-	Returns whether the document is open or not
+	Returns whether the document is currently open in this server.
 
 	@return boolean
 ]=]
@@ -803,18 +789,18 @@ end
 
 	@yields
 ]=]
-function Document.Close<T>(self: Document<T>): WriteResult<T?>
+function Document.CloseAsync<T>(self: Document<T>): WriteResult<T?>
 	assert(self._open, "Document not open")
 
 	runHooks(self._preHooks.Close)
 
-	-- This causes :Save to also remove the session lock
+	-- This causes :SaveAsync to also remove the session lock
 	self._isClosing = true
 
 	local saveResult: WriteResult<T>
 
 	if self._lockSessions then
-		saveResult = self:Save()
+		saveResult = self:SaveAsync()
 
 		-- Abort the closure if the save failed
 		if not saveResult.success then
@@ -851,7 +837,7 @@ function Document.Close<T>(self: Document<T>): WriteResult<T?>
 end
 
 --[=[
-	Returns true if `:Close` has been called and is incomplete.
+	Returns true if `:CloseAsync` has been called and is incomplete.
 
 	@return boolean
 ]=]
@@ -914,11 +900,11 @@ end
 
 	The document must be open before using this method.
 
-	If using session locking, passing a transform is equvialent to calling
-	`SetCache` with the transformed data and then `Save`.
+	If using session locking, passing a transform is equivalent to calling
+	`SetCache` with the transformed data and then `SaveAsync`.
 	If the Save fails, the cache will still be updated.
 
-	If you only need to update a document once, consider `OpenAndUpdate`.
+	If you only need to update a document once, consider `OpenAndUpdateAsync`.
 
 	Throws if data is not storable or the transform return value is invalid.
 
@@ -934,7 +920,7 @@ end
 
 	:::warning
 	Assumes the data that is already in Data Stores is valid since the last
-	`:Open`. If it isn't, and this is not corrected by the transform, this
+	`:OpenAsync`. If it isn't, and this is not corrected by the transform, this
 	method will throw a luau error.
 	:::
 
@@ -949,7 +935,7 @@ end
 	:::
 
 	:::info
-	Unlike `Open`, this method will not retry if the lock is stolen, and will
+	Unlike `OpenAsync`, this method will not retry if the lock is stolen, and will
 	instead return a `SessionLockedError` after the first attempt.
 	:::
 
@@ -958,7 +944,7 @@ end
 
 	@yields
 ]=]
-function Document.Update<T>(self: Document<T>, transform: Transform<T>): WriteResult<T>
+function Document.UpdateAsync<T>(self: Document<T>, transform: Transform<T>): WriteResult<T>
 	assert(self._open, "Document not open")
 
 	runHooks(self._preHooks.Update)
@@ -977,7 +963,7 @@ function Document.Update<T>(self: Document<T>, transform: Transform<T>): WriteRe
 		local updatedData = transform(self._cache)
 		-- Since session locked data requires immutable updates, we can
 		-- get away with just checking references here to avoid running
-		-- SetCache (and firing the signal) for a `:Save` call.
+		-- SetCache (and firing the signal) for a `:SaveAsync` call.
 		if updatedData ~= self._cache then
 			self:SetCache(updatedData)
 		end
@@ -1104,10 +1090,10 @@ function Document.Update<T>(self: Document<T>, transform: Transform<T>): WriteRe
 end
 
 --[=[
-	Saves a Document's cache to its DataStore. Equivalent to calling Update
+	Saves a Document's cache to its DataStore. Equivalent to calling UpdateAsync
 	without transforming the data.
 
-	The document must be open and locked to use this method.
+	The document must be open and session-locked to use this method.
 
 	Returns a WriteResult with the data field being the data saved to Data Stores.
 
@@ -1115,11 +1101,11 @@ end
 
 	@yields
 ]=]
-function Document.Save<T>(self: Document<T>): WriteResult<T>
+function Document.SaveAsync<T>(self: Document<T>): WriteResult<T>
 	assert(self._open, "Document not open")
 	assert(self._lockSessions, "Must be session locked to access cache")
 
-	return self:Update(function(cache)
+	return self:UpdateAsync(function(cache)
 		return cache
 	end)
 end
@@ -1128,7 +1114,7 @@ end
 	Erases all data associated with the key.
 
 	The document must not be open. It is up to you to check if the document
-	is open elsewhere, e.g. via `IsOpenAvailable`.
+	is open elsewhere, e.g. via `IsAvailableAsync`.
 
 	Satisfies compliance with GDPR right of erasure.
 
@@ -1138,7 +1124,7 @@ end
 
 	@yields
 ]=]
-function Document.Erase<T>(self: Document<T>): Result<nil, RobloxAPIError>
+function Document.EraseAsync<T>(self: Document<T>): Result<nil, RobloxAPIError>
 	assert(not self._open, "Cannot erase an open document")
 
 	local success = SaveUtil.removeAsync(self._dataStore, self._key)
@@ -1164,7 +1150,7 @@ end
 
 	:::warning
 	A `SchemaError` will be returned if document has never been opened before,
-	so it is strongly recommended to handle this case, and Open the document
+	so it is strongly recommended to handle this case, and open the document
 	before reading it if possible. This includes when migrating from no library.
 	:::
 
@@ -1174,7 +1160,7 @@ end
 
 	@yields
 ]=]
-function Document.Read<T>(self: Document<T>): ReadResult<T>
+function Document.ReadAsync<T>(self: Document<T>): ReadResult<T>
 	runHooks(self._preHooks.Read)
 
 	local success, getValue: any = SaveUtil.getAsync(self._dataStore, self._key)
