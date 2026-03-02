@@ -102,7 +102,7 @@ function DocumentStore.new<T>(props: DocumentStoreProps<T>): DocumentStore<T>
 		game:BindToClose(function()
 			gameClosing = true
 
-			self:CloseAllDocuments()
+			self:CloseAllDocumentsAsync()
 		end)
 	end
 
@@ -171,15 +171,15 @@ end
 
 	:::warning
 	Yields until all documents are closed. If there is a systematic error
-	in your :Close, for example a hook errors, this could infinitely yield.
+	in your `:CloseAsync`, for example a hook errors, this could infinitely yield.
 	:::
 
-	Closes documents asynchronously when request budget allows, and yields
+	Closes documents asynchronously when request budget allows, and yields until
 	all open documents are closed.
 
 	@yields
 ]=]
-function DocumentStore.CloseAllDocuments<T>(self: DocumentStore<T>)
+function DocumentStore.CloseAllDocumentsAsync<T>(self: DocumentStore<T>)
 	local thread = coroutine.running()
 
 	local complete = self._documentsToClose == 0 and self._openingDocuments == 0
@@ -187,7 +187,7 @@ function DocumentStore.CloseAllDocuments<T>(self: DocumentStore<T>)
 	-- This while loop exists for two reasons:
 	-- 1. if budget is limited, we can wait for
 	-- more to be available before spawning future threads, so documents
-	-- are closed as quickly as possilbe by minimising retries
+	-- are closed as quickly as possible by minimising retries
 	-- 2. ensures documents that are opening and not yet opened when
 	-- this is called are closed.
 	while not complete do
@@ -210,7 +210,7 @@ function DocumentStore.CloseAllDocuments<T>(self: DocumentStore<T>)
 
 			task.spawn(function()
 				if v:IsOpen() and not v:IsClosing() then
-					v:Close()
+					v:CloseAsync()
 				end
 
 				if v:IsClosing() then
@@ -219,7 +219,7 @@ function DocumentStore.CloseAllDocuments<T>(self: DocumentStore<T>)
 					until not v:IsClosing()
 				end
 
-				-- We decrement this even if the .Close failed so the pass
+				-- We decrement this even if the .CloseAsync failed so the pass
 				-- doesn't hang forever
 				documentsToClose -= 1
 

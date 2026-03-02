@@ -103,9 +103,9 @@ but adding fields is.
 **Use good tools:** Roblox Studio's script editor doesn't provide great linting - luau-lsp is better
 for taking full advantage of type-checking.
 
-**Seperation:** You might want to put your default table, migrations, types and your check function in a separate file to keep things manageable and modular.
+**Separation:** You might want to put your default table, migrations, types and your check function in a separate file to keep things manageable and modular.
 
-**Use cache where you can:** Minimise methods that call DataStore APIs, such as `Read` and `Update`, in
+**Use cache where you can:** Minimise methods that call DataStore APIs, such as `ReadAsync` and `UpdateAsync`, in
 favour of `GetCache` and `SetCache`. This improves performance and reduces the chance of hitting limits.
 
 **Don't change your migrations:** You should never delete a migration. You should not change migrations once they are live (unless you

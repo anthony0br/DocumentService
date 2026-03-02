@@ -10,13 +10,13 @@ The following code should run on `Players.PlayerAdded`:
 
  ```lua
 local document = store:GetDocument(tostring(player.UserId))
-local result = document:Open()
+local result = document:OpenAsync()
 
 -- DocumentService retries 5 times over 16 seconds, so it is safe to steal
--- after a failed `:Open`!
+-- after a failed `:OpenAsync`!
 if not result.success and result.reason == "SessionLockedError" then
     document:Steal()
-    result = document:Open()
+    result = document:OpenAsync()
 end
 
 if not result.success then
