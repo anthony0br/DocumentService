@@ -1199,8 +1199,8 @@ end
 	Hooks cannot mutate arguments.
 
 	@param event -- the operation to call the hook before
-	@param hook -- a hook function
-	@return cleanup -- a callback that removes the hook
+	@param hook -- a hook function that receives the arguments passed in to the operation
+	@return cleanup -- a callback that removes the hook from the given hook event registry
 ]=]
 function Document.HookBefore<T>(self: Document<T>, event: HookEvent, hook: () -> ()): () -> ()
 	local hooks = self._preHooks[event]
@@ -1215,7 +1215,7 @@ end
 	Attaches a single-use hook which occurs before the event.
 
 	@param event -- the operation to call the hook before
-	@param hook -- a hook function
+	@param hook -- a hook function that receives the arguments passed in to the operation
 ]=]
 function Document.OnceBefore<T>(self: Document<T>, event: HookEvent, hook: () -> ())
 	local cleanup
