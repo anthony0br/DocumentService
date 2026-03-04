@@ -146,17 +146,17 @@ function DocumentStore.GetDocument<T>(self: DocumentStore<T>, key: string): (Doc
 		self._openingDocuments += 1
 	end)
 
-	document:HookFail("Open", function()
+	document:GetOpenedSignal():Connect(function(result)
 		self._openingDocuments -= 1
+		if result.success then
+			self._documentsToClose += 1
+		end
 	end)
 
-	document:HookAfter("Open", function()
-		self._openingDocuments -= 1
-		self._documentsToClose += 1
-	end)
-
-	document:HookAfter("Close", function()
-		self._documentsToClose -= 1
+	document:GetClosedSignal():Connect(function(result)
+		if result.success then
+			self._documentsToClose -= 1
+		end
 	end)
 
 	self._documents[key] = document
