@@ -2,10 +2,10 @@
 -- Author: Anthony O'Brien
 -- Contributor: kineticwallet
 
-local Types = require(script.Parent:FindFirstChild("Types"))
-local SaveUtil = require(script.Parent:FindFirstChild("SaveUtil"))
-local deepFreeze = require(script.Parent:FindFirstChild("DeepFreeze"))
-local Signal = require(script.Parent:FindFirstChild("Signal"))
+local Types = require(script.Parent:FindFirstChild('Types'))
+local SaveUtil = require(script.Parent:FindFirstChild('SaveUtil'))
+local deepFreeze = require(script.Parent:FindFirstChild('DeepFreeze'))
+local Signal = require(script.Parent:FindFirstChild('Signal'))
 
 local SESSION_EXPIRE_TIME = 600
 local AUTOSAVE_INTERVAL = 150
@@ -60,43 +60,28 @@ export type Document<T> = typeof(setmetatable(
 			Open: { () -> () },
 			Close: { () -> () },
 			Read: { () -> () },
-			Update: { () -> () },
-		},
-		-- Post & fail hooks are deprecated.
-		_postHooks: {
-			Open: { () -> () },
-			Close: { () -> () },
-			Read: { () -> () },
-			Update: { () -> () },
-		},
-		_failHooks: {
-			Open: { () -> () },
-			Close: { () -> () },
-			Read: { () -> () },
-			Update: { () -> () },
-		},
+			Update: { () -> () }		
+},
 		-- We get a recursive type error if we use Signal.Signal<OpenResult<T>> etc
 		_actionSignals: {
 			Open: Signal.Signal<any>,
 			Close: Signal.Signal<any>,
 			Read: Signal.Signal<any>,
 			Update: Signal.Signal<any>,
-			Cache: Signal.Signal<any>,
-		},
+			Cache: Signal.Signal<any>		
+},
 		_migrations: Migrations,
 		_cache: T,
 		_isClosing: boolean,
 		_lockSessions: boolean,
 		_autoSaveThread: thread?,
 		_shouldSteal: boolean,
-		_onOpenTransform: Transform<T>?,
-	},
+		_onOpenTransform: Transform<T>?	
+},
 	Document
 ))
 
 export type Migrations = Types.Migrations
-
-export type HookEvent = Types.HookEvent
 
 export type Transform<T> = Types.Transform<T>
 
@@ -125,7 +110,7 @@ type KeyData<T> = {
 	isLocked: boolean,
 	dataSchemaVersion: number,
 	lastCompatibleVersion: number,
-	data: T,
+	data: T
 }
 
 type RobloxAPIError = Types.RobloxAPIError
@@ -133,12 +118,15 @@ type SessionLockedError = Types.SessionLockedError
 type CheckError = Types.CheckError
 type BackwardsCompatibilityError = Types.BackwardsCompatibilityError
 type SchemaError = Types.SchemaError
+type HookEvent = Types.HookEvent
+
+export type HookEvent = Types.HookEvent
 
 local INTERNAL_SCHEMA_VERSION = 0
 
 local function runHooks(hooks: { () -> () })
-	-- Clone the table instead of iterating backwards, so hooks are executed in the
-	-- order they were added
+	-- Clone the table so hooks are executed in original order even if one
+	-- removes itself during execution
 	for _, hook in table.clone(hooks) do
 		hook()
 	end
@@ -285,7 +273,7 @@ function Document.new<T>(props: {
 	check: (unknown) -> (boolean, T),
 	default: T,
 	migrations: Types.Migrations,
-	lockSessions: boolean,
+	lockSessions: boolean
 }): Document<T>
 	assert(props.check(props.default), "Default must pass type check")
 	assert(typeof(props.default) == "table", "Non-table values are not supported - group your data.")
@@ -300,18 +288,6 @@ function Document.new<T>(props: {
 		_open = false,
 		_sessionId = SaveUtil.uuid(),
 		_preHooks = {
-			Open = {},
-			Close = {},
-			Update = {},
-			Read = {},
-		},
-		_postHooks = {
-			Open = {},
-			Close = {},
-			Update = {},
-			Read = {},
-		},
-		_failHooks = {
 			Open = {},
 			Close = {},
 			Update = {},
@@ -541,17 +517,13 @@ function Document.OpenAsync<T>(self: Document<T>): OpenResult<T>
 	end
 
 	if failResult then
-		runHooks(self._failHooks.Open)
-
 		self._actionSignals.Open:Fire(failResult)
 
 		return failResult
 	end
 
 	if transformInvalid then
-		error(
-			`Could not open Document {self._key}. Invalid transform function - must return a table that passes the check function.`
-		)
+		error(`Could not open Document {self._key}. Invalid transform function - must return a table that passes the check function.`)
 	end
 
 	if notStorable then
@@ -585,8 +557,6 @@ function Document.OpenAsync<T>(self: Document<T>): OpenResult<T>
 		end
 	end)
 
-	runHooks(self._postHooks.Open)
-
 	local result: OpenResult<T> = {
 		success = true,
 		data = (updatedKeyData :: KeyData<T>).data,
@@ -604,7 +574,7 @@ end
 
 	Will throw a Luau error if the transform produces invalid or unsavable data.
 
-	Runs both Open and Update hooks and signals, including fail hooks.
+	Fires both the Open and Update signals.
 
 	@return OpenResult<T>
 
@@ -624,15 +594,7 @@ function Document.OpenAndUpdateAsync<T>(self: Document<T>, transform: Transform<
 
 	self._actionSignals.Update:Fire(result)
 
-	if result.success then
-		runHooks(self._postHooks.Update)
-
-		return result
-	else
-		runHooks(self._failHooks.Update)
-
-		return result
-	end
+	return result
 end
 
 --[=[
@@ -808,7 +770,6 @@ function Document.CloseAsync<T>(self: Document<T>): WriteResult<T?>
 		if not saveResult.success then
 			self._isClosing = false
 
-			runHooks(self._failHooks.Close)
 			self._actionSignals.Close:Fire(saveResult)
 
 			return saveResult
@@ -821,8 +782,6 @@ function Document.CloseAsync<T>(self: Document<T>): WriteResult<T?>
 
 	self._open = false
 	self._isClosing = false
-
-	runHooks(self._postHooks.Close)
 
 	local result: WriteResult<T?> = {
 		success = true,
@@ -956,7 +915,7 @@ function Document.UpdateAsync<T>(self: Document<T>, transform: Transform<T>): Wr
 	local notStorable: boolean
 	local schemaError: boolean
 	local notStorableErr: string
-
+	
 	-- We need to do this here since the updateAsync transform could run
 	-- multiple times.
 	if self._lockSessions then
@@ -1068,8 +1027,6 @@ function Document.UpdateAsync<T>(self: Document<T>, transform: Transform<T>): Wr
 	end
 
 	if failResult then
-		runHooks(self._failHooks.Update)
-
 		self._actionSignals.Update:Fire(failResult)
 
 		return failResult
@@ -1078,8 +1035,6 @@ function Document.UpdateAsync<T>(self: Document<T>, transform: Transform<T>): Wr
 	-- Cast to KeyData<T> since the new data has already passed self._check and
 	-- the update succeeded.
 	local updatedData: T = (updatedKeyData :: KeyData<T>).data
-
-	runHooks(self._postHooks.Update)
 
 	local result: WriteResult<T> = {
 		success = true,
@@ -1120,8 +1075,6 @@ end
 
 	Satisfies compliance with GDPR right of erasure.
 
-	Does not run hooks.
-
 	@return Result<nil, RobloxAPIError>
 
 	@yields
@@ -1156,8 +1109,6 @@ end
 	before reading it if possible. This includes when migrating from no library.
 	:::
 
-	Runs Read hooks.
-
 	@return Result<any, RobloxAPIError | SchemaError | CheckError | BackwardsCompatibilityError>
 
 	@yields
@@ -1168,8 +1119,6 @@ function Document.ReadAsync<T>(self: Document<T>): ReadResult<T>
 	local success, getValue: any = SaveUtil.getAsync(self._dataStore, self._key)
 
 	if not success then
-		runHooks(self._failHooks.Read)
-
 		local result: ReadResult<T> = {
 			success = false,
 			reason = "RobloxAPIError",
@@ -1183,8 +1132,6 @@ function Document.ReadAsync<T>(self: Document<T>): ReadResult<T>
 	local keyData = checkKeyData(getValue)
 
 	if not keyData then
-		runHooks(self._failHooks.Read)
-
 		local result: ReadResult<T> = {
 			success = false,
 			reason = "SchemaError",
@@ -1200,8 +1147,6 @@ function Document.ReadAsync<T>(self: Document<T>): ReadResult<T>
 	local checkOk = self._check(migratedData)
 
 	if not checkOk then
-		runHooks(self._failHooks.Read)
-
 		local result: ReadResult<T> = {
 			success = false,
 			reason = "CheckError",
@@ -1215,8 +1160,6 @@ function Document.ReadAsync<T>(self: Document<T>): ReadResult<T>
 	local data = migratedData :: T
 
 	if #self._migrations < keyData.lastCompatibleVersion then
-		runHooks(self._failHooks.Read)
-
 		local result: ReadResult<T> = {
 			success = false,
 			reason = "BackwardsCompatibilityError",
@@ -1226,8 +1169,6 @@ function Document.ReadAsync<T>(self: Document<T>): ReadResult<T>
 
 		return result
 	end
-
-	runHooks(self._postHooks.Read)
 
 	local result: ReadResult<T> = {
 		success = true,
@@ -1243,7 +1184,7 @@ local function cleanupHook(hooks: { () -> () }, hook: () -> ())
 	local index = table.find(hooks, hook)
 
 	if not index then
-		error(`Failed to cleanup "{hook}" hook, not found in the given "{hooks}" hooks event registry!`)
+		error(`Failed to cleanup hook, not found in hook registry!`)
 	end
 
 	table.remove(hooks, index)
@@ -1252,62 +1193,17 @@ end
 --[=[
 	Attaches a hook which occurs before the event.
 
-	Note that if a hook yields, it will yield all methods that call it. Hooks
+	Note that if a hook yields, it will yield the method that calls it. Hooks
 	are called in the order they are added.
 
-	Hooks cannot currently mutate arguments.
+	Hooks cannot mutate arguments.
 
 	@param event -- the operation to call the hook before
-	@param hook -- a hook function that receives the arguments passed in to the operation
-	@return cleanup -- a callback that removes the hook from the given hook event registry
+	@param hook -- a hook function
+	@return cleanup -- a callback that removes the hook
 ]=]
-function Document.HookBefore<T, S...>(self: Document<T>, event: HookEvent, hook: () -> ()): () -> ()
+function Document.HookBefore<T>(self: Document<T>, event: HookEvent, hook: () -> ()): () -> ()
 	local hooks = self._preHooks[event]
-	table.insert(hooks, hook)
-
-	return function()
-		cleanupHook(hooks, hook)
-	end
-end
-
---[=[
-	Attaches a hook which occurs after the event, before the method returns.
-
-	@deprecated v1.2.0 -- use signals
-
-	Note that if a hook yields, it will yield all methods that call it. Hooks
-	are called in the order they are added.
-
-	Hooks added with HookAfter only run if the operation is successful, and
-	cannot mutate the result.
-
-	@param event -- the operation to call the hook after
-	@param hook -- a hook function that receives the arguments passed in to the operation
-	@return cleanup -- a callback that removes the hook from the given hook event registry
-]=]
-function Document.HookAfter<T>(self: Document<T>, event: HookEvent, hook: () -> ()): () -> ()
-	local hooks = self._postHooks[event]
-	table.insert(hooks, hook)
-
-	return function()
-		cleanupHook(hooks, hook)
-	end
-end
-
---[=[
-	Attaches a hook which occurs after an event fails.
-
-	@deprecated v1.2.0 -- use signals
-
-	Note that fail hooks only run when a method returns an Err<E> type. They
-	will not run if the method throws a Luau error due to incorrect usage.
-
-	@param event -- the operation to call the hook after
-	@param hook -- a hook function that receives the arguments passed in to the operation
-	@return cleanup -- a callback that removes the hook from the given hook event registry
-]=]
-function Document.HookFail<T>(self: Document<T>, event: HookEvent, hook: () -> ()): () -> ()
-	local hooks = self._failHooks[event]
 	table.insert(hooks, hook)
 
 	return function()
@@ -1319,46 +1215,12 @@ end
 	Attaches a single-use hook which occurs before the event.
 
 	@param event -- the operation to call the hook before
-	@param hook -- a hook function that receives the arguments passed in to the operation
+	@param hook -- a hook function
 ]=]
-function Document.OnceBefore<T, S...>(self: Document<T>, event: HookEvent, hook: () -> ())
+function Document.OnceBefore<T>(self: Document<T>, event: HookEvent, hook: () -> ())
 	local cleanup
 
 	cleanup = Document.HookBefore(self, event, function()
-		cleanup()
-		hook()
-	end)
-end
-
---[=[
-	Attaches a single-use hook which occurs after the event, before the method returns.
-
-	@deprecated v1.2.0 -- use signals
-
-	@param event -- the operation to call the hook after
-	@param hook -- a hook function that receives the arguments passed in to the operation
-]=]
-function Document.OnceAfter<T>(self: Document<T>, event: HookEvent, hook: () -> ())
-	local cleanup
-
-	cleanup = Document.HookAfter(self, event, function()
-		cleanup()
-		hook()
-	end)
-end
-
---[=[
-	Attaches a single-use hook which occurs after an event fails.
-
-	@deprecated v1.2.0 -- use signals
-
-	@param event -- the operation to call the hook after
-	@param hook -- a hook function that receives the arguments passed in to the operation
-]=]
-function Document.OnceFail<T>(self: Document<T>, event: HookEvent, hook: () -> ())
-	local cleanup
-
-	cleanup = Document.HookFail(self, event, function()
 		cleanup()
 		hook()
 	end)
