@@ -523,7 +523,9 @@ function Document.OpenAsync<T>(self: Document<T>): OpenResult<T>
 	end
 
 	if transformInvalid then
-		error(`Could not open Document {self._key}. Invalid transform function - must return a table that passes the check function.`)
+		error(
+			`Could not open Document {self._key}. Invalid transform function - must return a table that passes the check function.`
+		)
 	end
 
 	if notStorable then
@@ -915,7 +917,7 @@ function Document.UpdateAsync<T>(self: Document<T>, transform: Transform<T>): Wr
 	local notStorable: boolean
 	local schemaError: boolean
 	local notStorableErr: string
-	
+
 	-- We need to do this here since the updateAsync transform could run
 	-- multiple times.
 	if self._lockSessions then
