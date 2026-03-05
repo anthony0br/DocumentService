@@ -1,10 +1,10 @@
 --!strict
 -- Author: Anthony O'Brien
 
-local Document = require(script.Parent:FindFirstChild("Document"))
-local Types = require(script.Parent:FindFirstChild("Types"))
-local Util = require(script.Parent:FindFirstChild("SaveUtil"))
-local deepFreeze = require(script.Parent:FindFirstChild("DeepFreeze"))
+local Document = require(script.Parent:FindFirstChild('Document'))
+local Types = require(script.Parent:FindFirstChild('Types'))
+local Util = require(script.Parent:FindFirstChild('SaveUtil'))
+local deepFreeze = require(script.Parent:FindFirstChild('DeepFreeze'))
 
 local CLOSE_PASS_INTERVAL = 1
 
@@ -30,7 +30,7 @@ export type DocumentStoreProps<T> = {
 	default: T & {},
 	migrations: Migrations?,
 	lockSessions: boolean,
-	bindToClose: boolean?,
+	bindToClose: boolean?
 }
 
 export type DocumentStore<T> = typeof(setmetatable(
@@ -44,8 +44,8 @@ export type DocumentStore<T> = typeof(setmetatable(
 		-- than trying to do inheritance in Luau
 		_lockSessions: boolean,
 		_openingDocuments: number,
-		_documentsToClose: number,
-	},
+		_documentsToClose: number	
+},
 	DocumentStore
 ))
 
@@ -146,17 +146,17 @@ function DocumentStore.GetDocument<T>(self: DocumentStore<T>, key: string): (Doc
 		self._openingDocuments += 1
 	end)
 
-	document:HookFail("Open", function()
+	document:GetOpenedSignal():Connect(function(result)
 		self._openingDocuments -= 1
+		if result.success then
+			self._documentsToClose += 1
+		end
 	end)
 
-	document:HookAfter("Open", function()
-		self._openingDocuments -= 1
-		self._documentsToClose += 1
-	end)
-
-	document:HookAfter("Close", function()
-		self._documentsToClose -= 1
+	document:GetClosedSignal():Connect(function(result)
+		if result.success then
+			self._documentsToClose -= 1
+		end
 	end)
 
 	self._documents[key] = document

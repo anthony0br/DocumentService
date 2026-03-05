@@ -1,6 +1,6 @@
 [package]
 name = "anthony0br/documentservice"
-description = "DataStores with full type checking, hooks, +more"
+description = "DataStores with full type checking, signals, +more"
 version = "1.2.2"
 registry = "https://github.com/UpliftGames/wally-index"
 realm = "shared"
