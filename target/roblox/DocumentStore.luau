@@ -1,10 +1,10 @@
 --!strict
 -- Author: Anthony O'Brien
 
-local Document = require(script.Parent:FindFirstChild('Document'))
-local Types = require(script.Parent:FindFirstChild('Types'))
-local Util = require(script.Parent:FindFirstChild('SaveUtil'))
-local deepFreeze = require(script.Parent:FindFirstChild('DeepFreeze'))
+local Document = require(script.Parent:FindFirstChild("Document"))
+local Types = require(script.Parent:FindFirstChild("Types"))
+local Util = require(script.Parent:FindFirstChild("SaveUtil"))
+local deepFreeze = require(script.Parent:FindFirstChild("DeepFreeze"))
 
 local CLOSE_PASS_INTERVAL = 1
 
@@ -30,7 +30,7 @@ export type DocumentStoreProps<T> = {
 	default: T & {},
 	migrations: Migrations?,
 	lockSessions: boolean,
-	bindToClose: boolean?
+	bindToClose: boolean?,
 }
 
 export type DocumentStore<T> = typeof(setmetatable(
@@ -44,8 +44,8 @@ export type DocumentStore<T> = typeof(setmetatable(
 		-- than trying to do inheritance in Luau
 		_lockSessions: boolean,
 		_openingDocuments: number,
-		_documentsToClose: number	
-},
+		_documentsToClose: number,
+	},
 	DocumentStore
 ))
 

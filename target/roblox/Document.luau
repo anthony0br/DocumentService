@@ -2,10 +2,10 @@
 -- Author: Anthony O'Brien
 -- Contributor: kineticwallet
 
-local Types = require(script.Parent:FindFirstChild('Types'))
-local SaveUtil = require(script.Parent:FindFirstChild('SaveUtil'))
-local deepFreeze = require(script.Parent:FindFirstChild('DeepFreeze'))
-local Signal = require(script.Parent:FindFirstChild('Signal'))
+local Types = require(script.Parent:FindFirstChild("Types"))
+local SaveUtil = require(script.Parent:FindFirstChild("SaveUtil"))
+local deepFreeze = require(script.Parent:FindFirstChild("DeepFreeze"))
+local Signal = require(script.Parent:FindFirstChild("Signal"))
 
 local SESSION_EXPIRE_TIME = 600
 local AUTOSAVE_INTERVAL = 150
@@ -60,24 +60,24 @@ export type Document<T> = typeof(setmetatable(
 			Open: { () -> () },
 			Close: { () -> () },
 			Read: { () -> () },
-			Update: { () -> () }		
-},
+			Update: { () -> () },
+		},
 		-- We get a recursive type error if we use Signal.Signal<OpenResult<T>> etc
 		_actionSignals: {
 			Open: Signal.Signal<any>,
 			Close: Signal.Signal<any>,
 			Read: Signal.Signal<any>,
 			Update: Signal.Signal<any>,
-			Cache: Signal.Signal<any>		
-},
+			Cache: Signal.Signal<any>,
+		},
 		_migrations: Migrations,
 		_cache: T,
 		_isClosing: boolean,
 		_lockSessions: boolean,
 		_autoSaveThread: thread?,
 		_shouldSteal: boolean,
-		_onOpenTransform: Transform<T>?	
-},
+		_onOpenTransform: Transform<T>?,
+	},
 	Document
 ))
 
@@ -110,7 +110,7 @@ type KeyData<T> = {
 	isLocked: boolean,
 	dataSchemaVersion: number,
 	lastCompatibleVersion: number,
-	data: T
+	data: T,
 }
 
 type RobloxAPIError = Types.RobloxAPIError
@@ -273,7 +273,7 @@ function Document.new<T>(props: {
 	check: (unknown) -> (boolean, T),
 	default: T,
 	migrations: Types.Migrations,
-	lockSessions: boolean
+	lockSessions: boolean,
 }): Document<T>
 	assert(props.check(props.default), "Default must pass type check")
 	assert(typeof(props.default) == "table", "Non-table values are not supported - group your data.")

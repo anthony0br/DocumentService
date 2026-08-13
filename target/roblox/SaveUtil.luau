@@ -3,12 +3,12 @@
 -- Author: Anthony O'Brien
 
 local DataStoreService
-do	
-DataStoreService = game:GetService("DataStoreService")
+do
+	DataStoreService = game:GetService("DataStoreService")
 end
 
-local Retry = require(script.Parent:FindFirstChild('Retry'))
-local Types = require(script.Parent:FindFirstChild('Types'))
+local Retry = require(script.Parent:FindFirstChild("Retry"))
+local Types = require(script.Parent:FindFirstChild("Types"))
 
 type DataStoreInterface = Types.DataStoreInterface
 
@@ -47,17 +47,10 @@ local RETRY = {
 	@param data
 ]=]
 
-
-
-
-
-
-
-
 function SaveUtil.assertStorable(data: unknown, fieldName: string?)
-	local indexDataType 
-	
-if not fieldName then
+	local indexDataType
+
+	if not fieldName then
 		fieldName = "Data"
 	end
 
@@ -112,28 +105,22 @@ if not fieldName then
 end
 
 function SaveUtil.getUpdateBudget()
-do		
-return DataStoreService:GetRequestBudgetForRequestType(Enum.DataStoreRequestType.UpdateAsync)
-end
-
-
+	do
+		return DataStoreService:GetRequestBudgetForRequestType(Enum.DataStoreRequestType.UpdateAsync)
+	end
 end
 
 function SaveUtil.getSetBudget()
-do		
-return game:GetService("DataStoreService")
+	do
+		return game:GetService("DataStoreService")
 			:GetRequestBudgetForRequestType(Enum.DataStoreRequestType.SetIncrementAsync)
-end
-
-
+	end
 end
 
 function SaveUtil.getGetBudget()
-do		
-return game:GetService("DataStoreService"):GetRequestBudgetForRequestType(Enum.DataStoreRequestType.GetAsync)
-end
-
-
+	do
+		return game:GetService("DataStoreService"):GetRequestBudgetForRequestType(Enum.DataStoreRequestType.GetAsync)
+	end
 end
 
 --[=[
@@ -208,13 +195,12 @@ end
 function SaveUtil.getAsync<T>(dataStore: DataStoreInterface, key: string): (boolean, any, DataStoreKeyInfo)
 	local result = Retry(RETRY.ATTEMPTS, RETRY.INITIAL_WAIT, function(): (any, DataStoreKeyInfo)
 		local options
-do			
-
-options = Instance.new("DataStoreGetOptions")
+		do
+			options = Instance.new("DataStoreGetOptions")
 			options.UseCache = false
-end
-		
-assert(SaveUtil.getGetBudget() > 0, "Ran out of budget")
+		end
+
+		assert(SaveUtil.getGetBudget() > 0, "Ran out of budget")
 
 		local resultData, resultKeyInfo = dataStore:GetAsync(key, options)
 
