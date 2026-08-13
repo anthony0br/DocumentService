@@ -19,22 +19,22 @@
 export type Connection = {
 	Disconnect: (self: Connection) -> (),
 	Destroy: (self: Connection) -> (),
-	Connected: boolean,
+	Connected: boolean
 }
 
 export type Signal<T...> = {
-	Fire: (self: Signal<T...>, T...) -> (),
-	FireDeferred: (self: Signal<T...>, T...) -> (),
+	Fire: (self: Signal<T...>,T...) -> (),
+	FireDeferred: (self: Signal<T...>,T...) -> (),
 	Connect: (self: Signal<T...>, fn: (T...) -> ()) -> Connection,
 	Once: (self: Signal<T...>, fn: (T...) -> ()) -> Connection,
 	DisconnectAll: (self: Signal<T...>) -> (),
 	GetConnections: (self: Signal<T...>) -> { Connection },
 	Destroy: (self: Signal<T...>) -> (),
-	Wait: (self: Signal<T...>) -> T...,
+	Wait: (self: Signal<T...>) -> T...
 }
 
 -- The currently idle thread to run the next handler on
-local freeRunnerThread
+local freeRunnerThread 
 -- Function which acquires the currently idle handler runner thread, runs the
 -- function fn on it, and then releases the thread, returning it to being the
 -- currently idle one.

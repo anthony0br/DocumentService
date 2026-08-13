@@ -1,17 +1,6 @@
 --!strict
 
 --[=[
-	@type HookEvent "Open" | "Close" | "Update" | "Read"
-
-	Update hooks will run on any operation that writes to Data Stores e.g. :Save().
-
-	Read hooks will run on any operation that reads from Data Stores e.g. :Peek()
-
-	@within DocumentService
-]=]
-export type HookEvent = "Open" | "Close" | "Update" | "Read"
-
---[=[
 	@type Ok<T> { success: true, data: T }
 
 	Subtype of Result. A success.
@@ -152,5 +141,14 @@ export type DataStoreInterface = {
 	GetAsync: (DataStoreInterface, key: string, options: DataStoreGetOptions) -> (any, DataStoreKeyInfo),
 	RemoveAsync: (DataStoreInterface, key: string) -> (any, DataStoreKeyInfo),
 }
+
+--[=[
+	@type HookEvent "Open" | "Close" | "Update" | "Read"
+
+	The set of operations that support before-hooks.
+
+	@within DocumentService
+]=]
+export type HookEvent = "Open" | "Close" | "Update" | "Read"
 
 return nil

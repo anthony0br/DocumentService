@@ -1,17 +1,6 @@
 --!strict
 
 --[=[
-	@type HookEvent "Open" | "Close" | "Update" | "Read"
-
-	Update hooks will run on any operation that writes to Data Stores e.g. :Save().
-
-	Read hooks will run on any operation that reads from Data Stores e.g. :Peek()
-
-	@within DocumentService
-]=]
-export type HookEvent = "Open" | "Close" | "Update" | "Read"
-
---[=[
 	@type Ok<T> { success: true, data: T }
 
 	Subtype of Result. A success.
@@ -20,7 +9,7 @@ export type HookEvent = "Open" | "Close" | "Update" | "Read"
 ]=]
 export type Ok<T> = {
 	success: true,
-	data: T,
+	data: T
 }
 
 --[=[
@@ -32,7 +21,7 @@ export type Ok<T> = {
 ]=]
 export type Err<E> = {
 	success: false,
-	reason: E,
+	reason: E
 }
 
 --[=[
@@ -117,8 +106,8 @@ export type SchemaError = "SchemaError"
 export type Migrations = {
 	{
 		backwardsCompatible: boolean,
-		migrate: (data: any) -> any,
-	}
+		migrate: (data: any) -> any	
+}
 }
 
 --[=[
@@ -150,7 +139,16 @@ export type DataStoreInterface = {
 		(any, DataStoreKeyInfo) -> (any, { number }?, any?)
 	) -> (any, DataStoreKeyInfo),
 	GetAsync: (DataStoreInterface, key: string, options: DataStoreGetOptions) -> (any, DataStoreKeyInfo),
-	RemoveAsync: (DataStoreInterface, key: string) -> (any, DataStoreKeyInfo),
+	RemoveAsync: (DataStoreInterface, key: string) -> (any, DataStoreKeyInfo)
 }
+
+--[=[
+	@type HookEvent "Open" | "Close" | "Update" | "Read"
+
+	The set of operations that support before-hooks.
+
+	@within DocumentService
+]=]
+export type HookEvent = "Open" | "Close" | "Update" | "Read"
 
 return nil
