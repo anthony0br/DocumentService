@@ -75,6 +75,7 @@ export type Document<T> = typeof(setmetatable(
 		_isClosing: boolean,
 		_lockSessions: boolean,
 		_autoSaveThread: thread?,
+		_updatesInFlight: number,
 		_shouldSteal: boolean,
 		_onOpenTransform: Transform<T>?,
 	},
@@ -305,6 +306,7 @@ function Document.new<T>(props: {
 		_cache = props.default,
 		-- TODO: Change to LOCK_SESSIONS as this should not change
 		_lockSessions = props.lockSessions,
+		_updatesInFlight = 0,
 		_shouldSteal = false,
 	}, Document)
 
@@ -544,10 +546,10 @@ function Document.OpenAsync<T>(self: Document<T>): OpenResult<T>
 	-- This also creates a closure preventing garbage collection while a
 	-- document is open and locked
 	self._autoSaveThread = task.defer(function()
-		while self._lockSessions and self._open do
+		while self._lockSessions and self._open and not self._isClosing do
 			task.wait(AUTOSAVE_INTERVAL)
 
-			if not self._open then
+			if not self._open or self._isClosing then
 				return
 			end
 
@@ -763,6 +765,18 @@ function Document.CloseAsync<T>(self: Document<T>): WriteResult<T?>
 	-- This causes :SaveAsync to also remove the session lock
 	self._isClosing = true
 
+	-- Wait for in-flight UpdateAsync/SaveAsync first (including an autosave that
+	-- already passed the _open check). With _isClosing set, those transforms
+	-- unlock; cancelling before they finish would leak _updatesInFlight.
+	while self._updatesInFlight > 0 do
+		task.wait()
+	end
+
+	if self._autoSaveThread then
+		task.cancel(self._autoSaveThread)
+		self._autoSaveThread = nil
+	end
+
 	local saveResult: WriteResult<T>
 
 	if self._lockSessions then
@@ -776,10 +790,6 @@ function Document.CloseAsync<T>(self: Document<T>): WriteResult<T?>
 
 			return saveResult
 		end
-	end
-
-	if self._autoSaveThread then
-		task.cancel(self._autoSaveThread)
 	end
 
 	self._open = false
@@ -910,6 +920,8 @@ end
 function Document.UpdateAsync<T>(self: Document<T>, transform: Transform<T>): WriteResult<T>
 	assert(self._open, "Document not open")
 
+	self._updatesInFlight += 1
+
 	runHooks(self._preHooks.Update)
 
 	local lockedByOther: boolean
@@ -998,10 +1010,12 @@ function Document.UpdateAsync<T>(self: Document<T>, transform: Transform<T>): Wr
 
 	-- This should be a LOUD error! The developer is doing something wrong.
 	if transformInvalid then
+		self._updatesInFlight -= 1
 		error("Invalid transform function - must return a table that passes the check function.")
 	end
 
 	if notStorable then
+		self._updatesInFlight -= 1
 		error("Not storable: " .. notStorableErr)
 	end
 
@@ -1031,6 +1045,7 @@ function Document.UpdateAsync<T>(self: Document<T>, transform: Transform<T>): Wr
 	if failResult then
 		self._actionSignals.Update:Fire(failResult)
 
+		self._updatesInFlight -= 1
 		return failResult
 	end
 
@@ -1045,6 +1060,7 @@ function Document.UpdateAsync<T>(self: Document<T>, transform: Transform<T>): Wr
 
 	self._actionSignals.Update:Fire(result)
 
+	self._updatesInFlight -= 1
 	return result
 end
 
