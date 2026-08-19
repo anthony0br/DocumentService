@@ -938,6 +938,7 @@ function Document.UpdateAsync<T>(self: Document<T>, transform: Transform<T>): Wr
 		transformInvalid = false
 		notStorable = false
 		notStorableErr = ""
+		schemaError = false
 
 		local keyData = checkKeyData(value)
 
