@@ -58,7 +58,6 @@ export type Document<T> = {
 	read getState: () -> DocState,
 	read savedSignal: () -> WriteResult<T>,
 	read releasedSignal: () -> WriteResult<T>,
-
 	read read: () -> T,
 	read update: ((T) -> T) -> (),
 	read saveAsync: () -> WriteResult<nil>, -- if releasing, just wait for the release
@@ -81,6 +80,11 @@ export type DocumentStore<T> = {
 	-- this proposal would remove the weak table, but also remove the need for
 	-- dynamic state checks. the idea of an unclaimed document, claimed document
 	-- closing document all having the same type is not great.
+	-- the alternative is the library user will be forced to collect player
+	-- documents in a table. that table will be typed, and thus, they will need
+	-- to check if the value exists to refine the type from Document? to Document.
+	-- Using a weak table and the old IsOpen() makes it impossible to statically check
+	-- that you've actually checked the document has been claimed first!
 	read claimAsync: (key: string, stealAfterSeconds: number?) -> ClaimResult<Document<T>>,
 	read claimFromMemoryAsync: (key: string) -> Result<Document<T>, "BackwardsCompatibilityError" | "RobloxAPIError" | "NotInMemoryStore">
 }
