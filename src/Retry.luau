@@ -18,7 +18,7 @@ local T = require("./Types")
 
 	@return { success, returnValues } -- if successful, the return values of func, otherwise an error string
 ]]
-local function Retry<T>(maxAttempts: number, initialWait: number, job: (T -> R)): T.Result<
+local function Retry<T>(maxAttempts: number, initialWait: number, job: (T -> R)): T.Result
 	local result: { any }
 
 	for i = 1, maxAttempts do
