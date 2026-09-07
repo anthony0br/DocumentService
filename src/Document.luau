@@ -48,38 +48,34 @@ Document.__index = Document
 
 type DataStoreInterface = Types.DataStoreInterface
 
-export type Document<T> = typeof(setmetatable(
-	{} :: {
-		_key: string,
-		_dataStore: DataStoreInterface,
-		_check: (unknown) -> (boolean, T),
-		_default: T,
-		_open: boolean,
-		_sessionId: string,
-		_preHooks: {
-			Open: { () -> () },
-			Close: { () -> () },
-			Read: { () -> () },
-			Update: { () -> () },
-		},
-		-- We get a recursive type error if we use Signal.Signal<OpenResult<T>> etc
-		_actionSignals: {
-			Open: Signal.Signal<any>,
-			Close: Signal.Signal<any>,
-			Read: Signal.Signal<any>,
-			Update: Signal.Signal<any>,
-			Cache: Signal.Signal<any>,
-		},
-		_migrations: Migrations,
-		_cache: T,
-		_isClosing: boolean,
-		_lockSessions: boolean,
-		_autoSaveThread: thread?,
-		_shouldSteal: boolean,
-		_onOpenTransform: Transform<T>?,
+export type Document<T> = {
+	_key: string,
+	_dataStore: DataStoreInterface,
+	_check: (unknown) -> (boolean, T),
+	_default: T,
+	_open: boolean,
+	_sessionId: string,
+	_preHooks: {
+		Open: { () -> () },
+		Close: { () -> () },
+		Read: { () -> () },
+		Update: { () -> () },
 	},
-	Document
-))
+	_actionSignals: {
+		Open: Signal.Signal<OpenResult<T>>,
+		Close: Signal.Signal<WriteResult<T>>,
+		Read: Signal.Signal<WriteResult<T>>,
+		Update: Signal.Signal<WriteResult<T>>,
+		Cache: Signal.Signal<T>,
+	},
+	_migrations: Migrations,
+	_cache: T,
+	_isClosing: boolean,
+	_lockSessions: boolean,
+	_autoSaveThread: thread?,
+	_shouldSteal: boolean,
+	_onOpenTransform: Transform<T>?,
+}
 
 export type Migrations = Types.Migrations
 
@@ -118,8 +114,6 @@ type SessionLockedError = Types.SessionLockedError
 type CheckError = Types.CheckError
 type BackwardsCompatibilityError = Types.BackwardsCompatibilityError
 type SchemaError = Types.SchemaError
-type HookEvent = Types.HookEvent
-
 export type HookEvent = Types.HookEvent
 
 local INTERNAL_SCHEMA_VERSION = 0
@@ -166,54 +160,46 @@ local function runMigrations(migrations: Migrations, initialData: unknown, initi
 	return data
 end
 
-local function isLocked(keyData: KeyData<any>): boolean
+local function isLocked<T>(keyData: KeyData<T>): boolean
 	return keyData.isLocked and (os.time() - keyData.lockTimestamp < SESSION_EXPIRE_TIME)
 end
 
-local function checkKeyData(value: any): KeyData<any>?
+local function checkKeyData<T>(value: KeyData<T>): KeyData<T>?
 	if type(value) ~= "table" then
-		return
+		return nil
 	end
-
 	if not value.documentServiceSchemaVersion then
-		return
+		return nil
 	end
-
-	-- Insert internal migrations here, noting each version a property
-	-- is introduced and when INTERNAL_SCHEMA_VERSION is incremented
-	-- Migrations should start at == 0 and progress to FORMAT_VERSION
-
 	if value.documentServiceSchemaVersion ~= INTERNAL_SCHEMA_VERSION then
 		warn("documentServiceSchemaVersion mutated")
-		return
+		return nil
 	end
-
 	if type(value.sessionLockId) ~= "string" then
 		warn(".isSessionLocked invalid")
-		return
+		return nil
 	end
 	if type(value.isLocked) ~= "boolean" then
 		warn(".isLocked invalid")
-		return
+		return nil
 	end
 	if type(value.lockTimestamp) ~= "number" then
 		warn(".lockTimestamp invalid")
-		return
+		return nil
 	end
 	if type(value.data) ~= "table" then
 		warn(".data invalid")
-		return
+		return nil
 	end
 	if type(value.lastCompatibleVersion) ~= "number" then
 		warn(".lastCompatibleVersion invalid")
-		return
+		return nil
 	end
 	if type(value.dataSchemaVersion) ~= "number" then
 		warn(".dataSchemaVersion invalid")
-		return
+		return nil
 	end
-
-	return value :: KeyData<any>
+	return value
 end
 
 --[=[
@@ -270,17 +256,15 @@ end
 function Document.new<T>(props: {
 	key: string,
 	dataStore: DataStoreInterface,
-	check: (unknown) -> (boolean, T),
 	default: T,
 	migrations: Types.Migrations,
-	lockSessions: boolean,
 }): Document<T>
 	assert(props.check(props.default), "Default must pass type check")
 	assert(typeof(props.default) == "table", "Non-table values are not supported - group your data.")
 
 	SaveUtil.assertStorable(props.default)
 
-	local self = setmetatable({
+	return {
 		_key = props.key,
 		_dataStore = props.dataStore,
 		_check = props.check,
@@ -294,8 +278,8 @@ function Document.new<T>(props: {
 			Read = {},
 		},
 		_actionSignals = {
-			Open = Signal.new(),
-			Close = Signal.new(),
+			Open = Signal.new<OpenResult<T>>(),
+			Close = Signal.new<WriteResult<T>>(),
 			Update = Signal.new(),
 			Read = Signal.new(),
 			Cache = Signal.new(),
@@ -306,9 +290,7 @@ function Document.new<T>(props: {
 		-- TODO: Change to LOCK_SESSIONS as this should not change
 		_lockSessions = props.lockSessions,
 		_shouldSteal = false,
-	}, Document)
-
-	return self
+	}
 end
 
 --[=[
