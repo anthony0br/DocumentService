@@ -5,17 +5,12 @@ local Signal = require("./Signal")
 -- Simple documents do not hold sessions or state.
 -- Example usage: a group or "clan" of players.
 
-export type SimpleDocumentConstructor<T> = ({
+-- type of a static api for getting simpledocument objcts
+export type GetSimpleDocument<T> = ({
 	key: string,
 	dataStore: DataStoreInterface,
 	migrationList: MigrationList<T>,
 }) -> SimpleDocument<T>
-
-export type GetSimpleDocument<T> = (
-	key: string,
-	dataStore: DataStoreInterface,
-	MigrationList: MigrationList<T>
-) -> SimpleDocument<T>
 
 export type SimpleDocument<T> = {
 	-- Private
