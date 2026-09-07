@@ -1,137 +1,102 @@
 --!strict
 
---[=[
-	@type Ok<T> { success: true, data: T }
+local Signal = require("./Signal")
 
-	Subtype of Result. A success.
+-- Simple documents do not hold sessions or state.
+-- Example usage: a group or "clan" of players.
 
-	@within DocumentService
-]=]
+export type SimpleDocumentConstructor<T> = ({
+	key: string,
+	dataStore: DataStoreInterface,
+	migrationList: MigrationList<T>,
+}) -> SimpleDocument<T>
+
+export type SimpleDocument<T> = {
+	-- Private
+	_key: string,
+	_data_store: DataStoreInterface,
+	_migrations: MigrationList<T>,
+	-- Public
+	read readAsync: () -> SimpleResult<T?>,
+	-- updateAsync will always migrate before passing data
+	read updateAsync: (transform: (T?) -> T) -> SimpleResult<T>,
+	read updatedSignal: Signal.Signal<SimpleResult<T>>
+}
+
+-- We'll use slightly different language to the typical session locking theory
+-- to improve clarity across the most important states.
+-- For example, the lock needs to be owned by our session for us to change the document
+-- Rather than 'Open', or 'Locked', 'OwnedBySession' clarifies this.
+-- In Unauthorised, the document may be unlocked or locked by another session. This
+-- is the initial state of a Document.
+-- Every unique Document object has its own session, with a globally
+-- unique session_id.
+export type DocState = "Unauthorised" | "OwnedBySession" | "Claiming" | "Releasing" | "Steal"
+
+-- Typical usage: create a document (which creates a session) on player join
+-- add to a collection once document is claimed.
+export type DocumentConstructor<T> = ({
+	key: string,
+	dataStore: DataStoreInterface,
+	migrationList: MigrationList<T>,
+	default: T,
+}) -> Document<T>
+
+export type Document<T> = {
+	-- Private
+	read _key: string,
+	read _data_store: DataStoreInterface,
+	read _session_id: string,
+	read _migrations: MigrationList<T>,
+	read _default: T,
+	_cache: T,
+	_state: DocState,
+	-- Public
+	read claimAsync: () -> (),
+	read claimedSignal: () -> Signal.Signal<ClaimResult<T>>,
+	read steal: () -> (), -- transition to steal state to steal on next claim
+	read read: () -> T,
+	read update: (T) -> T,
+	read saveAsync: () -> WriteResult<T>, -- typically used for purchases to determine return type
+	read savedSignal: () -> WriteResult<T>,
+	read releaseAsync: () -> WriteResult<T>,
+	read releasedSignal: () -> WriteResult<T>,
+}
+-- the use of a signal for each async method allows us to treat them like promises,
+-- but without the heavyweight and poor type compatibility of luau promise packages
+
+-- without weak tables and GetDocument, we can remove:
+-- IsOpen -- the user can track this themselves e.g. add the document to a central table
+
 export type Ok<T> = {
-	success: true,
+	ok: true,
 	data: T,
 }
-
---[=[
-	@type Err<E> { success: false, reason: E }
-
-	Subtype of Result. An error.
-
-	@within DocumentService
-]=]
-export type Err<E> = {
-	success: false,
-	reason: E,
+export type Fail<Reason> = {
+	ok: false,
+	reason: Reason,
 }
-
---[=[
-	@type Result<T,E> Ok<T> | Err<E>
-
-	The result of a yielding operation that could error. You should always write
-	error handling for all types of errors that can be returned.
-
-	@within DocumentService
-]=]
-export type Result<T, E> = Ok<T> | Err<E>
-
---[=[
-	@type RobloxAPIError "RobloxAPIError"
-
-	Indicates the Roblox API failed, e.g. too many requests
-
-	@within DocumentService
-]=]
+export type Result<T, Reason> = Ok<T> | Fail<Reason>
 export type RobloxAPIError = "RobloxAPIError"
-
---[=[
-	@type SessionLockedError "SessionLockedError"
-
-	Indicates the document was locked by some other session.
-
-	@within DocumentService
-]=]
-export type SessionLockedError = "SessionLockedError"
-
---[=[
-	@type CheckError "CheckError"
-
-	Indicates the document's check function failed.
-
-	@within DocumentService
-]=]
+export type SessionNotOwned = "SessionNotOwned"
 export type CheckError = "CheckError"
-
---[=[
-	@type BackwardsCompatibilityError "BackwardsCompatibleError"
-
-	Attempted to load data that has been migrated ahead to a version that isn't
-	backwards compatible with the latest version our session has.
-
-	@within DocumentService
-]=]
 export type BackwardsCompatibilityError = "BackwardsCompatibilityError"
+export type CorruptionError = "CorruptionError"
 
---[=[
-	@type SchemaError "SchemaError"
-
-	This indicates the key provided is not managed by DocumentService, or has
-	been corrupted.
-
-	In the case of a SchemaError during opening, a new
-	Document will be created, enclosing the existing value at the key.
-
-	@within DocumentService
-]=]
-export type SchemaError = "SchemaError"
-
---[=[
-	@type Migrations { { backwardsCompatible: boolean, migrate: (data: any) -> any, } }
-
-	Data format versions start at 0. The first migration should migrate from 0 to 1.
-
-	If you have data existing in the key before you open a Document, this will be considered version 0 and migrations will run.
-
-	If backwardsCompatible is false, loading this version and later versions in an older server without this migration defined will fail.
-
-	The current version is defined by the length of this array.
-
-	:::warning
-	If you make a not-backwards-compatible migration on not-session-locked
-	Documents, you must shut down all servers, or old servers will break.
-	:::
-
-	@within DocumentService
-
-]=]
-export type Migrations = {
-	{
-		backwardsCompatible: boolean,
-		migrate: (data: any) -> any,
-	}
+-- Each migration returns the transformed data in the new schema, as well as
+-- a backwards compatibility boolean. If the second value is true, then the migration
+-- is treated as backwards compatible. Note this means backwards compatibility
+-- can depend on a user's data.
+export type MigrationList<T> = {
+	legacy: {(data: any) -> (any, boolean)}?,
+	latest: (data: {}) -> (T, boolean)
 }
 
---[=[
-	@type Transform<T> (data: T) -> T
+export type SimpleResult<T> = Result<T, RobloxAPIError | BackwardsCompatibilityError | CorruptionError>
+export type ClaimResult<T> = Result<T, RobloxAPIError | BackwardsCompatibilityError | SessionNotOwned>
+export type WriteResult<T> = Result<T, RobloxAPIError | SessionNotOwned | CorruptionError>
+export type ReadResult<T> = Result<T, RobloxAPIError | CorruptionError | BackwardsCompatibilityError>
 
-	Takes data and returns an updated version of it.
-	Ideally this should be a pure function.
-
-	@within DocumentService
-]=]
-export type Transform<T> = (data: T) -> T
-
---[=[
-	@type DataStoreInterface { UpdateAsync: (DataStoreInterface, key: string, (any, DataStoreKeyInfo) -> (any, { number }?, any?)) -> (any, DataStoreKeyInfo), GetAsync: (DataStoreInterface, key: string, options: DataStoreGetOptions) -> (any, DataStoreKeyInfo), RemoveAsync: (DataStoreInterface, key: string) -> (any, DataStoreKeyInfo)}
-
-	An interface, implemented by DataStore in Roblox, to allow dependency injection
-	(e.g. MockDataStores).
-
-	There is currently an issue where passing `DataStore` will result in a type
-	error, even though `DataStore` currently implements `DataStoreInterface`.
-	You can typecast to to any (:: any) as a workaround.
-
-	@within DocumentService
-]=]
 export type DataStoreInterface = {
 	UpdateAsync: (
 		DataStoreInterface,
@@ -142,13 +107,6 @@ export type DataStoreInterface = {
 	RemoveAsync: (DataStoreInterface, key: string) -> (any, DataStoreKeyInfo),
 }
 
---[=[
-	@type HookEvent "Open" | "Close" | "Update" | "Read"
-
-	The set of operations that support before-hooks.
-
-	@within DocumentService
-]=]
 export type HookEvent = "Open" | "Close" | "Update" | "Read"
 
 return nil

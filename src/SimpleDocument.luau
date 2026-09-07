@@ -1,0 +1,8 @@
+--!strict
+-- SimpleDocument will act like a regular key except contains
+-- Schema types
+-- Retrying & type error handling
+-- Migrations
+-- No session looking. No hooks. No signls
+-- Default is not enforced on read -- users can make their own default.
+-- The default is always nil, like a regular datastore key.

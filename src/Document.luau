@@ -2,7 +2,7 @@
 -- Author: Anthony O'Brien
 -- Contributor: kineticwallet
 
-local Types = require("./Types")
+local T = require("./Types")
 local SaveUtil = require("./SaveUtil")
 local deepFreeze = require("./DeepFreeze")
 local Signal = require("./Signal")
@@ -46,40 +46,6 @@ local AUTOSAVE_INTERVAL = 150
 local Document = {}
 Document.__index = Document
 
-type DataStoreInterface = Types.DataStoreInterface
-
-export type Document<T> = {
-	_key: string,
-	_dataStore: DataStoreInterface,
-	_check: (unknown) -> (boolean, T),
-	_default: T,
-	_open: boolean,
-	_sessionId: string,
-	_preHooks: {
-		Open: { () -> () },
-		Close: { () -> () },
-		Read: { () -> () },
-		Update: { () -> () },
-	},
-	_actionSignals: {
-		Open: Signal.Signal<OpenResult<T>>,
-		Close: Signal.Signal<WriteResult<T>>,
-		Read: Signal.Signal<WriteResult<T>>,
-		Update: Signal.Signal<WriteResult<T>>,
-		Cache: Signal.Signal<T>,
-	},
-	_migrations: Migrations,
-	_cache: T,
-	_isClosing: boolean,
-	_lockSessions: boolean,
-	_autoSaveThread: thread?,
-	_shouldSteal: boolean,
-	_onOpenTransform: Transform<T>?,
-}
-
-export type Migrations = Types.Migrations
-
-export type Transform<T> = Types.Transform<T>
 
 type Result<T, E> = Types.Result<T, E>
 
@@ -88,26 +54,13 @@ type Result<T, E> = Types.Result<T, E>
 
 	@within Document
 ]=]
-type OpenResult<T> = Result<T, RobloxAPIError | BackwardsCompatibilityError | CheckError | SessionLockedError>
 
 --[=[
 	@type WriteResult<T> Result<T, RobloxAPIError | SessionLockedError | SchemaError>
 
 	@within Document
 ]=]
-type WriteResult<T> = Result<T, RobloxAPIError | SessionLockedError | SchemaError>
 
-type ReadResult<T> = Result<T, RobloxAPIError | SchemaError | CheckError | BackwardsCompatibilityError>
-
-type KeyData<T> = {
-	documentServiceSchemaVersion: number,
-	sessionLockId: string,
-	lockTimestamp: number,
-	isLocked: boolean,
-	dataSchemaVersion: number,
-	lastCompatibleVersion: number,
-	data: T,
-}
 
 type RobloxAPIError = Types.RobloxAPIError
 type SessionLockedError = Types.SessionLockedError
@@ -259,7 +212,6 @@ function Document.new<T>(props: {
 	default: T,
 	migrations: Types.Migrations,
 }): Document<T>
-	assert(props.check(props.default), "Default must pass type check")
 	assert(typeof(props.default) == "table", "Non-table values are not supported - group your data.")
 
 	SaveUtil.assertStorable(props.default)
@@ -267,7 +219,6 @@ function Document.new<T>(props: {
 	return {
 		_key = props.key,
 		_dataStore = props.dataStore,
-		_check = props.check,
 		_default = deepFreeze(props.default),
 		_open = false,
 		_sessionId = SaveUtil.uuid(),
