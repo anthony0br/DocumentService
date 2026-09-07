@@ -31,7 +31,6 @@ export type DocumentStoreProps<T> = DocumentStore.DocumentStoreProps<T>
 	```
 ]=]
 return {
-	DocumentStore = DocumentStore,
 	Document = Document,
 	SaveUtil = SaveUtil,
 }

@@ -66,7 +66,9 @@ export type Document<T> = {
 -- but without the heavyweight and poor type compatibility of luau promise packages
 
 -- without weak tables and GetDocument, we can remove:
--- IsOpen -- the user can track this themselves e.g. add the document to a central table
+-- pre-hooks.
+-- IsOpen checks -- the user can track this themselves e.g. add the document to a central table
+-- unit test / concerns of memory leakage
 
 export type Ok<T> = {
 	ok: true,
