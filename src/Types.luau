@@ -42,6 +42,12 @@ export type DocumentConstructor<T> = ({
 	default: T,
 }) -> Document<T>
 
+-- TODO: Are we going to enforce immutable edits this time?
+-- If so, how will the types work?
+-- Currently immutable editing is a real pain:
+-- no type support
+-- tedious cloning due to no build in function, with potential for yields in-between
+
 export type Document<T> = {
 	-- Private
 	read _key: string,
@@ -56,7 +62,7 @@ export type Document<T> = {
 	read claimedSignal: () -> Signal.Signal<ClaimResult<T>>,
 	read steal: () -> (), -- transition to steal state to steal on next claim
 	read read: () -> T,
-	read update: (T) -> T,
+	read update: (T) -> T, -- this will be wrapped in a noYield to prevent possible rollbacks.
 	read saveAsync: () -> WriteResult<T>, -- typically used for purchases to determine return type
 	read savedSignal: () -> WriteResult<T>,
 	read releaseAsync: () -> WriteResult<T>,
